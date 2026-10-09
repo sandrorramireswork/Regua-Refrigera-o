@@ -1,0 +1,63 @@
+# Roadmap
+
+- [x] Priorizar o aviso Sniper acima de todos os padrões
+- [x] Adicionar gráfico de tendências dos 35 padrões
+- [x] Adicionar gráficos Z-Score, Kelly e frequência do Camuflado
+- [x] Validar em celular e PC
+- [x] Aviso instantâneo da planilha (webhook do Apps Script + tela Planilha Instantânea)
+- [x] Tela própria de edição de alvos e regras dos padrões
+- [x] Aba "Spins ao Vivo" com dispersão de números, setores e ângulos
+- [x] Conferir as séries dos padrões e do Camuflado com os giros reais da planilha
+- [ ] Gravar novos giros reais na planilha — aguardando os números reais da mesa
+- [x] Tela de jogos com aposta, padrão, resultado, bankroll e histórico individual
+- [x] Identificar novos giros da planilha por usuário e filtrar o painel
+- [x] Tela de histórico com giros da planilha da conta conectada
+- [x] Tela administrativa de colaboradores com nome, status e link de acesso
+- [x] Motor Balístico com captura de deltas e calibração local
+- [x] Tabela executiva de Análise Balística com 13 colunas
+- [x] Alerta prioritário para confiança acima de 80%
+- [x] Validar Análise Balística no celular e no computador
+- [x] Implementar os quatro motores quantitativos em processamento conjunto
+- [x] Evoluir Top 10 Puxa para a tabela mestra de oito colunas
+- [x] Adicionar retenção 3 de 4 em janela total de 9 casas e gráfico direcional
+- [x] Integrar alertas de retenção e entrada de alta precisão ao painel
+- [x] Validar fórmulas sem arredondamento e experiência no celular e computador
+- [x] Implementar gatilho consecutivo Alto → Baixo com zero cancelando a sequência
+- [x] Calcular terminal, alvos menor/maior e zonas de quatro vizinhos por lado
+- [x] Integrar card prioritário e notificação do Motor de Estratégia de Subtração
+- [x] Validar o novo motor no celular e no computador
+- [x] Adicionar evolução da frequência dos terminais 0–9 à Tabela Mestra
+- [x] Classificar terminais quentes e frios contra a frequência teórica
+- [x] Validar o gráfico de terminais no celular e no computador
+- [x] Disparar o alerta do motor de terminal nas atualizações do painel público em tempo real
+- [x] Garantir o alerta sem depender de cadastro
+- [x] Criar aba Monitoramento de Atração e Ciclos com Chart.js
+- [x] Calcular alvos ao vivo para os gatilhos 22 e 18
+- [x] Integrar alerta visual e sonoro de Padrão Aproximado
+- [x] Validar a nova aba no celular e no computador
+- [x] Criar aba pública de rodadas por imagem no painel principal
+- [x] Ler primeiro a linha superior externa e depois cada linha da esquerda para a direita
+- [x] Inserir o lote reconhecido no histórico público na ordem visual
+- [x] Validar a importação por imagem no celular e no computador
+- [x] Inverter a leitura por imagem: última linha primeiro, da direita para a esquerda e de baixo para cima
+- [x] Remover o limite de 120 resultados e adicionar todas as rodadas reconhecidas da imagem
+- [x] Criar o motor de atrasos para dúzias, colunas, zero, terminais e setores
+- [x] Adicionar o painel lateral de Monitoramento de Máximas ao Grid de Notificações
+- [x] Validar os atrasos com entrada manual, imagem e atualização pública
+- [x] Posicionar o teclado à esquerda do Monitoramento de Máximas em cinco colunas (0–4, 5–9, até 36)
+- [x] Criar rastreamento de Puxadas e Terminais com validação na janela de 15 giros
+- [x] Medir Win/Loss e assertividade dos alertas em até duas entradas
+- [x] Adicionar cards e notificações em laranja neon ao Grid de Notificações
+- [x] Adicionar quebra de dúzias e colunas após três repetições consecutivas
+- [x] Separar assertividade por Puxada, Terminal, Dúzia e Coluna
+- [x] Animar a entrada lateral e a borda pulsante dos alertas laranja
+- [x] Adicionar rastreador físico de quatro saltos com amplitude máxima de cinco casas
+- [x] Projetar o salto médio arredondado e a Zona 5 na ordem europeia exata
+- [x] Cruzar sinais simultâneos e emitir Super Confluência apenas nos alvos intersectados
+- [x] Adicionar cards e notificações ciano para Saltos Físicos e Super Confluência
+- [x] Adicionar Radar de Densidade dos quatro quadrantes nas últimas 50 rodadas
+- [x] Destacar e notificar quadrantes acima de 40% como Zona Quente
+- [x] Adicionar Smart Bankroll com sugestões totais de 1% e 2,5%
+- [x] Simular resultados em duas entradas com pagamento real de 35:1
+- [x] Bloquear novos alertas ao atingir Stop-Win ou Stop-Loss
+- [x] Adicionar controles independentes para ativar ou desativar Stop-Win e Stop-Loss

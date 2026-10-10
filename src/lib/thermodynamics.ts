@@ -2,6 +2,26 @@
 // Uses the Antoine Equation: log10(P) = A - B / (T + C)
 // where P is Absolute Pressure in bar, and T is Temperature in °C.
 
+export const refrigerantsList = [
+  { id: "R-410A", name: "R-410A", hasGlide: true, glideK: 0.1, color: "bg-rose-500", chemName: "Mistura (R-32 / R-125)", chemFormula: "CH2F2 / CHF2CF3" },
+  { id: "R-32", name: "R-32", hasGlide: false, glideK: 0, color: "bg-orange-500", chemName: "Difluorometano", chemFormula: "CH2F2" },
+  { id: "R-134a", name: "R-134a", hasGlide: false, glideK: 0, color: "bg-blue-400", chemName: "Tetrafluoroetano", chemFormula: "CH2FCF3" },
+  { id: "R-404A", name: "R-404A", hasGlide: true, glideK: 0.5, color: "bg-orange-600", chemName: "Mistura (R-125/143a/134a)", chemFormula: "Blend HFC" },
+  { id: "R-22", name: "R-22", hasGlide: false, glideK: 0, color: "bg-green-500", chemName: "Clorodifluorometano", chemFormula: "CHClF2" },
+  { id: "R-407C", name: "R-407C", hasGlide: true, glideK: 5.0, color: "bg-orange-400", chemName: "Mistura (R-32/125/134a)", chemFormula: "Blend HFC" },
+  { id: "R-290", name: "R-290 (Propano)", hasGlide: false, glideK: 0, color: "bg-zinc-300", chemName: "Propano", chemFormula: "C3H8" },
+  { id: "R-1234yf", name: "R-1234yf", hasGlide: false, glideK: 0, color: "bg-zinc-400", chemName: "Tetrafluoropropeno", chemFormula: "C3H2F4" },
+  { id: "R-744", name: "R-744 (CO2)", hasGlide: false, glideK: 0, color: "bg-slate-500", chemName: "Dióxido de Carbono", chemFormula: "CO2" },
+  { id: "R-507A", name: "R-507A", hasGlide: false, glideK: 0, color: "bg-red-500", chemName: "Mistura (R-125/143a)", chemFormula: "Blend HFC" },
+  { id: "R-600a", name: "R-600a (Isobutano)", hasGlide: false, glideK: 0, color: "bg-slate-300", chemName: "Isobutano", chemFormula: "C4H10" },
+  { id: "R-448A", name: "R-448A", hasGlide: true, glideK: 3.5, color: "bg-indigo-400", chemName: "Mistura Zeotrópica HFO/HFC", chemFormula: "Blend HFO" },
+  { id: "R-449A", name: "R-449A", hasGlide: true, glideK: 4.0, color: "bg-indigo-500", chemName: "Mistura Zeotrópica HFO/HFC", chemFormula: "Blend HFO" },
+  { id: "R-12", name: "R-12", hasGlide: false, glideK: 0, color: "bg-neutral-100", chemName: "Diclorodifluorometano", chemFormula: "CCl2F2" },
+  { id: "R-502", name: "R-502", hasGlide: false, glideK: 0, color: "bg-purple-600", chemName: "Mistura (R-22 / R-115)", chemFormula: "Blend CFC/HCFC" },
+  { id: "R-123", name: "R-123", hasGlide: false, glideK: 0, color: "bg-teal-300", chemName: "Diclorotrifluoroetano", chemFormula: "C2HCl2F3" },
+  { id: "R-407A", name: "R-407A", hasGlide: true, glideK: 4.5, color: "bg-orange-300", chemName: "Mistura Zeotrópica", chemFormula: "Blend HFC" },
+  { id: "R-407F", name: "R-407F", hasGlide: true, glideK: 4.8, color: "bg-orange-500", chemName: "Mistura Zeotrópica", chemFormula: "Blend HFC" },
+];
 interface ReferencePoints {
   t1: number; p1: number;
   t2: number; p2: number;
@@ -25,6 +45,15 @@ const refPoints: Record<string, ReferencePoints> = {
   "R-290": { t1: -20, p1: 2.44, t2: 10, p2: 6.36, t3: 40, p3: 13.67 },
   "R-1234yf": { t1: -20, p1: 1.43, t2: 10, p2: 4.35, t3: 40, p3: 10.15 },
   "R-744": { t1: -40, p1: 10.05, t2: -10, p2: 26.49, t3: 20, p3: 57.29 },
+  "R-507A": { t1: -20, p1: 3.12, t2: 10, p2: 8.48, t3: 40, p3: 18.82 },
+  "R-600a": { t1: -20, p1: 0.69, t2: 10, p2: 2.23, t3: 40, p3: 5.31 },
+  "R-448A": { t1: -20, p1: 2.40, t2: 10, p2: 7.00, t3: 40, p3: 15.60 },
+  "R-449A": { t1: -20, p1: 2.38, t2: 10, p2: 6.95, t3: 40, p3: 15.45 },
+  "R-12": { t1: -20, p1: 1.51, t2: 10, p2: 4.23, t3: 40, p3: 9.60 },
+  "R-502": { t1: -20, p1: 2.50, t2: 10, p2: 6.84, t3: 40, p3: 15.43 },
+  "R-123": { t1: -20, p1: 0.12, t2: 10, p2: 0.44, t3: 40, p3: 1.55 },
+  "R-407A": { t1: -20, p1: 2.25, t2: 10, p2: 6.70, t3: 40, p3: 15.90 },
+  "R-407F": { t1: -20, p1: 2.45, t2: 10, p2: 7.30, t3: 40, p3: 17.00 }
 };
 
 const coefficientsCache: Record<string, AntoineCoeffs> = {};

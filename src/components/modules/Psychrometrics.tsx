@@ -104,7 +104,7 @@ export default function Psychrometrics() {
                 <Slider 
                   value={[Tdb]} 
                   min={tempUnit === "F" ? 30 : 0} max={tempUnit === "F" ? 110 : 45} step={0.5}
-                  onValueChange={(val) => handleTdbChange(val[0])}
+                  onValueChange={(val) => handleTdbChange(val[0]!)}
                   className="py-2"
                 />
               </div>
@@ -122,7 +122,7 @@ export default function Psychrometrics() {
                 <Slider 
                   value={[rh]} 
                   min={1} max={100} step={1}
-                  onValueChange={(val) => setRh(val[0])}
+                  onValueChange={(val) => setRh(val[0]!)}
                   className="py-2"
                 />
               </div>

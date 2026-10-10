@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { AlertCircle, CheckCircle2, ThermometerSun, AlertTriangle, TerminalSquare, MapPin, Loader2 } from "lucide-react";
-import { getSaturationTemp } from "@/lib/thermodynamics";
+import { getSaturationTemp, refrigerantsList } from "@/lib/thermodynamics";
 import DiagnosticsChart from "./DiagnosticsChart";
 import { useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
@@ -205,11 +205,9 @@ export default function DiagnosticsMatrix() {
               <Select value={ref} onValueChange={setRef}>
                 <SelectTrigger className="bg-black/50 border-white/10 font-mono text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent className="bg-background/95 backdrop-blur-xl border-white/10">
-                  <SelectItem value="R-410A">R-410A</SelectItem>
-                  <SelectItem value="R-22">R-22</SelectItem>
-                  <SelectItem value="R-134a">R-134a</SelectItem>
-                  <SelectItem value="R-404A">R-404A</SelectItem>
-                  <SelectItem value="R-32">R-32</SelectItem>
+                  {refrigerantsList.map(r => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -234,7 +232,7 @@ export default function DiagnosticsMatrix() {
                 <Slider 
                   value={[pSuc]} 
                   min={pressureUnit === "psig" ? 0 : 0.1} max={pressureUnit === "psig" ? 250 : 20} step={pressureUnit === "psig" ? 1 : 0.1}
-                  onValueChange={(val) => setPSuc(val[0])}
+                  onValueChange={(val) => setPSuc(val[0]!)}
                 />
                </div>
                <div className="space-y-4">
@@ -245,7 +243,7 @@ export default function DiagnosticsMatrix() {
                 <Slider 
                   value={[tSuc]} 
                   min={tempUnit === "F" ? -20 : -30} max={tempUnit === "F" ? 100 : 40} step={0.5}
-                  onValueChange={(val) => setTSuc(val[0])}
+                  onValueChange={(val) => setTSuc(val[0]!)}
                 />
                </div>
             </div>
@@ -259,7 +257,7 @@ export default function DiagnosticsMatrix() {
                 <Slider 
                   value={[pLiq]} 
                   min={pressureUnit === "psig" ? 50 : 3} max={pressureUnit === "psig" ? 700 : 50} step={pressureUnit === "psig" ? 1 : 0.1}
-                  onValueChange={(val) => setPLiq(val[0])}
+                  onValueChange={(val) => setPLiq(val[0]!)}
                 />
                </div>
                <div className="space-y-4">
@@ -270,7 +268,7 @@ export default function DiagnosticsMatrix() {
                 <Slider 
                   value={[tLiq]} 
                   min={tempUnit === "F" ? 30 : 0} max={tempUnit === "F" ? 160 : 70} step={0.5}
-                  onValueChange={(val) => setTLiq(val[0])}
+                  onValueChange={(val) => setTLiq(val[0]!)}
                 />
                </div>
             </div>

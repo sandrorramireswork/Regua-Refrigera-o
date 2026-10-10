@@ -64,7 +64,7 @@ export default function Piping() {
     const volFlow_liq_m3_s = massFlow_kg_s * v_liq;
 
     // Find ideal suction pipe (Target velocity: 8 to 15 m/s)
-    let bestSuc = PIPE_SIZES[PIPE_SIZES.length - 1];
+    let bestSuc = PIPE_SIZES[PIPE_SIZES.length - 1]!;
     let actualSucVel = 0;
     for (let pipe of PIPE_SIZES) {
       const area = Math.PI * Math.pow(pipe.id_m / 2, 2);
@@ -77,7 +77,7 @@ export default function Piping() {
     }
 
     // Find ideal liquid pipe (Target velocity: 0.5 to 1.5 m/s)
-    let bestLiq = PIPE_SIZES[PIPE_SIZES.length - 1];
+    let bestLiq = PIPE_SIZES[PIPE_SIZES.length - 1]!;
     let actualLiqVel = 0;
     for (let pipe of PIPE_SIZES) {
       const area = Math.PI * Math.pow(pipe.id_m / 2, 2);
@@ -129,7 +129,7 @@ export default function Piping() {
                 <Slider 
                   value={[capacity]} 
                   min={7000} max={120000} step={1000}
-                  onValueChange={(val) => setCapacity(val[0])}
+                  onValueChange={(val) => setCapacity(val[0]!)}
                   className="py-2"
                 />
               </div>
@@ -147,7 +147,7 @@ export default function Piping() {
                 <Slider 
                   value={[length]} 
                   min={1} max={100} step={1}
-                  onValueChange={(val) => setLength(val[0])}
+                  onValueChange={(val) => setLength(val[0]!)}
                   className="py-2"
                 />
               </div>
@@ -261,6 +261,52 @@ export default function Piping() {
             </div>
           </div>
 
+          {/* Alert Grid */}
+          <Card className={`glass-panel border-white/10 ${(!isSucVelGood || !isLiqVelGood) ? 'alert-card-orange' : 'shadow-[0_0_20px_rgba(0,255,102,0.1)] border-green-500/50'}`}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-display tracking-widest text-primary text-lg uppercase">
+                {(!isSucVelGood || !isLiqVelGood) ? <AlertTriangle className="h-5 w-5 text-yellow-400 animate-pulse" /> : <CheckCircle2 className="h-5 w-5 text-[#00FF66]" />}
+                Análise de Conformidade
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {(!isSucVelGood || !isLiqVelGood) ? (
+                <div className="grid gap-3">
+                  {!isSucVelGood && (
+                     <div className="p-3 bg-black/40 rounded-lg border border-yellow-500/30 border-l-4 border-l-yellow-400">
+                       <h4 className="text-yellow-400 font-tactical tracking-widest text-xs uppercase mb-1">
+                         {sucVel > 15 ? "Alta Velocidade na Sucção" : "Baixa Velocidade na Sucção"}
+                       </h4>
+                       <p className="text-sm font-mono text-white/80">
+                         {sucVel > 15 
+                           ? `A velocidade do gás (${displaySucVel.toFixed(1)} ${velLabel}) excede o ideal (15 ${velLabel}). Risco de ruído excessivo e alta perda de carga, o que reduz a capacidade do compressor. O diâmetro calculado de ${sucPipe} está no limite térmico.`
+                           : `A velocidade do gás (${displaySucVel.toFixed(1)} ${velLabel}) está muito baixa. Risco crítico de falha no retorno de óleo ao compressor, especialmente em tubulações verticais (risers). O diâmetro sugerido de ${sucPipe} pode precisar ser reduzido.`}
+                       </p>
+                     </div>
+                  )}
+                  {!isLiqVelGood && (
+                     <div className="p-3 bg-black/40 rounded-lg border border-yellow-500/30 border-l-4 border-l-yellow-400">
+                       <h4 className="text-yellow-400 font-tactical tracking-widest text-xs uppercase mb-1">
+                         {liqVel > 1.5 ? "Alta Velocidade no Líquido" : "Baixa Velocidade no Líquido"}
+                       </h4>
+                       <p className="text-sm font-mono text-white/80">
+                         {liqVel > 1.5
+                           ? `A velocidade do líquido (${displayLiqVel.toFixed(2)} ${velLabel}) excede o ideal. Risco de Golpe de Aríete (Water Hammer) em válvulas solenoides e geração de Flash Gas (bolhas) devido à perda de carga prematura.`
+                           : `A velocidade do líquido (${displayLiqVel.toFixed(2)} ${velLabel}) está abaixo do ideal. Indica superdimensionamento da linha, resultando em aumento de custo da instalação e excesso de carga térmica de gás necessária.`}
+                       </p>
+                     </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 bg-black/40 rounded-lg border border-[#00FF66]/30 flex flex-col gap-2">
+                  <p className="text-[#00FF66] font-bold tracking-wide">TUBULAÇÃO DENTRO DOS PARÂMETROS NOMINAIS</p>
+                  <p className="text-sm font-mono text-white/80">
+                    As velocidades de sucção ({displaySucVel.toFixed(1)} {velLabel}) e de líquido ({displayLiqVel.toFixed(2)} {velLabel}) são perfeitamente adequadas para garantir máxima eficiência energética, zero ruídos obstrutivos e ótimo arraste de óleo de volta ao cárter do compressor.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

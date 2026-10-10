@@ -5,21 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { getSaturationTemp, getSaturationPressure } from "@/lib/thermodynamics";
+import { getSaturationTemp, getSaturationPressure, refrigerantsList as refrigerants } from "@/lib/thermodynamics";
 import { useAppContext } from "@/context/AppContext";
-
-const refrigerants = [
-  { id: "R-410A", name: "R-410A", hasGlide: true, glideK: 0.1, color: "bg-rose-500" },
-  { id: "R-32", name: "R-32", hasGlide: false, glideK: 0, color: "bg-orange-500" },
-  { id: "R-134a", name: "R-134a", hasGlide: false, glideK: 0, color: "bg-blue-400" },
-  { id: "R-404A", name: "R-404A", hasGlide: true, glideK: 0.5, color: "bg-orange-600" },
-  { id: "R-22", name: "R-22", hasGlide: false, glideK: 0, color: "bg-green-500" },
-  { id: "R-407C", name: "R-407C", hasGlide: true, glideK: 5.0, color: "bg-orange-400" },
-  { id: "R-290", name: "R-290 (Propane)", hasGlide: false, glideK: 0, color: "bg-zinc-300" },
-  { id: "R-1234yf", name: "R-1234yf", hasGlide: false, glideK: 0, color: "bg-zinc-400" },
-  { id: "R-744", name: "R-744 (CO2)", hasGlide: false, glideK: 0, color: "bg-slate-500" },
-];
-
+import RefData from "./RefData";
 
 export default function PTEngine() {
   const { 
@@ -72,8 +60,14 @@ export default function PTEngine() {
   };
 
   return (
-    <div className={`grid gap-6 ${viewMode === 'mobile' ? 'grid-cols-1' : 'md:grid-cols-2'}`}>
-      <Card className="glass-panel border-white/5">
+    <div className="flex flex-col gap-8">
+      
+      {/* Header Ficha Técnica & Manifold */}
+      <RefData />
+
+      {/* Controles Interativos (P-T) */}
+      <div className={`grid gap-6 ${viewMode === 'mobile' ? 'grid-cols-1' : 'md:grid-cols-2'}`}>
+        <Card className="glass-panel border-white/5">
         <CardHeader>
           <CardTitle className="font-display tracking-widest text-lg text-primary">FLUIDO E CONFIGURAÇÕES</CardTitle>
           <CardDescription className="font-mono uppercase text-xs">Selecione o fluido de trabalho e as unidades.</CardDescription>
@@ -160,7 +154,7 @@ export default function PTEngine() {
               min={pressureUnit === "psig" ? 0 : 0.1} 
               max={pressureUnit === "psig" ? 700 : 50} 
               step={pressureUnit === "psig" ? 1 : 0.1}
-              onValueChange={(val) => handlePressureChange(val[0])}
+              onValueChange={(val) => handlePressureChange(val[0]!)}
               className="py-4"
             />
           </div>
@@ -180,7 +174,7 @@ export default function PTEngine() {
               min={tempUnit === "F" ? -76 : -60} 
               max={tempUnit === "F" ? 176 : 80} 
               step={0.5}
-              onValueChange={(val) => handleTempChange(val[0])}
+              onValueChange={(val) => handleTempChange(val[0]!)}
               className="py-4"
             />
           </div>
@@ -200,6 +194,7 @@ export default function PTEngine() {
           
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }

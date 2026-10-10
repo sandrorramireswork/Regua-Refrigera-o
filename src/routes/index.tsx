@@ -13,7 +13,9 @@ import DigitalTwin from "@/components/modules/DigitalTwin";
 import Psychrometrics from "@/components/modules/Psychrometrics";
 import Piping from "@/components/modules/Piping";
 import Reports from "@/components/modules/Reports";
-import { Lock, Unlock, User, AlertTriangle, AlertCircle, CheckCircle2, MessageCircle, UserPlus, Key } from "lucide-react";
+import Maintenance from "@/components/modules/Maintenance";
+import CompressorTest from "@/components/modules/CompressorTest";
+import { Lock, Unlock, User, AlertTriangle, AlertCircle, CheckCircle2, MessageCircle, UserPlus, Key, Wrench, Zap, Cylinder, Thermometer, Wind, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getSaturationTemp } from "@/lib/thermodynamics";
 
@@ -136,10 +138,10 @@ function DashboardContent() {
         </div>
 
         <Tabs defaultValue="pt-engine" className="w-full space-y-6" onValueChange={setActiveTab}>
-          <TabsList className={`grid h-auto p-1 bg-black/40 backdrop-blur-sm border border-border/50 rounded-xl ${viewMode === 'mobile' ? 'grid-cols-3 gap-2' : 'grid-cols-2 md:grid-cols-6 lg:grid-cols-6'}`}>
+          <TabsList className={`grid h-auto p-1 bg-black/40 backdrop-blur-sm border border-border/50 rounded-xl ${viewMode === 'mobile' ? 'grid-cols-4 gap-2' : 'grid-cols-4 md:grid-cols-8 lg:grid-cols-8'}`}>
             <TabsTrigger value="pt-engine" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
               <Thermometer className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase">P-T</span>
+              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase">FLUIDOS P-T</span>
             </TabsTrigger>
             <TabsTrigger value="diagnostics" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
               <Activity className="h-5 w-5" />
@@ -160,6 +162,14 @@ function DashboardContent() {
             <TabsTrigger value="reports" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
               <FileText className="h-5 w-5" />
               <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Relatórios</span>
+            </TabsTrigger>
+            <TabsTrigger value="compressor" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
+              <Zap className="h-5 w-5" />
+              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Elétrica</span>
+            </TabsTrigger>
+            <TabsTrigger value="maintenance" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
+              <Wrench className="h-5 w-5" />
+              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Ferramentas</span>
             </TabsTrigger>
           </TabsList>
 
@@ -185,6 +195,14 @@ function DashboardContent() {
           
           <TabsContent value="reports" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
             <Reports />
+          </TabsContent>
+
+          <TabsContent value="compressor" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
+            <CompressorTest />
+          </TabsContent>
+
+          <TabsContent value="maintenance" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
+            <Maintenance />
           </TabsContent>
 
         </Tabs>

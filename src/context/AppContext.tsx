@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 type AppContextType = {
   selectedRef: string;
@@ -23,25 +23,62 @@ type AppContextType = {
   setTExt: (v: number) => void;
   tWb: number;
   setTWb: (v: number) => void;
+  tdbC: number;
+  setTdbC: (v: number) => void;
+  rh: number;
+  setRh: (v: number) => void;
+  tsupC: number;
+  setTsupC: (v: number) => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+const loadState = <T,>(key: string, defaultValue: T): T => {
+  if (typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem(`thermomaster_${key}`);
+      if (saved !== null) return JSON.parse(saved);
+    } catch (e) {}
+  }
+  return defaultValue;
+};
+
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [selectedRef, setSelectedRef] = useState("R-410A");
-  const [pressureUnit, setPressureUnit] = useState<"bar" | "psig">("psig");
-  const [tempUnit, setTempUnit] = useState<"C" | "F">("C");
-  const [viewMode, setViewMode] = useState<"desktop" | "mobile">("desktop");
+  const [selectedRef, setSelectedRef] = useState<string>(() => loadState("selectedRef", "R-410A"));
+  const [pressureUnit, setPressureUnit] = useState<"bar" | "psig">(() => loadState("pressureUnit", "psig"));
+  const [tempUnit, setTempUnit] = useState<"C" | "F">(() => loadState("tempUnit", "C"));
+  const [viewMode, setViewMode] = useState<"desktop" | "mobile">(() => loadState("viewMode", "desktop"));
   
-  const [pSuc, setPSuc] = useState<number>(8.5);
-  const [tSuc, setTSuc] = useState<number>(10);
+  const [pSuc, setPSuc] = useState<number>(() => loadState("pSuc", 8.5));
+  const [tSuc, setTSuc] = useState<number>(() => loadState("tSuc", 10));
   
-  const [pLiq, setPLiq] = useState<number>(25);
-  const [tLiq, setTLiq] = useState<number>(35);
+  const [pLiq, setPLiq] = useState<number>(() => loadState("pLiq", 25));
+  const [tLiq, setTLiq] = useState<number>(() => loadState("tLiq", 35));
   
-  const [expansion, setExpansion] = useState("txv");
-  const [tExt, setTExt] = useState<number>(30);
-  const [tWb, setTWb] = useState<number>(19);
+  const [expansion, setExpansion] = useState<string>(() => loadState("expansion", "txv"));
+  const [tExt, setTExt] = useState<number>(() => loadState("tExt", 30));
+  const [tWb, setTWb] = useState<number>(() => loadState("tWb", 19));
+
+  const [tdbC, setTdbC] = useState<number>(() => loadState("tdbC", 25));
+  const [rh, setRh] = useState<number>(() => loadState("rh", 50));
+  const [tsupC, setTsupC] = useState<number>(() => loadState("tsupC", 13));
+
+  useEffect(() => {
+    localStorage.setItem("thermomaster_selectedRef", JSON.stringify(selectedRef));
+    localStorage.setItem("thermomaster_pressureUnit", JSON.stringify(pressureUnit));
+    localStorage.setItem("thermomaster_tempUnit", JSON.stringify(tempUnit));
+    localStorage.setItem("thermomaster_viewMode", JSON.stringify(viewMode));
+    localStorage.setItem("thermomaster_pSuc", JSON.stringify(pSuc));
+    localStorage.setItem("thermomaster_tSuc", JSON.stringify(tSuc));
+    localStorage.setItem("thermomaster_pLiq", JSON.stringify(pLiq));
+    localStorage.setItem("thermomaster_tLiq", JSON.stringify(tLiq));
+    localStorage.setItem("thermomaster_expansion", JSON.stringify(expansion));
+    localStorage.setItem("thermomaster_tExt", JSON.stringify(tExt));
+    localStorage.setItem("thermomaster_tWb", JSON.stringify(tWb));
+    localStorage.setItem("thermomaster_tdbC", JSON.stringify(tdbC));
+    localStorage.setItem("thermomaster_rh", JSON.stringify(rh));
+    localStorage.setItem("thermomaster_tsupC", JSON.stringify(tsupC));
+  }, [selectedRef, pressureUnit, tempUnit, viewMode, pSuc, tSuc, pLiq, tLiq, expansion, tExt, tWb, tdbC, rh, tsupC]);
 
   return (
     <AppContext.Provider value={{
@@ -55,7 +92,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       tLiq, setTLiq,
       expansion, setExpansion,
       tExt, setTExt,
-      tWb, setTWb
+      tWb, setTWb,
+      tdbC, setTdbC,
+      rh, setRh,
+      tsupC, setTsupC
     }}>
       {children}
     </AppContext.Provider>

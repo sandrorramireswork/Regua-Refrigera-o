@@ -1,21 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Gauge, Thermometer, Activity, Wind, FileText, Settings, Smartphone, Monitor } from "lucide-react";
-import { useState } from "react";
+import { Gauge, Thermometer, Activity, Wind, FileText, Settings, Smartphone, Monitor, MapPin, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
 import { AppProvider, useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 // Module A component
 import PTEngine from "@/components/modules/PTEngine";
 // Module B component
-import DiagnosticsMatrix from "@/components/modules/DiagnosticsMatrix";
 import DigitalTwin from "@/components/modules/DigitalTwin";
 import Psychrometrics from "@/components/modules/Psychrometrics";
 import Piping from "@/components/modules/Piping";
 import Reports from "@/components/modules/Reports";
 import Maintenance from "@/components/modules/Maintenance";
-import CompressorTest from "@/components/modules/CompressorTest";
-import { Lock, Unlock, User, AlertTriangle, AlertCircle, CheckCircle2, MessageCircle, UserPlus, Key, Wrench, Zap, Cylinder, Thermometer, Wind, Settings } from "lucide-react";
+import { ElectricalSizing } from "@/components/modules/ElectricalSizing";
+import { Lock, Unlock, User, AlertTriangle, AlertCircle, CheckCircle2, MessageCircle, UserPlus, Key, Wrench, Zap, Cylinder } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getSaturationTemp } from "@/lib/thermodynamics";
 
@@ -25,7 +25,70 @@ export const Route = createFileRoute("/")({
 
 function DashboardContent() {
   const [activeTab, setActiveTab] = useState("pt-engine");
-  const { viewMode, setViewMode, selectedRef, pSuc, pLiq, tSuc, tLiq, pressureUnit, tempUnit } = useAppContext();
+  const { viewMode, setViewMode, selectedRef, pSuc, pLiq, tSuc, tLiq, pressureUnit, tempUnit, tExt, setTExt } = useAppContext();
+  const [isFetchingWeather, setIsFetchingWeather] = useState(false);
+  const [extRh, setExtRh] = useState<number | null>(null);
+  const [city, setCity] = useState<string>("SISTEMA ONLINE");
+
+  const fetchWeather = useCallback(async (silent = false) => {
+    setIsFetchingWeather(true);
+    try {
+      if (!navigator.geolocation) {
+        if (!silent) toast.error("Geolocalização não suportada", { description: "Seu navegador não suporta GPS." });
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          try {
+            // Fetch Weather
+            const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m`);
+            const data = await res.json();
+            
+            // Fetch City
+            const cityRes = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt`);
+            const cityData = await cityRes.json();
+            
+            if (cityData?.city || cityData?.locality) {
+              setCity(cityData.city || cityData.locality);
+            }
+
+            if (data?.current?.temperature_2m !== undefined) {
+              let tempC = data.current.temperature_2m;
+              if (tempUnit === "F") {
+                tempC = (tempC * 9/5) + 32;
+              }
+              setTExt(tempC);
+              setExtRh(data.current.relative_humidity_2m);
+              if (!silent) toast.success("Clima atualizado", { description: `Temperatura local: ${tempC}°${tempUnit}` });
+            }
+          } catch (e) {
+            if (!silent) toast.error("Erro na API", { description: "Não foi possível buscar os dados do clima." });
+          } finally {
+            setIsFetchingWeather(false);
+          }
+        },
+        (error) => {
+          if (!silent) toast.error("Erro no GPS", { description: "Permissão negada ou sinal fraco." });
+          setIsFetchingWeather(false);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    } catch (e) {
+      if (!silent) toast.error("Erro genérico", { description: "Falha ao buscar localização." });
+      setIsFetchingWeather(false);
+    }
+  }, [tempUnit, setTExt]);
+
+  useEffect(() => {
+    // Atualiza a cada 10 minutos (600000 ms) silenciosamente
+    const intervalId = setInterval(() => {
+      fetchWeather(true);
+    }, 10 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [fetchWeather]);
 
   // Global Diagnosis Logic
   const pSucBar = pressureUnit === "psig" ? (pSuc + 14.5038) / 14.5038 : pSuc;
@@ -95,20 +158,50 @@ function DashboardContent() {
               <Activity className="h-5 w-5 text-primary animate-pulse" />
             </div>
             <div className="flex flex-col">
-              <h1 className="text-2xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white to-primary drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white to-primary drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] text-center sm:text-left">
                 THERMOMASTER <span className="text-primary">PRO</span>
               </h1>
-              <span className="text-[10px] text-primary/70 font-mono tracking-widest uppercase">By SRR</span>
+              <div className="flex justify-end w-full">
+                <span className="text-[9px] sm:text-[10px] font-black italic text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.8)] font-mono tracking-widest uppercase mt-0.5">BY SRR</span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-4 text-sm font-mono text-muted-foreground mr-4">
-              <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> SISTEMA ONLINE</span>
+          <div className="flex items-center gap-3">
+            
+            {/* GPS & External Temp Widget - FIXED IN APP HEADER */}
+            <div className="flex items-center justify-end">
+              <Button 
+                variant="ghost" size="icon" className="h-10 w-10 sm:h-12 sm:w-12 hover:bg-cyan-500/20 text-cyan-400 rounded-lg shrink-0 p-0 hover:text-cyan-300"
+                style={{ filter: "drop-shadow(0 0 10px rgba(0,240,255,0.8))" }}
+                onClick={() => fetchWeather(false)} disabled={isFetchingWeather} title="Obter clima local por GPS"
+              >
+                {isFetchingWeather ? <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin" /> : <MapPin className="w-6 h-6 sm:w-8 sm:h-8" />}
+              </Button>
+              <div className="flex items-center" style={{ textShadow: "0 0 10px #00f0ff, 0 0 20px #00f0ff, 0 0 40px #00f0ff" }}>
+                <span className="text-cyan-400 font-mono text-3xl sm:text-4xl font-black shrink-0">
+                  {tExt !== 0 ? tExt.toFixed(1) : "--"}
+                </span>
+                <span className="text-lg sm:text-2xl font-bold text-cyan-400 font-mono shrink-0 ml-1">
+                  °{tempUnit}
+                </span>
+              </div>
+            </div>
+
+            <div className="hidden md:flex flex-col items-start justify-center ml-2 mr-2">
+              <div className="flex items-center gap-2 font-mono text-muted-foreground">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                <span className="text-cyan-400 font-bold tracking-widest text-lg">{extRh !== null ? `${extRh}%` : 'SISTEMA ONLINE'}</span>
+              </div>
+              {city !== "SISTEMA ONLINE" && (
+                <span className="text-[10px] uppercase font-tactical text-zinc-500 tracking-widest pl-4 truncate max-w-[120px]">
+                  {city}
+                </span>
+              )}
             </div>
             <Button 
               variant="outline" 
               size="icon" 
-              className="bg-black/50 border-white/10 hover:bg-primary/20 hover:text-primary transition-colors"
+              className="bg-black/50 border-white/10 hover:bg-primary/20 hover:text-primary transition-colors shrink-0"
               onClick={() => setViewMode(viewMode === "desktop" ? "mobile" : "desktop")}
               title="Alternar Modo de Visualização (Celular/PC)"
             >
@@ -129,7 +222,14 @@ function DashboardContent() {
       </div>
 
       {/* Main Content */}
-      <main className={`flex-1 mx-auto p-4 md:p-6 transition-all duration-500 ${viewMode === 'mobile' ? 'w-full max-w-[430px] border-x border-white/10 bg-black/20 shadow-[0_0_50px_rgba(0,0,0,0.5)]' : 'container lg:p-8'}`}>
+      <main 
+        className={`flex-1 mx-auto p-4 md:p-6 transition-all duration-500 ${viewMode === 'mobile' ? 'w-full max-w-[430px] border-x border-white/10 bg-black/20 shadow-[0_0_50px_rgba(0,0,0,0.5)]' : 'container lg:p-8'}`}
+        style={{ 
+          transform: viewMode === 'mobile' ? 'scale(0.75)' : 'none',
+          transformOrigin: 'top center',
+          marginBottom: viewMode === 'mobile' ? '-25%' : '0' // Prevents excess whitespace at the bottom due to scale
+        }}
+      >
         <div className="mb-6">
           <h2 className="text-3xl font-bold tracking-tight mb-2 font-display neon-text-cyan opacity-90">PAINEL DE DIAGNÓSTICO</h2>
           <p className="text-muted-foreground font-mono text-sm uppercase tracking-wider">
@@ -138,47 +238,45 @@ function DashboardContent() {
         </div>
 
         <Tabs defaultValue="pt-engine" className="w-full space-y-6" onValueChange={setActiveTab}>
-          <TabsList className={`grid h-auto p-1 bg-black/40 backdrop-blur-sm border border-border/50 rounded-xl ${viewMode === 'mobile' ? 'grid-cols-4 gap-2' : 'grid-cols-4 md:grid-cols-8 lg:grid-cols-8'}`}>
-            <TabsTrigger value="pt-engine" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
-              <Thermometer className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase">FLUIDOS P-T</span>
+          <TabsList className="flex flex-wrap justify-center h-auto p-1 bg-black/40 backdrop-blur-sm border border-border/50 rounded-xl w-full gap-1">
+            <TabsTrigger value="pt-engine" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-cyan-500/20 text-cyan-500/70 hover:text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)] data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 data-[state=active]:border-cyan-400 data-[state=active]:shadow-[0_0_20px_rgba(34,211,238,0.8)] transition-all duration-300">
+              <Activity className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">DIAGNÓSTICO</span>
             </TabsTrigger>
-            <TabsTrigger value="diagnostics" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
-              <Activity className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase">SH/SC</span>
+            
+            <TabsTrigger value="mollier" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-green-500/20 text-green-500/70 hover:text-green-400 hover:bg-green-500/10 hover:border-green-500/50 hover:shadow-[0_0_10px_rgba(74,222,128,0.3)] data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 data-[state=active]:border-green-400 data-[state=active]:shadow-[0_0_20px_rgba(74,222,128,0.8)] transition-all duration-300">
+              <Gauge className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">GÊMEO DIGITAL</span>
             </TabsTrigger>
-            <TabsTrigger value="mollier" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
-              <Gauge className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Gêmeo Digital</span>
+            
+            <TabsTrigger value="psychrometrics" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-purple-500/20 text-purple-500/70 hover:text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/50 hover:shadow-[0_0_10px_rgba(168,85,247,0.3)] data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 data-[state=active]:border-purple-400 data-[state=active]:shadow-[0_0_20px_rgba(168,85,247,0.8)] transition-all duration-300">
+              <Wind className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">PSICROMETRIA</span>
             </TabsTrigger>
-            <TabsTrigger value="psychrometrics" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
-              <Wind className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Psicrometria</span>
+            
+            <TabsTrigger value="piping" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-blue-500/20 text-blue-500/70 hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 data-[state=active]:border-blue-400 data-[state=active]:shadow-[0_0_20px_rgba(59,130,246,0.8)] transition-all duration-300">
+              <Settings className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">TUBULAÇÃO</span>
             </TabsTrigger>
-            <TabsTrigger value="piping" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
-              <Settings className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Tubulação</span>
+            
+            <TabsTrigger value="reports" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-orange-500/20 text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/50 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)] data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400 data-[state=active]:border-orange-400 data-[state=active]:shadow-[0_0_20px_rgba(249,115,22,0.8)] transition-all duration-300">
+              <FileText className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">RELATÓRIOS</span>
             </TabsTrigger>
-            <TabsTrigger value="reports" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
-              <FileText className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Relatórios</span>
+            
+            <TabsTrigger value="compressor" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-yellow-500/20 text-yellow-500/70 hover:text-yellow-400 hover:bg-yellow-500/10 hover:border-yellow-500/50 hover:shadow-[0_0_10px_rgba(234,179,8,0.3)] data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400 data-[state=active]:border-yellow-400 data-[state=active]:shadow-[0_0_20px_rgba(234,179,8,0.8)] transition-all duration-300">
+              <Zap className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">ELÉTRICA</span>
             </TabsTrigger>
-            <TabsTrigger value="compressor" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
-              <Zap className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Elétrica</span>
-            </TabsTrigger>
-            <TabsTrigger value="maintenance" className="flex flex-col gap-1 py-3 rounded-lg data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-[0_0_15px_rgba(0,240,255,0.3)] transition-all duration-300">
-              <Wrench className="h-5 w-5" />
-              <span className="text-[10px] sm:text-xs font-bold tracking-wider font-tactical uppercase text-center leading-tight">Ferramentas</span>
+            
+            <TabsTrigger value="maintenance" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-rose-500/20 text-rose-500/70 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/50 hover:shadow-[0_0_10px_rgba(244,63,94,0.3)] data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-400 data-[state=active]:border-rose-400 data-[state=active]:shadow-[0_0_20px_rgba(244,63,94,0.8)] transition-all duration-300">
+              <Wrench className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
+              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">FERRAMENTAS</span>
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pt-engine" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
             <PTEngine />
-          </TabsContent>
-
-          <TabsContent value="diagnostics" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
-            <DiagnosticsMatrix />
           </TabsContent>
 
           <TabsContent value="mollier" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
@@ -198,7 +296,7 @@ function DashboardContent() {
           </TabsContent>
 
           <TabsContent value="compressor" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
-            <CompressorTest />
+            <ElectricalSizing />
           </TabsContent>
 
           <TabsContent value="maintenance" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
@@ -309,10 +407,14 @@ function Dashboard() {
               {showCreateAccount ? <UserPlus className="w-8 h-8 text-primary" /> : <Lock className="w-8 h-8 text-primary" />}
             </div>
             <div className="flex flex-col items-center">
-              <CardTitle className="text-3xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white to-primary drop-shadow-[0_0_8px_rgba(0,240,255,0.5)]">
-                THERMOMASTER <span className="text-primary">PRO</span>
-              </CardTitle>
-              <span className="text-xs text-primary/70 font-mono tracking-widest uppercase mt-1">By SRR</span>
+              <div className="flex flex-col">
+                <CardTitle className="text-2xl sm:text-3xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white to-primary drop-shadow-[0_0_8px_rgba(0,240,255,0.5)] text-center">
+                  THERMOMASTER <span className="text-primary">PRO</span>
+                </CardTitle>
+                <div className="flex justify-end w-full">
+                  <span className="text-[10px] sm:text-xs font-black italic text-yellow-400 drop-shadow-[0_0_10px_rgba(234,179,8,0.9)] font-mono tracking-widest uppercase mt-1 pr-2 sm:pr-1">BY SRR</span>
+                </div>
+              </div>
             </div>
             <CardDescription className="font-mono uppercase tracking-widest text-xs mt-2">
               {showCreateAccount ? "REGISTRO DE NOVO OPERADOR" : "SISTEMA RESTRITO A ENGENHARIA"}

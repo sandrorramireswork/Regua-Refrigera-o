@@ -222,3 +222,6 @@ input[type=range]::-webkit-slider-thumb {
   animation: spin-slow 4s linear infinite;
   transform-origin: center;
 }
+.animate-spin-fast {
+  animation: spin 0.3s linear infinite;
+}

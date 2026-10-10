@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 import { AlertCircle, CheckCircle2, ThermometerSun, AlertTriangle, TerminalSquare, MapPin, Loader2 } from "lucide-react";
-import { getSaturationTemp, refrigerantsList } from "@/lib/thermodynamics";
+import { getSaturationTemp, getSaturationPressure, refrigerantsList } from "@/lib/thermodynamics";
 import DiagnosticsChart from "./DiagnosticsChart";
 import { useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,40 @@ export default function DiagnosticsMatrix() {
   } = useAppContext();
 
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
+
+  // Calculadora P-T Integrada
+  const [ptPressure, setPtPressure] = useState(pressureUnit === "psig" ? 120 : 8);
+  const [ptTemperature, setPtTemperature] = useState(5);
+  const [useGlide, setUseGlide] = useState(false);
+  const [lastEdited, setLastEdited] = useState<"pressure" | "temp">("pressure");
+  const refData = refrigerantsList.find(r => r.id === ref);
+
+  useEffect(() => {
+    const pBar = pressureUnit === "psig" ? (ptPressure + 14.5038) / 14.5038 : ptPressure;
+    const tC = tempUnit === "F" ? (ptTemperature - 32) * 5/9 : ptTemperature;
+    
+    if (lastEdited === "pressure") {
+      let t = getSaturationTemp(ref, pBar);
+      if (useGlide && refData?.hasGlide) t -= refData.glideK / 2;
+      const resultT = tempUnit === "F" ? (t * 9/5) + 32 : t;
+      setPtTemperature(Number(resultT.toFixed(2)));
+    } else {
+      let t = tC;
+      if (useGlide && refData?.hasGlide) t += refData.glideK / 2;
+      let p = getSaturationPressure(ref, t);
+      const resultP = pressureUnit === "psig" ? (p * 14.5038) - 14.5038 : p;
+      setPtPressure(Number(resultP.toFixed(2)));
+    }
+  }, [ptPressure, ptTemperature, ref, pressureUnit, tempUnit, useGlide, lastEdited]);
+
+  const handlePtPressureChange = (val: number) => {
+    setLastEdited("pressure");
+    setPtPressure(val);
+  };
+  const handlePtTempChange = (val: number) => {
+    setLastEdited("temp");
+    setPtTemperature(val);
+  };
 
   const fetchWeather = () => {
     setIsFetchingWeather(true);
@@ -191,26 +226,86 @@ export default function DiagnosticsMatrix() {
   }
 
   return (
-    <div className={`grid gap-6 ${viewMode === 'mobile' ? 'grid-cols-1' : 'lg:grid-cols-4'}`}>
+    <div className="flex flex-col gap-8">
       
-      {/* Inputs Column */}
-      <div className="lg:col-span-1 space-y-6">
-        <Card className="glass-panel border-white/5">
-          <CardHeader>
-            <CardTitle className="font-display tracking-widest text-primary text-sm">PARÂMETROS DO SISTEMA</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label className="font-tactical tracking-widest uppercase">Gás Refrigerante</Label>
-              <Select value={ref} onValueChange={setRef}>
-                <SelectTrigger className="bg-black/50 border-white/10 font-mono text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-background/95 backdrop-blur-xl border-white/10">
-                  {refrigerantsList.map(r => (
-                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* 1. Calculadora P-T (Modo Expert Integrado) */}
+      <Card className="glass-panel border-white/5 relative overflow-hidden mt-2">
+        <div className="absolute top-0 right-0 p-32 bg-primary/10 rounded-full blur-[80px] -mr-16 -mt-16 pointer-events-none z-0"></div>
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2 relative z-10 gap-4">
+          <div>
+            <CardTitle className="font-display tracking-widest text-lg text-primary">CALCULADORA P-T</CardTitle>
+            <CardDescription className="font-mono uppercase text-xs">Simulador de Saturação</CardDescription>
+          </div>
+          {refData?.hasGlide && (
+            <div className="flex items-center gap-3 bg-orange-500/10 border border-orange-500/30 px-3 py-2 rounded-lg shadow-inner">
+              <Label className="text-xs font-tactical tracking-widest uppercase text-orange-400">Compensar Glide</Label>
+              <Switch checked={useGlide} onCheckedChange={setUseGlide} />
             </div>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-8 relative z-10 pt-4">
+          <div className={`grid gap-8 md:gap-12 ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+            
+            {/* Bloco Pressão */}
+            <div className="space-y-6 bg-black/40 p-5 md:p-6 rounded-2xl border border-white/5 shadow-inner">
+              <div className="flex justify-between items-end">
+                <Label className="text-sm md:text-base font-tactical tracking-widest uppercase neon-text-cyan">Pressão ({pressureUnit})</Label>
+                <Input 
+                  type="number" 
+                  className="w-28 md:w-32 bg-black/50 text-right text-lg md:text-xl digital-display border-cyan-500/50 focus-visible:ring-cyan-500 text-cyan-400 h-10 md:h-12"
+                  value={ptPressure}
+                  onChange={(e) => handlePtPressureChange(Number(e.target.value))}
+                />
+              </div>
+              <div className="px-2">
+                <Slider 
+                  value={[ptPressure]} 
+                  min={pressureUnit === "psig" ? 0 : 0.1} 
+                  max={pressureUnit === "psig" ? 700 : 50} 
+                  step={pressureUnit === "psig" ? 1 : 0.1}
+                  onValueChange={(val) => handlePtPressureChange(val[0]!)}
+                  className="py-4 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Bloco Temperatura */}
+            <div className="space-y-6 bg-black/40 p-5 md:p-6 rounded-2xl border border-white/5 shadow-inner">
+              <div className="flex justify-between items-end">
+                <Label className="text-sm md:text-base font-tactical tracking-widest uppercase neon-text-orange">T. Saturação ({tempUnit === "F" ? "°F" : "°C"})</Label>
+                <Input 
+                  type="number" 
+                  className="w-28 md:w-32 bg-black/50 text-right text-lg md:text-xl digital-display border-orange-500/50 focus-visible:ring-orange-500 text-orange-400 h-10 md:h-12"
+                  value={ptTemperature}
+                  onChange={(e) => handlePtTempChange(Number(e.target.value))}
+                />
+              </div>
+              <div className="px-2">
+                <Slider 
+                  value={[ptTemperature]} 
+                  min={tempUnit === "F" ? -76 : -60} 
+                  max={tempUnit === "F" ? 176 : 80} 
+                  step={0.5}
+                  onValueChange={(val) => handlePtTempChange(val[0]!)}
+                  className="py-4 cursor-pointer"
+                />
+              </div>
+            </div>
+
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 3. SH/SC Matrix */}
+      <div className={`grid gap-6 ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
+        
+        {/* Inputs Column */}
+        <div className="lg:col-span-1 space-y-6">
+          <Card className="glass-panel border-white/5">
+            <CardHeader>
+              <CardTitle className="font-display tracking-widest text-primary text-sm">PARÂMETROS DE CAMPO</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
             
             <div className="space-y-2">
               <Label className="font-tactical tracking-widest uppercase">Dispositivo de Expansão</Label>
@@ -386,6 +481,7 @@ export default function DiagnosticsMatrix() {
         </Card>
       </div>
 
+      </div>
     </div>
   );
 }

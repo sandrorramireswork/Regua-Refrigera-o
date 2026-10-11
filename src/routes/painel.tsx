@@ -582,16 +582,12 @@ function Painel() {
 
   const [tab, setTab] = useState<(typeof TABS)[number]>("Roda ao Vivo");
   const [pastedImageFile, setPastedImageFile] = useState<File | null>(null);
-  const [largura, setLargura] = useState<"celular" | "pc">("celular");
+  const largura = "pc" as const;
   useEffect(() => {
-    const salvo = localStorage.getItem("roleta-largura");
-    if (salvo === "celular" || salvo === "pc") setLargura(salvo);
+    try {
+      localStorage.removeItem("roleta-largura");
+    } catch (e) {}
   }, []);
-  function trocarLargura() {
-    const nova = largura === "celular" ? "pc" : "celular";
-    setLargura(nova);
-    localStorage.setItem("roleta-largura", nova);
-  }
   // Troca para a aba "Rodadas por Imagem" ao colar uma imagem em qualquer tela do painel e repassa o arquivo diretamente
   useEffect(() => {
     function handlePasteToTab(e: ClipboardEvent) {
@@ -1685,20 +1681,7 @@ function Painel() {
               <span className="uppercase">{permissao === "granted" ? "Alertas On" : "Alertas"}</span>
             </button>
 
-            {/* Modo de Tela (PC / Celular) */}
-            <button
-              onClick={trocarLargura}
-              aria-label="Alternar tamanho da página entre celular e PC"
-              title="Alternar Layout de Visualização (PC ou Celular)"
-              className="flex items-center gap-1 rounded-md px-1.5 py-0.5 sm:px-2 sm:py-0.5 text-[8.5px] sm:text-[9px] font-mono font-bold border border-cyan-500/30 bg-black/60 text-neon-cyan hover:bg-cyan-950/50 hover:border-cyan-400 transition-all cursor-pointer"
-            >
-              {largura === "pc" ? (
-                <Monitor className="h-3 w-3 text-neon-green" />
-              ) : (
-                <Smartphone className="h-3 w-3 text-neon-green" />
-              )}
-              <span className="uppercase">{largura === "pc" ? "Modo PC" : "Celular"}</span>
-            </button>
+
 
             {/* Desfazer */}
             <button

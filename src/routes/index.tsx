@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Gauge, Thermometer, Activity, Wind, FileText, Settings, Smartphone, Monitor, MapPin, Loader2 } from "lucide-react";
+import { Gauge, Thermometer, Activity, Wind, FileText, Settings, MapPin, Loader2 } from "lucide-react";
 import { useState, useEffect, useCallback } from "react";
 import { AppProvider, useAppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
 
 function DashboardContent() {
   const [activeTab, setActiveTab] = useState("pt-engine");
-  const { viewMode, setViewMode, selectedRef, pSuc, pLiq, tSuc, tLiq, pressureUnit, tempUnit, tExt, setTExt } = useAppContext();
+  const { selectedRef, pSuc, pLiq, tSuc, tLiq, pressureUnit, tempUnit, tExt, setTExt } = useAppContext();
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
   const [extRh, setExtRh] = useState<number | null>(null);
   const [city, setCity] = useState<string>("SISTEMA ONLINE");
@@ -198,15 +198,6 @@ function DashboardContent() {
                 </span>
               )}
             </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="bg-black/50 border-white/10 hover:bg-primary/20 hover:text-primary transition-colors shrink-0"
-              onClick={() => setViewMode(viewMode === "desktop" ? "mobile" : "desktop")}
-              title="Alternar Modo de Visualização (Celular/PC)"
-            >
-              {viewMode === "desktop" ? <Smartphone className="w-4 h-4" /> : <Monitor className="w-4 h-4" />}
-            </Button>
           </div>
         </div>
       </header>
@@ -222,14 +213,7 @@ function DashboardContent() {
       </div>
 
       {/* Main Content */}
-      <main 
-        className={`flex-1 mx-auto p-4 md:p-6 transition-all duration-500 ${viewMode === 'mobile' ? 'w-full max-w-[430px] border-x border-white/10 bg-black/20 shadow-[0_0_50px_rgba(0,0,0,0.5)]' : 'container lg:p-8'}`}
-        style={{ 
-          transform: viewMode === 'mobile' ? 'scale(0.75)' : 'none',
-          transformOrigin: 'top center',
-          marginBottom: viewMode === 'mobile' ? '-25%' : '0' // Prevents excess whitespace at the bottom due to scale
-        }}
-      >
+      <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8">
         <div className="mb-6">
           <h2 className="text-3xl font-bold tracking-tight mb-2 font-display neon-text-cyan opacity-90">PAINEL DE DIAGNÓSTICO</h2>
           <p className="text-muted-foreground font-mono text-sm uppercase tracking-wider">

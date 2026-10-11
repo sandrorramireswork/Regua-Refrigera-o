@@ -80,10 +80,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "google", content: "notranslate" },
-      { title: "ThermoMaster Pro | HVAC-R Diagnostics" },
+      { title: "Régua Refrigeração TermoMaster Pro" },
       { name: "description", content: "Advanced diagnostic engine for HVAC-R mechanical engineers." },
       { name: "author", content: "ClimaCore AI" },
-      { property: "og:title", content: "ThermoMaster Pro" },
+      { property: "og:title", content: "Régua Refrigeração TermoMaster Pro" },
       {
         property: "og:description",
         content: "Advanced diagnostic engine for HVAC-R mechanical engineers.",

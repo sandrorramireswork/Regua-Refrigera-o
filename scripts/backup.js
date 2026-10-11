@@ -45,12 +45,12 @@ function getTimestamp() {
 }
 
 export function createBackup() {
-  console.log("\n==========================================");
-  console.log("  INICIANDO BACKUP DO NEON ROULETTE PRO   ");
-  console.log("==========================================\n");
+  console.log("\n=======================================================");
+  console.log("  INICIANDO BACKUP - RÉGUA REFRIGERAÇÃO TERMOMASTER PRO ");
+  console.log("=======================================================\n");
 
   const desktop = getDesktopPath();
-  const backupDir = path.join(desktop, "Backups_NeonRoulette");
+  const backupDir = path.join(desktop, "Backups_ReguaRefrigeracao");
 
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
@@ -58,7 +58,7 @@ export function createBackup() {
   }
 
   const timestamp = getTimestamp();
-  const fileName = `neon-roulette-pro_${timestamp}.zip`;
+  const fileName = `regua-refrigeracao-termomaster-pro_${timestamp}.zip`;
   const destination = path.join(backupDir, fileName);
 
   console.log(`⏳ Compactando arquivos do projeto...`);

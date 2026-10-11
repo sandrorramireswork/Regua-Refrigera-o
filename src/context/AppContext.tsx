@@ -47,7 +47,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [selectedRef, setSelectedRef] = useState<string>(() => loadState("selectedRef", "R-410A"));
   const [pressureUnit, setPressureUnit] = useState<"bar" | "psig">(() => loadState("pressureUnit", "psig"));
   const [tempUnit, setTempUnit] = useState<"C" | "F">(() => loadState("tempUnit", "C"));
-  const [viewMode, setViewMode] = useState<"desktop" | "mobile">(() => loadState("viewMode", "desktop"));
+  const viewMode = "desktop" as const;
+  const setViewMode = (_v?: "desktop" | "mobile") => {};
   
   const [pSuc, setPSuc] = useState<number>(() => loadState("pSuc", 8.5));
   const [tSuc, setTSuc] = useState<number>(() => loadState("tSuc", 10));
@@ -64,10 +65,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [tsupC, setTsupC] = useState<number>(() => loadState("tsupC", 13));
 
   useEffect(() => {
+    try {
+      localStorage.removeItem("thermomaster_viewMode");
+    } catch (e) {}
     localStorage.setItem("thermomaster_selectedRef", JSON.stringify(selectedRef));
     localStorage.setItem("thermomaster_pressureUnit", JSON.stringify(pressureUnit));
     localStorage.setItem("thermomaster_tempUnit", JSON.stringify(tempUnit));
-    localStorage.setItem("thermomaster_viewMode", JSON.stringify(viewMode));
     localStorage.setItem("thermomaster_pSuc", JSON.stringify(pSuc));
     localStorage.setItem("thermomaster_tSuc", JSON.stringify(tSuc));
     localStorage.setItem("thermomaster_pLiq", JSON.stringify(pLiq));
@@ -78,7 +81,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("thermomaster_tdbC", JSON.stringify(tdbC));
     localStorage.setItem("thermomaster_rh", JSON.stringify(rh));
     localStorage.setItem("thermomaster_tsupC", JSON.stringify(tsupC));
-  }, [selectedRef, pressureUnit, tempUnit, viewMode, pSuc, tSuc, pLiq, tLiq, expansion, tExt, tWb, tdbC, rh, tsupC]);
+  }, [selectedRef, pressureUnit, tempUnit, pSuc, tSuc, pLiq, tLiq, expansion, tExt, tWb, tdbC, rh, tsupC]);
 
   return (
     <AppContext.Provider value={{

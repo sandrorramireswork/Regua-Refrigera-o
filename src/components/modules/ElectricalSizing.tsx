@@ -60,33 +60,32 @@ export function ElectricalSizing() {
   if (targetBreaker > 36) wireGauge = "10.0";
   else if (targetBreaker > 28) wireGauge = "6.0";
   else if (targetBreaker > 21) wireGauge = "4.0";
-  else if (targetBreaker > 15) wireGauge = "2.5";
   else wireGauge = "2.5"; // Minimum standard for power circuits is 2.5mm2
 
   return (
-    <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+    <div className="flex flex-col gap-4 sm:gap-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-16">
       
       {/* Parameters Header */}
-      <div className="bg-[#0B1221] border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.1)] rounded-3xl p-6 relative overflow-hidden">
+      <div className="bg-[#0B1221] border border-emerald-500/20 shadow-[0_0_30px_rgba(16,185,129,0.1)] rounded-xl sm:rounded-3xl p-3.5 sm:p-6 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-[100px] rounded-full pointer-events-none"></div>
         
-        <div className="flex items-center gap-3 mb-6 relative z-10">
-          <Zap className="text-emerald-400 w-6 h-6" />
-          <h2 className="text-sm md:text-base font-tactical text-emerald-50 tracking-widest uppercase">
-            Dimensionamento Elétrico
+        <div className="flex items-center gap-3 mb-4 sm:mb-6 relative z-10">
+          <Zap className="text-emerald-400 w-5 h-5 sm:w-6 sm:h-6" />
+          <h2 className="text-sm sm:text-base font-tactical text-emerald-50 tracking-widest uppercase font-bold">
+            Dimensionamento Elétrico (NBR 5410)
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 relative z-10">
           {/* Capacity Selector */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">Capacidade Térmica</label>
-            <div className="flex flex-wrap gap-2">
+            <label className="text-xs text-zinc-300 font-mono uppercase tracking-widest font-bold">Capacidade Térmica</label>
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               {capacities.map((c) => (
                 <button
                   key={c.btu}
                   onClick={() => setSelectedBtu(c.btu)}
-                  className={`px-3 py-2 rounded-lg font-mono text-xs transition-all border ${
+                  className={`px-3 py-2 rounded-lg font-mono text-xs sm:text-sm font-bold transition-all border ${
                     selectedBtu === c.btu
                       ? "bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
                       : "bg-black/40 border-white/5 text-zinc-400 hover:bg-white/5"
@@ -100,13 +99,13 @@ export function ElectricalSizing() {
 
           {/* Voltage Selector */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">Tensão / Fases</label>
-            <div className="flex flex-col gap-2">
+            <label className="text-xs text-zinc-300 font-mono uppercase tracking-widest font-bold">Tensão / Fases</label>
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               {(["220V-Mono", "220V-Tri", "380V-Tri"] as VoltagePhase[]).map((v) => (
                 <button
                   key={v}
                   onClick={() => setVoltage(v)}
-                  className={`px-3 py-2 rounded-lg font-mono text-xs transition-all border text-left ${
+                  className={`px-3 py-2 rounded-lg font-mono text-xs sm:text-sm font-bold transition-all border text-left ${
                     voltage === v
                       ? "bg-cyan-500/20 border-cyan-500 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.2)]"
                       : "bg-black/40 border-white/5 text-zinc-400 hover:bg-white/5"
@@ -120,13 +119,13 @@ export function ElectricalSizing() {
 
           {/* Technology Selector */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] text-zinc-400 font-mono uppercase tracking-widest">Tecnologia do Compressor</label>
+            <label className="text-xs text-zinc-300 font-mono uppercase tracking-widest font-bold">Tecnologia do Compressor</label>
             <div className="flex gap-2">
               {(["Inverter", "On/Off"] as Technology[]).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTech(t)}
-                  className={`flex-1 px-3 py-3 rounded-lg font-mono text-xs transition-all border flex items-center justify-center gap-2 ${
+                  className={`flex-1 px-3 py-3 rounded-lg font-mono text-xs sm:text-sm font-bold transition-all border flex items-center justify-center gap-2 ${
                     tech === t
                       ? "bg-purple-500/20 border-purple-500 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.2)]"
                       : "bg-black/40 border-white/5 text-zinc-400 hover:bg-white/5"
@@ -145,55 +144,55 @@ export function ElectricalSizing() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
         {/* Thermodynamics & Power */}
-        <div className="bg-[#0B1221] border border-white/10 rounded-2xl p-5 shadow-lg relative overflow-hidden group">
+        <div className="bg-[#0B1221] border border-white/10 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-lg relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-3xl group-hover:bg-blue-500/10 transition-colors"></div>
-          <h3 className="text-xs font-tactical text-zinc-500 mb-4 tracking-widest">Conversão Termodinâmica & Carga</h3>
+          <h3 className="text-xs font-tactical text-zinc-400 mb-4 tracking-widest font-bold uppercase">Conversão Termodinâmica & Carga</h3>
           
-          <div className="space-y-4 font-mono text-sm">
+          <div className="space-y-3 font-mono text-sm sm:text-base">
             <div className="flex justify-between items-end border-b border-white/5 pb-2">
-              <span className="text-zinc-400">Capacidade de Refrigeração</span>
+              <span className="text-zinc-300 font-medium">Capacidade de Refrigeração</span>
               <div className="text-right">
-                <span className="text-cyan-400 font-bold text-lg">{data.btu.toLocaleString('pt-BR')} <span className="text-xs text-cyan-400/70">BTU/h</span></span>
+                <span className="text-cyan-400 font-black text-xl sm:text-2xl">{data.btu.toLocaleString('pt-BR')} <span className="text-xs text-cyan-400/70 font-normal">BTU/h</span></span>
               </div>
             </div>
             <div className="flex justify-between items-end border-b border-white/5 pb-2">
-              <span className="text-zinc-400">Equivalente Térmico (TR)</span>
-              <span className="text-white font-bold">{data.tr.toFixed(2)} <span className="text-xs text-zinc-500">TR</span></span>
+              <span className="text-zinc-300 font-medium">Equivalente Térmico (TR)</span>
+              <span className="text-white font-black text-lg sm:text-xl">{data.tr.toFixed(2)} <span className="text-xs text-zinc-500 font-normal">TR</span></span>
             </div>
             <div className="flex justify-between items-end border-b border-white/5 pb-2">
-              <span className="text-zinc-400">Potência Frigorífica (kW)</span>
-              <span className="text-white font-bold">{data.coolingKw.toFixed(2)} <span className="text-xs text-zinc-500">kW</span></span>
+              <span className="text-zinc-300 font-medium">Potência Frigorífica (kW)</span>
+              <span className="text-white font-black text-lg sm:text-xl">{data.coolingKw.toFixed(2)} <span className="text-xs text-zinc-500 font-normal">kW</span></span>
             </div>
-            <div className="flex justify-between items-end pt-2">
-              <span className="text-zinc-400">Potência Elétrica (Estimada)</span>
-              <span className="text-amber-400 font-bold">{data.elecPower.toLocaleString('pt-BR')} <span className="text-xs text-amber-400/70">Watts</span></span>
+            <div className="flex justify-between items-end pt-1">
+              <span className="text-zinc-300 font-medium">Potência Elétrica (Estimada)</span>
+              <span className="text-amber-400 font-black text-xl sm:text-2xl">{data.elecPower.toLocaleString('pt-BR')} <span className="text-xs text-amber-400/70 font-normal">Watts</span></span>
             </div>
           </div>
         </div>
 
         {/* Protection Sizing */}
-        <div className="bg-[#0B1221] border border-emerald-500/30 rounded-2xl p-5 shadow-[0_0_20px_rgba(16,185,129,0.05)] relative overflow-hidden group">
+        <div className="bg-[#0B1221] border border-emerald-500/30 rounded-xl sm:rounded-2xl p-3.5 sm:p-5 shadow-[0_0_20px_rgba(16,185,129,0.05)] relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl group-hover:bg-emerald-500/10 transition-colors"></div>
-          <h3 className="text-xs font-tactical text-zinc-500 mb-4 tracking-widest">Dimensionamento de Proteção (NBR 5410)</h3>
+          <h3 className="text-xs font-tactical text-zinc-400 mb-4 tracking-widest font-bold uppercase">Dimensionamento de Proteção</h3>
           
-          <div className="space-y-4 font-mono text-sm">
+          <div className="space-y-3 font-mono text-sm sm:text-base">
             <div className="flex justify-between items-end border-b border-white/5 pb-2">
-              <span className="text-zinc-400">Corrente de Projeto (I<sub>B</sub>)</span>
-              <span className="text-emerald-400 font-bold text-lg">{nominalCurrent.toFixed(1)} <span className="text-xs text-emerald-400/70">A</span></span>
+              <span className="text-zinc-300 font-medium">Corrente de Projeto (I<sub>B</sub>)</span>
+              <span className="text-emerald-400 font-black text-xl sm:text-2xl">{nominalCurrent.toFixed(1)} <span className="text-xs text-emerald-400/70 font-normal">A</span></span>
             </div>
             <div className="flex justify-between items-end border-b border-white/5 pb-2">
-              <span className="text-zinc-400">Corrente de Partida (LRA)</span>
-              <span className="text-rose-400 font-bold">{startingCurrent.toFixed(1)} <span className="text-xs text-rose-400/70">A</span></span>
+              <span className="text-zinc-300 font-medium">Corrente de Partida (LRA)</span>
+              <span className="text-rose-400 font-black text-xl sm:text-2xl">{startingCurrent.toFixed(1)} <span className="text-xs text-rose-400/70 font-normal">A</span></span>
             </div>
             <div className="flex justify-between items-end border-b border-white/5 pb-2">
-              <span className="text-zinc-400">Secção do Condutor (Cabo)</span>
-              <span className="text-white font-bold">{wireGauge} <span className="text-xs text-zinc-500">mm²</span></span>
+              <span className="text-zinc-300 font-medium">Secção do Condutor (Cabo)</span>
+              <span className="text-white font-black text-xl sm:text-2xl">{wireGauge} <span className="text-xs text-zinc-500 font-normal">mm²</span></span>
             </div>
-            <div className="flex justify-between items-end pt-2">
-              <span className="text-zinc-400">Disjuntor Recomendado (I<sub>n</sub>)</span>
+            <div className="flex justify-between items-end pt-1">
+              <span className="text-zinc-300 font-medium">Disjuntor Recomendado (I<sub>n</sub>)</span>
               <div className="text-right">
-                <div className="text-emerald-400 font-bold text-xl">{recommendedBreaker}A</div>
-                <div className="text-[10px] text-emerald-400/70 mt-1">{breakerPoles} - {breakerCurve}</div>
+                <div className="text-emerald-400 font-black text-2xl sm:text-3xl">{recommendedBreaker}A</div>
+                <div className="text-xs text-emerald-400/80 font-bold mt-0.5">{breakerPoles} - {breakerCurve}</div>
               </div>
             </div>
           </div>

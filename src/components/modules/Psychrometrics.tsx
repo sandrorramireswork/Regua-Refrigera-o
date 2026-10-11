@@ -42,7 +42,7 @@ function calcPsychrometrics(Tdb_C: number, RH: number) {
 
 export default function Psychrometrics() {
   const { 
-    tempUnit, viewMode,
+    tempUnit,
     expansion, setExpansion,
     tExt, setTExt,
     tWb, setTWb,
@@ -100,21 +100,21 @@ export default function Psychrometrics() {
   }, [deltaTC, tdbC, rh, Tdp_C, h]);
 
   return (
-    <div className={`mx-auto bg-[#0A0E17] rounded-3xl p-4 md:p-8 border-2 border-[#1E293B] shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col gap-6 w-full`}>
+    <div className="mx-auto bg-[#0A0E17] rounded-xl sm:rounded-3xl p-2.5 sm:p-6 md:p-8 border border-[#1E293B] shadow-[0_0_50px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col gap-5 sm:gap-6 w-full max-w-5xl">
       
       {/* Background Borders */}
-      <div className="absolute inset-0 pointer-events-none border-[1px] border-purple-500/20 m-2 rounded-2xl">
+      <div className="absolute inset-0 pointer-events-none border-[1px] border-purple-500/20 m-1 sm:m-2 rounded-lg sm:rounded-2xl">
          <div className="absolute top-4 left-0 w-2 h-8 border-r-2 border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
          <div className="absolute top-4 right-0 w-2 h-8 border-l-2 border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
       </div>
 
       {/* Header */}
-      <div className="flex justify-between items-start relative z-10">
+      <div className="flex justify-between items-start relative z-10 px-1">
         <div className="flex flex-col items-start pr-2">
-           <h1 className={`font-display font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.6)] leading-tight ${viewMode === 'mobile' ? 'text-sm sm:text-base' : 'text-xl md:text-3xl'}`}>
+           <h1 className="font-display font-black text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,255,255,0.6)] leading-tight text-xl sm:text-2xl md:text-3xl">
              DIAGNÓSTICO PSICROMÉTRICO
            </h1>
-           <p className={`text-purple-400 font-mono mt-1 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(168,85,247,0.5)] ${viewMode === 'mobile' ? 'text-[8px] sm:text-[9px]' : 'text-[10px] md:text-sm'}`}>
+           <p className="text-purple-400 font-mono mt-1 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(168,85,247,0.5)] text-xs sm:text-sm font-bold">
              Rendimento e Qualidade do Ar
            </p>
         </div>
@@ -171,121 +171,121 @@ export default function Psychrometrics() {
         <h2 className="text-sm font-tactical tracking-widest uppercase text-purple-400 mb-4 flex items-center justify-center gap-2">
           <Thermometer className="w-4 h-4" /> Sensores do Ambiente
         </h2>
-        <div className={`grid gap-8 ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
           {/* Return Air */}
           <div className="flex flex-col items-center space-y-3">
             <div className="flex flex-col items-center gap-1 text-center">
-              <Label className="text-purple-400 font-tactical tracking-widest text-[10px] md:text-xs uppercase">T. Retorno (Ambiente)</Label>
-              <span className="font-mono text-purple-300 font-bold text-lg">{Tdb.toFixed(1)} °{tempUnit}</span>
+              <Label className="text-purple-400 font-tactical tracking-widest text-xs uppercase font-bold">T. Retorno (Ambiente)</Label>
+              <span className="font-mono text-purple-300 font-black text-xl sm:text-2xl">{Tdb.toFixed(1)} °{tempUnit}</span>
             </div>
-            <Slider value={[Tdb]} min={tempUnit === "F" ? 30 : 0} max={tempUnit === "F" ? 110 : 45} step={0.5} onValueChange={(val) => handleTdbChange(val[0]!)} className="w-full max-w-[250px] [&_[role=slider]]:border-purple-400 [&_[role=slider]]:bg-purple-200 [&_[role=slider]]:shadow-[0_0_10px_rgba(168,85,247,0.8)] [&_.bg-primary]:bg-purple-500" />
+            <Slider value={[Tdb]} min={tempUnit === "F" ? 30 : 0} max={tempUnit === "F" ? 110 : 45} step={0.5} onValueChange={(val) => handleTdbChange(val[0]!)} className="w-full max-w-[280px] cursor-pointer [&_[role=slider]]:border-purple-400 [&_[role=slider]]:bg-purple-200 [&_[role=slider]]:shadow-[0_0_10px_rgba(168,85,247,0.8)] [&_.bg-primary]:bg-purple-500 py-3" />
           </div>
 
           {/* Humidity */}
           <div className="flex flex-col items-center space-y-3">
             <div className="flex flex-col items-center gap-1 text-center">
-              <Label className="text-cyan-400 font-tactical tracking-widest text-[10px] md:text-xs uppercase">Umidade Relativa</Label>
-              <span className="font-mono text-cyan-300 font-bold text-lg">{rh.toFixed(1)} %</span>
+              <Label className="text-cyan-400 font-tactical tracking-widest text-xs uppercase font-bold">Umidade Relativa</Label>
+              <span className="font-mono text-cyan-300 font-black text-xl sm:text-2xl">{rh.toFixed(1)} %</span>
             </div>
-            <Slider value={[rh]} min={1} max={100} step={1} onValueChange={(val) => setRh(val[0]!)} className="w-full max-w-[250px] [&_[role=slider]]:border-cyan-400 [&_[role=slider]]:bg-cyan-200 [&_[role=slider]]:shadow-[0_0_10px_rgba(0,240,255,0.8)] [&_.bg-primary]:bg-cyan-500" />
+            <Slider value={[rh]} min={1} max={100} step={1} onValueChange={(val) => setRh(val[0]!)} className="w-full max-w-[280px] cursor-pointer [&_[role=slider]]:border-cyan-400 [&_[role=slider]]:bg-cyan-200 [&_[role=slider]]:shadow-[0_0_10px_rgba(0,240,255,0.8)] [&_.bg-primary]:bg-cyan-500 py-3" />
           </div>
 
           {/* Supply Air */}
           <div className="flex flex-col items-center space-y-3">
             <div className="flex flex-col items-center gap-1 text-center">
-              <Label className="text-blue-400 font-tactical tracking-widest text-[10px] md:text-xs uppercase">T. Insuflamento (Grelha)</Label>
-              <span className="font-mono text-blue-300 font-bold text-lg">{Tsup.toFixed(1)} °{tempUnit}</span>
+              <Label className="text-blue-400 font-tactical tracking-widest text-xs uppercase font-bold">T. Insuflamento (Grelha)</Label>
+              <span className="font-mono text-blue-300 font-black text-xl sm:text-2xl">{Tsup.toFixed(1)} °{tempUnit}</span>
             </div>
-            <Slider value={[Tsup]} min={tempUnit === "F" ? 30 : -5} max={tempUnit === "F" ? 80 : 30} step={0.5} onValueChange={(val) => handleTsupChange(val[0]!)} className="w-full max-w-[250px] [&_[role=slider]]:border-blue-400 [&_[role=slider]]:bg-blue-200 [&_[role=slider]]:shadow-[0_0_10px_rgba(59,130,246,0.8)] [&_.bg-primary]:bg-blue-500" />
+            <Slider value={[Tsup]} min={tempUnit === "F" ? 30 : -5} max={tempUnit === "F" ? 80 : 30} step={0.5} onValueChange={(val) => handleTsupChange(val[0]!)} className="w-full max-w-[280px] cursor-pointer [&_[role=slider]]:border-blue-400 [&_[role=slider]]:bg-blue-200 [&_[role=slider]]:shadow-[0_0_10px_rgba(59,130,246,0.8)] [&_.bg-primary]:bg-blue-500 py-3" />
           </div>
         </div>
 
       </div>
 
       {/* SINGLE GRID ALL METRICS */}
-      <div className={`grid gap-4 relative z-10 ${viewMode === 'mobile' ? 'grid-cols-2' : 'grid-cols-2 md:grid-cols-5'}`}>
+      <div className="grid gap-2 sm:gap-4 relative z-10 grid-cols-2 md:grid-cols-5">
         
-        <Card className="glass-panel border-green-500/30 bg-green-950/10">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="font-tactical tracking-widest uppercase text-green-400 flex items-center gap-1.5 text-[9px] md:text-[10px]">
-              <Activity className="w-3 h-3 shrink-0" /> Delta T (Rendimento)
+        <Card className="glass-panel border-green-500/30 bg-green-950/10 p-2 sm:p-4 rounded-xl sm:rounded-2xl">
+          <CardHeader className="pb-1 p-1 sm:p-2">
+            <CardTitle className="font-tactical tracking-widest uppercase text-green-400 flex items-center gap-1.5 text-[10px] sm:text-xs">
+              <Activity className="w-3.5 h-3.5 shrink-0" /> Delta T (Rendimento)
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3">
-            <div className="digital-display font-bold text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)] text-2xl md:text-3xl">
-              {DeltaT.toFixed(1)} <span className="text-xs md:text-sm">°</span>
+          <CardContent className="p-1 sm:p-2 pt-1">
+            <div className="digital-display font-black text-green-400 drop-shadow-[0_0_10px_rgba(34,197,94,0.8)] text-3xl sm:text-4xl md:text-5xl">
+              {DeltaT.toFixed(1)} <span className="text-sm sm:text-base">°</span>
             </div>
-            <p className="mt-1 text-[9px] font-mono text-green-500/70 uppercase">Tr - Ti</p>
+            <p className="mt-1 text-[10px] font-mono text-green-500/70 uppercase font-bold">Tr - Ti</p>
           </CardContent>
         </Card>
 
-        <Card className="glass-panel border-cyan-500/30 bg-cyan-950/10">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="font-tactical tracking-widest uppercase text-cyan-400 flex items-center gap-1.5 text-[9px] md:text-[10px]">
-              <Thermometer className="w-3 h-3 shrink-0" /> Bulbo Úmido
+        <Card className="glass-panel border-cyan-500/30 bg-cyan-950/10 p-2 sm:p-4 rounded-xl sm:rounded-2xl">
+          <CardHeader className="pb-1 p-1 sm:p-2">
+            <CardTitle className="font-tactical tracking-widest uppercase text-cyan-400 flex items-center gap-1.5 text-[10px] sm:text-xs">
+              <Thermometer className="w-3.5 h-3.5 shrink-0" /> Bulbo Úmido
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3">
-            <div className="digital-display font-bold text-cyan-400 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)] text-2xl md:text-3xl">
-              {Twb.toFixed(1)} <span className="text-xs md:text-sm">°{tempUnit}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="glass-panel border-blue-500/30 bg-blue-950/10">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="font-tactical tracking-widest uppercase text-blue-400 flex items-center gap-1.5 text-[9px] md:text-[10px]">
-              <Droplets className="w-3 h-3 shrink-0" /> Orvalho
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            <div className="digital-display font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] text-2xl md:text-3xl">
-              {Tdp.toFixed(1)} <span className="text-xs md:text-sm">°{tempUnit}</span>
+          <CardContent className="p-1 sm:p-2 pt-1">
+            <div className="digital-display font-black text-cyan-400 drop-shadow-[0_0_10px_rgba(0,240,255,0.8)] text-3xl sm:text-4xl md:text-5xl">
+              {Twb.toFixed(1)} <span className="text-sm sm:text-base">°{tempUnit}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-panel border-purple-500/30 bg-purple-950/10">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="font-tactical tracking-widest uppercase text-purple-400 flex items-center gap-1.5 text-[9px] md:text-[10px]">
-              <Wind className="w-3 h-3 shrink-0" /> U. Absoluta
+        <Card className="glass-panel border-blue-500/30 bg-blue-950/10 p-2 sm:p-4 rounded-xl sm:rounded-2xl">
+          <CardHeader className="pb-1 p-1 sm:p-2">
+            <CardTitle className="font-tactical tracking-widest uppercase text-blue-400 flex items-center gap-1.5 text-[10px] sm:text-xs">
+              <Droplets className="w-3.5 h-3.5 shrink-0" /> Orvalho
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3">
-            <div className="digital-display font-bold text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)] text-2xl md:text-3xl">
+          <CardContent className="p-1 sm:p-2 pt-1">
+            <div className="digital-display font-black text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.8)] text-3xl sm:text-4xl md:text-5xl">
+              {Tdp.toFixed(1)} <span className="text-sm sm:text-base">°{tempUnit}</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-panel border-purple-500/30 bg-purple-950/10 p-2 sm:p-4 rounded-xl sm:rounded-2xl">
+          <CardHeader className="pb-1 p-1 sm:p-2">
+            <CardTitle className="font-tactical tracking-widest uppercase text-purple-400 flex items-center gap-1.5 text-[10px] sm:text-xs">
+              <Wind className="w-3.5 h-3.5 shrink-0" /> U. Absoluta
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-1 sm:p-2 pt-1">
+            <div className="digital-display font-black text-purple-400 drop-shadow-[0_0_10px_rgba(168,85,247,0.8)] text-3xl sm:text-4xl md:text-5xl">
               {moisture.toFixed(1)}
             </div>
-            <p className="mt-1 text-[9px] font-mono text-purple-500/70 uppercase">{moistureUnit}</p>
+            <p className="mt-1 text-[10px] font-mono text-purple-500/70 uppercase font-bold">{moistureUnit}</p>
           </CardContent>
         </Card>
 
-        <Card className={`glass-panel border-rose-500/30 bg-rose-950/10 ${viewMode === 'mobile' ? 'col-span-2' : ''}`}>
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="font-tactical tracking-widest uppercase text-rose-400 flex items-center gap-1.5 text-[9px] md:text-[10px]">
-              <Flame className="w-3 h-3 shrink-0" /> Entalpia
+        <Card className="glass-panel border-rose-500/30 bg-rose-950/10 p-2 sm:p-4 rounded-xl sm:rounded-2xl col-span-2 md:col-span-1">
+          <CardHeader className="pb-1 p-1 sm:p-2">
+            <CardTitle className="font-tactical tracking-widest uppercase text-rose-400 flex items-center gap-1.5 text-[10px] sm:text-xs">
+              <Flame className="w-3.5 h-3.5 shrink-0" /> Entalpia
             </CardTitle>
           </CardHeader>
-          <CardContent className="px-3 pb-3 flex flex-row md:flex-col justify-between items-end md:items-start">
-            <div className="digital-display font-bold text-rose-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.8)] text-2xl md:text-3xl">
+          <CardContent className="p-1 sm:p-2 pt-1 flex flex-row md:flex-col justify-between items-end md:items-start">
+            <div className="digital-display font-black text-rose-400 drop-shadow-[0_0_10px_rgba(244,63,94,0.8)] text-3xl sm:text-4xl md:text-5xl">
               {enthalpy.toFixed(1)}
             </div>
-            <p className="mt-1 text-[9px] font-mono text-rose-500/70 uppercase">{enthalpyUnit}</p>
+            <p className="mt-1 text-[10px] font-mono text-rose-500/70 uppercase font-bold">{enthalpyUnit}</p>
           </CardContent>
         </Card>
 
       </div>
 
       {/* RADAR CHART AND ANALYSIS - Single Column Grid */}
-      <div className="grid gap-6 mt-4 relative z-10 grid-cols-1 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 mt-4 relative z-10 grid-cols-1 md:grid-cols-2">
          
-         <div className="bg-black/40 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center shadow-inner h-[300px] md:h-[400px]">
+         <div className="bg-black/40 border border-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 flex flex-col items-center justify-center shadow-inner h-[300px] md:h-[400px]">
             <h3 className="text-white/70 font-tactical tracking-widest uppercase text-xs mb-2">RADAR DE PERFORMANCE TÉRMICA</h3>
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                 <PolarGrid stroke="rgba(255,255,255,0.1)" />
                 <PolarAngleAxis 
                   dataKey="subject" 
-                  tick={{ fill: '#a855f7', fontSize: viewMode === 'mobile' ? 9 : 12, fontFamily: 'monospace', fontWeight: 'bold' }} 
+                  tick={{ fill: '#a855f7', fontSize: 10, fontFamily: 'monospace', fontWeight: 'bold' }} 
                 />
                 <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                 <RechartsTooltip 

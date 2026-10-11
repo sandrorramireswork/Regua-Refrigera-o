@@ -62,7 +62,7 @@ export default function DigitalTwin() {
   const efeitoFrig = Math.max(10, 180 - (T_cond_K - T_evap_K));
 
   return (
-    <div className={`mx-auto space-y-6 ${viewMode === 'mobile' ? 'w-full' : 'max-w-7xl'}`}>
+    <div className="mx-auto space-y-4 sm:space-y-6 w-full max-w-7xl">
       
       {/* THE DIGITAL TWIN CANVAS */}
       <div className="relative glass-panel border border-white/10 rounded-2xl overflow-hidden bg-[#050505] shadow-[0_0_40px_rgba(0,0,0,0.8)]">
@@ -269,58 +269,58 @@ export default function DigitalTwin() {
       </div>
 
       {/* DIAGNOSTICS REPORT WITH INLINE METRICS */}
-      <div className="bg-black/60 border border-white/10 rounded-2xl p-5 md:p-8 shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] relative overflow-hidden">
+      <div className="bg-black/60 border border-white/10 rounded-xl sm:rounded-2xl p-3.5 sm:p-6 md:p-8 shadow-[inset_0_0_30px_rgba(0,0,0,0.8)] relative overflow-hidden">
         <div className="absolute top-0 left-0 w-1.5 h-full bg-primary shadow-[0_0_15px_rgba(0,240,255,1)]"></div>
         
-        <h3 className="text-sm md:text-base font-display font-black tracking-widest uppercase text-white mb-6 flex items-center gap-2">
+        <h3 className="text-base sm:text-lg font-display font-black tracking-wider uppercase text-white mb-4 sm:mb-6 flex items-center gap-2">
           <BookOpen className="w-5 h-5 text-cyan-400" />
           Relatório Analítico do Ciclo
         </h3>
 
-        <div className={`grid gap-8 ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
+        <div className="grid gap-6 md:gap-8 grid-cols-1 md:grid-cols-3">
           
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex flex-col">
-               <h4 className="text-xs font-tactical tracking-widest uppercase text-cyan-400 flex items-center gap-1.5">
-                 <Zap className="w-3 h-3" /> Eficiência (COP)
+               <h4 className="text-xs sm:text-sm font-tactical tracking-wider uppercase text-cyan-400 flex items-center gap-1.5 font-bold">
+                 <Zap className="w-3.5 h-3.5" /> Eficiência (COP)
                </h4>
-               <div className="digital-display font-bold text-cyan-400 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)] text-4xl mt-1">
+               <div className="digital-display font-black text-cyan-400 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)] text-4xl sm:text-5xl mt-1">
                  {estimatedCOP.toFixed(2)}
                </div>
             </div>
-            <p className="text-[11px] font-mono text-zinc-300 leading-relaxed text-justify">
+            <p className="text-xs sm:text-sm font-mono text-zinc-300 leading-relaxed text-justify">
               O <strong className="text-white">Coeficiente de Performance (COP)</strong> indica a eficiência teórica global do sistema. Este valor significa que para cada 1 kW de energia elétrica consumida, o equipamento gera {estimatedCOP.toFixed(2)} kW de capacidade frigorífica. Valores reais comuns em equipamentos modernos variam entre 3.0 e 5.0. 
-              <br/><span className="text-zinc-500 mt-2 block italic">*Estimativa de Carnot (55% isoentrópico) calibrada em tempo real pelas pressões.</span>
+              <br/><span className="text-zinc-500 mt-2 block italic text-[11px] sm:text-xs">*Estimativa de Carnot (55% isoentrópico) calibrada em tempo real pelas pressões.</span>
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex flex-col">
-               <h4 className="text-xs font-tactical tracking-widest uppercase text-rose-400 flex items-center gap-1.5">
-                 <Power className="w-3 h-3" /> Razão de Compressão
+               <h4 className="text-xs sm:text-sm font-tactical tracking-wider uppercase text-rose-400 flex items-center gap-1.5 font-bold">
+                 <Power className="w-3.5 h-3.5" /> Razão de Compressão
                </h4>
-               <div className="digital-display font-bold text-rose-400 drop-shadow-[0_0_15px_rgba(244,63,94,0.8)] text-4xl mt-1">
+               <div className="digital-display font-black text-rose-400 drop-shadow-[0_0_15px_rgba(244,63,94,0.8)] text-4xl sm:text-5xl mt-1">
                  {compRatio.toFixed(1)}<span className="text-2xl text-rose-500/50">:1</span>
                </div>
             </div>
-            <div className="text-[11px] font-mono text-zinc-300 leading-relaxed text-justify">
+            <div className="text-xs sm:text-sm font-mono text-zinc-300 leading-relaxed text-justify">
               Representa o esforço mecânico. É a proporção entre a Pressão de Descarga e Sucção. 
-              {compRatio < 4 && <div className="text-green-400 mt-3 font-bold bg-green-900/20 p-3 rounded border border-green-500/30">Valor excelente. Compressor aliviado, baixo desgaste e consumo reduzido.</div>}
-              {compRatio >= 4 && compRatio <= 7 && <div className="text-yellow-400 mt-3 font-bold bg-yellow-900/20 p-3 rounded border border-yellow-500/30">Valor normal. Condições típicas de operação para AC.</div>}
-              {compRatio > 7 && <div className="text-red-400 mt-3 font-bold bg-red-900/20 p-3 rounded border border-red-500/30">ALERTA DE DESGASTE: Esforço excessivo! Risco de carbonização de óleo e alta amperagem.</div>}
+              {compRatio < 4 && <div className="text-green-400 mt-3 font-bold bg-green-900/20 p-3 rounded-lg border border-green-500/30 text-xs sm:text-sm">Valor excelente. Compressor aliviado, baixo desgaste e consumo reduzido.</div>}
+              {compRatio >= 4 && compRatio <= 7 && <div className="text-yellow-400 mt-3 font-bold bg-yellow-900/20 p-3 rounded-lg border border-yellow-500/30 text-xs sm:text-sm">Valor normal. Condições típicas de operação para AC.</div>}
+              {compRatio > 7 && <div className="text-red-400 mt-3 font-bold bg-red-900/20 p-3 rounded-lg border border-red-500/30 text-xs sm:text-sm">ALERTA DE DESGASTE: Esforço excessivo! Risco de carbonização de óleo e alta amperagem.</div>}
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <div className="flex flex-col">
-               <h4 className="text-xs font-tactical tracking-widest uppercase text-orange-400 flex items-center gap-1.5">
-                 <Fan className="w-3 h-3" /> Efeito Frigorífico
+               <h4 className="text-xs sm:text-sm font-tactical tracking-wider uppercase text-orange-400 flex items-center gap-1.5 font-bold">
+                 <Fan className="w-3.5 h-3.5" /> Efeito Frigorífico
                </h4>
-               <div className="digital-display font-bold text-orange-400 drop-shadow-[0_0_15px_rgba(255,140,0,0.8)] text-4xl mt-1">
+               <div className="digital-display font-black text-orange-400 drop-shadow-[0_0_15px_rgba(255,140,0,0.8)] text-4xl sm:text-5xl mt-1">
                  {efeitoFrig.toFixed(0)} <span className="text-lg text-orange-500/50">kJ/kg</span>
                </div>
             </div>
-            <p className="text-[11px] font-mono text-zinc-300 leading-relaxed text-justify">
+            <p className="text-xs sm:text-sm font-mono text-zinc-300 leading-relaxed text-justify">
               O <strong className="text-white">Efeito Frigorífico</strong> representa a capacidade de absorção de calor por unidade de massa do fluido ({ref}). Quanto maior a condensação (calor) ou menor a evaporação (congelamento), menor este valor se torna, estrangulando o rendimento da máquina.
             </p>
           </div>

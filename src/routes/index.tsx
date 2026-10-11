@@ -213,49 +213,49 @@ function DashboardContent() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8">
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold tracking-tight mb-2 font-display neon-text-cyan opacity-90">PAINEL DE DIAGNÓSTICO</h2>
-          <p className="text-muted-foreground font-mono text-sm uppercase tracking-wider">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-1 sm:px-4 md:px-6 lg:px-8 py-2 sm:py-6">
+        <div className="mb-4 sm:mb-6 px-1 sm:px-0">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-1 font-display neon-text-cyan opacity-90">PAINEL DE DIAGNÓSTICO</h2>
+          <p className="text-muted-foreground font-mono text-xs sm:text-sm uppercase tracking-wider">
             Cálculos termodinâmicos avançados e análise de campo
           </p>
         </div>
 
-        <Tabs defaultValue="pt-engine" className="w-full space-y-6" onValueChange={setActiveTab}>
+        <Tabs defaultValue="pt-engine" className="w-full space-y-4 sm:space-y-6" onValueChange={setActiveTab}>
           <TabsList className="flex flex-wrap justify-center h-auto p-1 bg-black/40 backdrop-blur-sm border border-border/50 rounded-xl w-full gap-1">
-            <TabsTrigger value="pt-engine" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-cyan-500/20 text-cyan-500/70 hover:text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)] data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 data-[state=active]:border-cyan-400 data-[state=active]:shadow-[0_0_20px_rgba(34,211,238,0.8)] transition-all duration-300">
+            <TabsTrigger value="pt-engine" className="shrink-0 flex-1 min-w-[65px] sm:min-w-[90px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-cyan-500/20 text-cyan-500/70 hover:text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)] data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 data-[state=active]:border-cyan-400 data-[state=active]:shadow-[0_0_20px_rgba(34,211,238,0.8)] transition-all duration-300">
               <Activity className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">DIAGNÓSTICO</span>
+              <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">DIAGNÓSTICO</span>
             </TabsTrigger>
             
-            <TabsTrigger value="mollier" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-green-500/20 text-green-500/70 hover:text-green-400 hover:bg-green-500/10 hover:border-green-500/50 hover:shadow-[0_0_10px_rgba(74,222,128,0.3)] data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 data-[state=active]:border-green-400 data-[state=active]:shadow-[0_0_20px_rgba(74,222,128,0.8)] transition-all duration-300">
+            <TabsTrigger value="mollier" className="shrink-0 flex-1 min-w-[65px] sm:min-w-[90px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-green-500/20 text-green-500/70 hover:text-green-400 hover:bg-green-500/10 hover:border-green-500/50 hover:shadow-[0_0_10px_rgba(74,222,128,0.3)] data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400 data-[state=active]:border-green-400 data-[state=active]:shadow-[0_0_20px_rgba(74,222,128,0.8)] transition-all duration-300">
               <Gauge className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">GÊMEO DIGITAL</span>
+              <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">GÊMEO DIGITAL</span>
             </TabsTrigger>
             
-            <TabsTrigger value="psychrometrics" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-purple-500/20 text-purple-500/70 hover:text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/50 hover:shadow-[0_0_10px_rgba(168,85,247,0.3)] data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 data-[state=active]:border-purple-400 data-[state=active]:shadow-[0_0_20px_rgba(168,85,247,0.8)] transition-all duration-300">
+            <TabsTrigger value="psychrometrics" className="shrink-0 flex-1 min-w-[65px] sm:min-w-[90px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-purple-500/20 text-purple-500/70 hover:text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/50 hover:shadow-[0_0_10px_rgba(168,85,247,0.3)] data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400 data-[state=active]:border-purple-400 data-[state=active]:shadow-[0_0_20px_rgba(168,85,247,0.8)] transition-all duration-300">
               <Wind className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">PSICROMETRIA</span>
+              <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">PSICROMETRIA</span>
             </TabsTrigger>
             
-            <TabsTrigger value="piping" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-blue-500/20 text-blue-500/70 hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 data-[state=active]:border-blue-400 data-[state=active]:shadow-[0_0_20px_rgba(59,130,246,0.8)] transition-all duration-300">
+            <TabsTrigger value="piping" className="shrink-0 flex-1 min-w-[65px] sm:min-w-[90px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-blue-500/20 text-blue-500/70 hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50 hover:shadow-[0_0_10px_rgba(59,130,246,0.3)] data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-400 data-[state=active]:border-blue-400 data-[state=active]:shadow-[0_0_20px_rgba(59,130,246,0.8)] transition-all duration-300">
               <Settings className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">TUBULAÇÃO</span>
+              <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">TUBULAÇÃO</span>
             </TabsTrigger>
             
-            <TabsTrigger value="reports" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-orange-500/20 text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/50 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)] data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400 data-[state=active]:border-orange-400 data-[state=active]:shadow-[0_0_20px_rgba(249,115,22,0.8)] transition-all duration-300">
+            <TabsTrigger value="reports" className="shrink-0 flex-1 min-w-[65px] sm:min-w-[90px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-orange-500/20 text-orange-500/70 hover:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/50 hover:shadow-[0_0_10px_rgba(249,115,22,0.3)] data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400 data-[state=active]:border-orange-400 data-[state=active]:shadow-[0_0_20px_rgba(249,115,22,0.8)] transition-all duration-300">
               <FileText className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">RELATÓRIOS</span>
+              <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">RELATÓRIOS</span>
             </TabsTrigger>
             
-            <TabsTrigger value="compressor" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-yellow-500/20 text-yellow-500/70 hover:text-yellow-400 hover:bg-yellow-500/10 hover:border-yellow-500/50 hover:shadow-[0_0_10px_rgba(234,179,8,0.3)] data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400 data-[state=active]:border-yellow-400 data-[state=active]:shadow-[0_0_20px_rgba(234,179,8,0.8)] transition-all duration-300">
+            <TabsTrigger value="compressor" className="shrink-0 flex-1 min-w-[65px] sm:min-w-[90px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-yellow-500/20 text-yellow-500/70 hover:text-yellow-400 hover:bg-yellow-500/10 hover:border-yellow-500/50 hover:shadow-[0_0_10px_rgba(234,179,8,0.3)] data-[state=active]:bg-yellow-500/20 data-[state=active]:text-yellow-400 data-[state=active]:border-yellow-400 data-[state=active]:shadow-[0_0_20px_rgba(234,179,8,0.8)] transition-all duration-300">
               <Zap className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">ELÉTRICA</span>
+              <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">ELÉTRICA</span>
             </TabsTrigger>
             
-            <TabsTrigger value="maintenance" className="shrink-0 flex-1 min-w-[70px] sm:min-w-[90px] flex flex-col gap-0.5 py-2 rounded-lg border border-rose-500/20 text-rose-500/70 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/50 hover:shadow-[0_0_10px_rgba(244,63,94,0.3)] data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-400 data-[state=active]:border-rose-400 data-[state=active]:shadow-[0_0_20px_rgba(244,63,94,0.8)] transition-all duration-300">
+            <TabsTrigger value="maintenance" className="shrink-0 flex-1 min-w-[65px] sm:min-w-[90px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-rose-500/20 text-rose-500/70 hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/50 hover:shadow-[0_0_10px_rgba(244,63,94,0.3)] data-[state=active]:bg-rose-500/20 data-[state=active]:text-rose-400 data-[state=active]:border-rose-400 data-[state=active]:shadow-[0_0_20px_rgba(244,63,94,0.8)] transition-all duration-300">
               <Wrench className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
-              <span className="text-[8px] sm:text-[9px] font-bold tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">FERRAMENTAS</span>
+              <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">FERRAMENTAS</span>
             </TabsTrigger>
           </TabsList>
 

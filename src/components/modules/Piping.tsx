@@ -23,7 +23,7 @@ export default function Piping() {
   const { 
     selectedRef: ref,
     pSuc, pLiq,
-    pressureUnit, tempUnit, viewMode
+    pressureUnit, tempUnit
   } = useAppContext();
 
   // Local state for capacity
@@ -127,24 +127,24 @@ export default function Piping() {
   const isLiqVelGood = liqVel >= 0.3 && liqVel <= 1.5;
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 grid-cols-1">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1">
         
         {/* Controls Column */}
-        <div className="space-y-6">
-          <Card className="glass-panel border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-            <CardHeader>
-              <CardTitle className="font-display tracking-widest text-primary text-sm">DIMENSIONAMENTO</CardTitle>
-              <CardDescription className="font-mono text-xs">Ajuste a carga térmica</CardDescription>
+        <div className="space-y-4 sm:space-y-6">
+          <Card className="glass-panel border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)] p-3 sm:p-6 rounded-xl sm:rounded-2xl">
+            <CardHeader className="p-2 sm:p-4 pb-2">
+              <CardTitle className="font-display tracking-widest text-primary text-sm sm:text-base">DIMENSIONAMENTO DE TUBULAÇÃO</CardTitle>
+              <CardDescription className="font-mono text-xs sm:text-sm">Ajuste a carga térmica e comprimento</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-5 p-2 sm:p-4 pt-2">
               
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-primary font-tactical tracking-widest text-xs uppercase">Capacidade ({capLabel})</Label>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-primary font-tactical tracking-widest text-xs sm:text-sm uppercase">Capacidade ({capLabel})</Label>
                   <Input 
                     type="number" 
-                    className="bg-black/50 border-primary/30 text-primary font-mono text-lg" 
+                    className="bg-black/50 border-primary/30 text-primary font-mono text-xl sm:text-2xl h-11 sm:h-12 font-bold" 
                     value={capacity} 
                     onChange={e => setCapacity(Number(e.target.value))} 
                   />
@@ -153,16 +153,16 @@ export default function Piping() {
                   value={[capacity]} 
                   min={7000} max={120000} step={1000}
                   onValueChange={(val) => setCapacity(val[0]!)}
-                  className="py-2"
+                  className="py-2 cursor-pointer"
                 />
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground font-tactical tracking-widest text-xs uppercase">Comp. Equivalente ({lenLabel})</Label>
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-muted-foreground font-tactical tracking-widest text-xs sm:text-sm uppercase">Comp. Equivalente ({lenLabel})</Label>
                   <Input 
                     type="number" 
-                    className="bg-black/50 border-white/10 font-mono text-lg" 
+                    className="bg-black/50 border-white/10 font-mono text-xl sm:text-2xl h-11 sm:h-12 font-bold" 
                     value={length} 
                     onChange={e => setLength(Number(e.target.value))} 
                   />
@@ -171,11 +171,11 @@ export default function Piping() {
                   value={[length]} 
                   min={1} max={100} step={1}
                   onValueChange={(val) => setLength(val[0]!)}
-                  className="py-2"
+                  className="py-2 cursor-pointer"
                 />
               </div>
 
-              <div className="p-3 bg-primary/10 border border-primary/20 rounded text-xs font-mono text-primary/80">
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-xs sm:text-sm font-mono text-primary/80">
                 O aplicativo utiliza as pressões dinâmicas da aba <strong className="text-primary">Matriz SH/SC</strong> para estimar a densidade do fluido <strong>{ref}</strong> em tempo real.
               </div>
 
@@ -184,34 +184,34 @@ export default function Piping() {
         </div>
 
         {/* Results */}
-        <div className="grid gap-6 grid-cols-1">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1">
           
           {/* Suction Line */}
-          <Card className={`glass-panel border-2 ${isSucVelGood ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(0,240,255,0.15)]' : 'border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.15)]'}`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-tactical tracking-widest uppercase text-cyan-400 flex justify-between items-center">
-                <span className="flex items-center gap-2"><Wind className="w-4 h-4" /> Linha de Sucção (Gás)</span>
-                {isSucVelGood ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <AlertTriangle className="w-4 h-4 text-yellow-400" />}
+          <Card className={`glass-panel border-2 p-3 sm:p-6 rounded-xl sm:rounded-2xl ${isSucVelGood ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(0,240,255,0.15)]' : 'border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.15)]'}`}>
+            <CardHeader className="p-2 sm:p-4 pb-2">
+              <CardTitle className="text-sm sm:text-base font-tactical tracking-widest uppercase text-cyan-400 flex justify-between items-center">
+                <span className="flex items-center gap-2"><Wind className="w-5 h-5" /> Linha de Sucção (Gás)</span>
+                {isSucVelGood ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <AlertTriangle className="w-5 h-5 text-yellow-400" />}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col items-center justify-center py-4 border-b border-white/10">
-                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Diâmetro Recomendado</span>
-                <div className={`font-display font-bold text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] ${viewMode === 'mobile' ? 'text-5xl' : 'text-7xl'}`}>
+            <CardContent className="space-y-6 p-2 sm:p-4">
+              <div className="flex flex-col items-center justify-center py-3 sm:py-5 border-b border-white/10">
+                <span className="text-xs sm:text-sm font-mono text-muted-foreground uppercase tracking-widest mb-1">Diâmetro Recomendado</span>
+                <div className="font-display font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] text-6xl sm:text-7xl md:text-8xl tracking-tight">
                   {sucPipe}
                 </div>
               </div>
               
               <div className="flex justify-between items-center">
                 <div>
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest block">Velocidade</span>
-                  <span className={`font-mono font-bold ${isSucVelGood ? 'text-green-400' : 'text-yellow-400'} ${viewMode === 'mobile' ? 'text-xl' : 'text-2xl'}`}>
-                    {displaySucVel.toFixed(1)} <span className="text-sm">{velLabel}</span>
+                  <span className="text-[11px] sm:text-xs font-mono text-muted-foreground uppercase tracking-widest block mb-0.5">Velocidade</span>
+                  <span className={`font-mono font-black ${isSucVelGood ? 'text-green-400' : 'text-yellow-400'} text-2xl sm:text-3xl`}>
+                    {displaySucVel.toFixed(1)} <span className="text-sm sm:text-base font-normal">{velLabel}</span>
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest block">Retorno de Óleo</span>
-                  <span className={`text-sm font-tactical uppercase tracking-wider ${isSucVelGood ? 'text-green-400' : 'text-yellow-400'}`}>
+                  <span className="text-[11px] sm:text-xs font-mono text-muted-foreground uppercase tracking-widest block mb-0.5">Retorno de Óleo</span>
+                  <span className={`text-sm sm:text-base font-tactical uppercase tracking-wider font-bold ${isSucVelGood ? 'text-green-400' : 'text-yellow-400'}`}>
                     {sucVel < 5 ? "Risco (Baixa Vel.)" : sucVel > 18 ? "Ruído (Alta Vel.)" : "Ideal"}
                   </span>
                 </div>
@@ -220,31 +220,31 @@ export default function Piping() {
           </Card>
 
           {/* Liquid Line */}
-          <Card className={`glass-panel border-2 ${isLiqVelGood ? 'border-orange-500/50 shadow-[0_0_20px_rgba(255,140,0,0.15)]' : 'border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.15)]'}`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-tactical tracking-widest uppercase text-orange-400 flex justify-between items-center">
-                <span className="flex items-center gap-2"><Droplets className="w-4 h-4" /> Linha de Líquido</span>
-                {isLiqVelGood ? <CheckCircle2 className="w-4 h-4 text-green-400" /> : <AlertTriangle className="w-4 h-4 text-yellow-400" />}
+          <Card className={`glass-panel border-2 p-3 sm:p-6 rounded-xl sm:rounded-2xl ${isLiqVelGood ? 'border-orange-500/50 shadow-[0_0_20px_rgba(255,140,0,0.15)]' : 'border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.15)]'}`}>
+            <CardHeader className="p-2 sm:p-4 pb-2">
+              <CardTitle className="text-sm sm:text-base font-tactical tracking-widest uppercase text-orange-400 flex justify-between items-center">
+                <span className="flex items-center gap-2"><Droplets className="w-5 h-5" /> Linha de Líquido</span>
+                {isLiqVelGood ? <CheckCircle2 className="w-5 h-5 text-green-400" /> : <AlertTriangle className="w-5 h-5 text-yellow-400" />}
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col items-center justify-center py-4 border-b border-white/10">
-                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest mb-2">Diâmetro Recomendado</span>
-                <div className={`font-display font-bold text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] ${viewMode === 'mobile' ? 'text-5xl' : 'text-7xl'}`}>
+            <CardContent className="space-y-6 p-2 sm:p-4">
+              <div className="flex flex-col items-center justify-center py-3 sm:py-5 border-b border-white/10">
+                <span className="text-xs sm:text-sm font-mono text-muted-foreground uppercase tracking-widest mb-1">Diâmetro Recomendado</span>
+                <div className="font-display font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] text-6xl sm:text-7xl md:text-8xl tracking-tight">
                   {liqPipe}
                 </div>
               </div>
               
               <div className="flex justify-between items-center">
                 <div>
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest block">Velocidade</span>
-                  <span className={`font-mono font-bold ${isLiqVelGood ? 'text-green-400' : 'text-yellow-400'} ${viewMode === 'mobile' ? 'text-xl' : 'text-2xl'}`}>
-                    {displayLiqVel.toFixed(2)} <span className="text-sm">{velLabel}</span>
+                  <span className="text-[11px] sm:text-xs font-mono text-muted-foreground uppercase tracking-widest block mb-0.5">Velocidade</span>
+                  <span className={`font-mono font-black ${isLiqVelGood ? 'text-green-400' : 'text-yellow-400'} text-2xl sm:text-3xl`}>
+                    {displayLiqVel.toFixed(2)} <span className="text-sm sm:text-base font-normal">{velLabel}</span>
                   </span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest block">Condição (Flash Gas)</span>
-                  <span className={`text-sm font-tactical uppercase tracking-wider ${isLiqVelGood ? 'text-green-400' : 'text-yellow-400'}`}>
+                  <span className="text-[11px] sm:text-xs font-mono text-muted-foreground uppercase tracking-widest block mb-0.5">Condição (Flash Gas)</span>
+                  <span className={`text-sm sm:text-base font-tactical uppercase tracking-wider font-bold ${isLiqVelGood ? 'text-green-400' : 'text-yellow-400'}`}>
                     {liqVel > 1.5 ? "Risco de Bolhas" : "Ideal"}
                   </span>
                 </div>
@@ -252,30 +252,30 @@ export default function Piping() {
             </CardContent>
           </Card>
 
-          <div className={`${viewMode === 'mobile' ? 'h-[90px] px-4' : 'h-[120px] px-12'} glass-panel border border-white/10 rounded-xl overflow-hidden relative flex items-center justify-center bg-black/60`}>
+          <div className="h-[110px] sm:h-[130px] px-3 sm:px-10 glass-panel border border-white/10 rounded-xl sm:rounded-2xl overflow-hidden relative flex items-center justify-center bg-black/60">
             <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(255, 255, 255, 0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.15) 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
             
             <div className="flex w-full items-center justify-between z-10">
-               <div className="text-center w-16">
-                 <div className={`font-display font-bold text-cyan-400 ${viewMode === 'mobile' ? 'text-xl' : 'text-2xl'}`}>{sucPipe}</div>
-                 <div className="text-[10px] font-tactical tracking-widest uppercase text-cyan-400/50 mt-1">SUCÇÃO</div>
+               <div className="text-center w-20">
+                 <div className="font-display font-black text-cyan-400 text-2xl sm:text-3xl">{sucPipe}</div>
+                 <div className="text-[10px] sm:text-xs font-tactical tracking-widest uppercase text-cyan-400/70 mt-1 font-bold">SUCÇÃO</div>
                </div>
 
-               <div className="flex-1 flex flex-col items-center justify-center relative px-8">
-                 <div className="w-full h-4 bg-cyan-900/30 rounded-full border border-cyan-500/30 overflow-hidden relative mb-2">
+               <div className="flex-1 flex flex-col items-center justify-center relative px-4 sm:px-8">
+                 <div className="w-full h-4 sm:h-5 bg-cyan-900/30 rounded-full border border-cyan-500/30 overflow-hidden relative mb-2">
                    <div className="absolute top-0 left-0 h-full bg-cyan-400 w-full animate-flow opacity-50" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.5) 10px, rgba(0,0,0,0.5) 20px)' }}></div>
                  </div>
                  
-                 <ArrowRight className="w-6 h-6 text-white/20 absolute" />
+                 <ArrowRight className="w-6 h-6 text-white/30 absolute" />
 
-                 <div className="w-full h-2 bg-orange-900/30 rounded-full border border-orange-500/30 overflow-hidden relative">
+                 <div className="w-full h-2.5 sm:h-3 bg-orange-900/30 rounded-full border border-orange-500/30 overflow-hidden relative">
                    <div className="absolute top-0 left-0 h-full bg-orange-400 w-full animate-flow opacity-50" style={{ backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.5) 10px, rgba(0,0,0,0.5) 20px)', animationDirection: 'reverse' }}></div>
                  </div>
                </div>
 
-               <div className="text-center w-16">
-                 <div className={`font-display font-bold text-orange-400 ${viewMode === 'mobile' ? 'text-xl' : 'text-2xl'}`}>{liqPipe}</div>
-                 <div className="text-[10px] font-tactical tracking-widest uppercase text-orange-400/50 mt-1">LÍQUIDO</div>
+               <div className="text-center w-20">
+                 <div className="font-display font-black text-orange-400 text-2xl sm:text-3xl">{liqPipe}</div>
+                 <div className="text-[10px] sm:text-xs font-tactical tracking-widest uppercase text-orange-400/70 mt-1 font-bold">LÍQUIDO</div>
                </div>
             </div>
           </div>

@@ -4,11 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Zap, CheckCircle2, AlertTriangle, AlertCircle, Info, Activity } from "lucide-react";
-import { useAppContext } from "@/context/AppContext";
 
 export default function CompressorTest() {
-  const { viewMode } = useAppContext();
-
   // Tipo de compressor
   const [isCompressorInverter, setIsCompressorInverter] = useState(false);
   const [hasGroundFault, setHasGroundFault] = useState(false);
@@ -112,14 +109,14 @@ export default function CompressorTest() {
   }, [val1, val2, val3, isCompressorInverter, hasGroundFault]);
 
   return (
-    <div className={`grid gap-6 ${viewMode === 'mobile' ? 'grid-cols-1' : 'lg:grid-cols-12'}`}>
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-12">
       
       {/* Coluna da Esquerda */}
-      <div className={`space-y-6 ${viewMode === 'mobile' ? 'col-span-1' : 'lg:col-span-5'}`}>
-        <Card className="glass-panel border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-          <CardHeader>
-            <CardTitle className="font-display tracking-widest text-primary text-sm flex justify-between items-center">
-              <span className="flex items-center gap-2"><Zap className="h-4 w-4" /> TESTE DE MOTOR</span>
+      <div className="space-y-4 sm:space-y-6 col-span-1 lg:col-span-5">
+        <Card className="glass-panel border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)] p-2.5 sm:p-5 rounded-xl sm:rounded-2xl">
+          <CardHeader className="p-2 sm:p-4 pb-2">
+            <CardTitle className="font-display tracking-widest text-primary text-sm sm:text-base flex justify-between items-center">
+              <span className="flex items-center gap-2"><Zap className="h-4 w-4 sm:h-5 sm:w-5" /> TESTE DE MOTOR</span>
               <div className="flex items-center gap-2 text-xs font-mono bg-black/40 px-3 py-1 rounded-full border border-white/10">
                 <span className={!isCompressorInverter ? "text-primary font-bold" : "text-white/40"}>ON/OFF</span>
                 <Switch checked={isCompressorInverter} onCheckedChange={(v) => { setIsCompressorInverter(v); setVal1(""); setVal2(""); setVal3(""); }} />
@@ -130,9 +127,9 @@ export default function CompressorTest() {
               {isCompressorInverter ? "Módulo Trifásico DC (Tecnologia Inverter)" : "Motor Monofásico (C-R-S)"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5 p-2 sm:p-4 pt-2">
             
-            <div className="p-3 bg-primary/10 border border-primary/20 rounded text-xs font-mono text-primary/80 flex gap-2">
+            <div className="p-3 bg-primary/10 border border-primary/20 rounded-lg text-xs sm:text-sm font-mono text-primary/80 flex gap-2">
               <Info className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
                 {isCompressorInverter 
@@ -142,57 +139,57 @@ export default function CompressorTest() {
               </span>
             </div>
 
-            <div className="space-y-4">
-               <div className="flex flex-col gap-2 p-4 rounded-lg bg-black/40 border border-white/10">
-                 <Label className="text-cyan-400 font-tactical tracking-widest text-xs uppercase flex justify-between">
+            <div className="space-y-3 sm:space-y-4">
+               <div className="flex flex-col gap-2 p-3 sm:p-4 rounded-xl bg-black/40 border border-white/10">
+                 <Label className="text-cyan-400 font-tactical tracking-widest text-xs sm:text-sm uppercase flex justify-between font-bold">
                    <span>Teste 1: {isCompressorInverter ? "U - V" : "C - R"}</span>
                    <span className="text-white/50">{isCompressorInverter ? "Bobina 1" : "Comum p/ Marcha"}</span>
                  </Label>
                  <div className="relative">
                    <Input 
                      type="number" step="0.1" placeholder="Ex: 1.1"
-                     className="bg-black/60 border-cyan-500/30 text-cyan-400 font-mono text-lg pr-8"
+                     className="bg-black/60 border-cyan-500/30 text-cyan-400 font-mono text-xl sm:text-2xl font-black pr-8 h-11 sm:h-12"
                      value={val1} onChange={e => setVal1(e.target.value === "" ? "" : Number(e.target.value))}
                    />
-                   <span className="absolute right-3 top-2.5 text-cyan-400/50 font-mono">Ω</span>
+                   <span className="absolute right-3 top-2.5 sm:top-3 text-cyan-400/50 font-mono font-bold text-sm sm:text-base">Ω</span>
                  </div>
                </div>
 
-               <div className="flex flex-col gap-2 p-4 rounded-lg bg-black/40 border border-white/10">
-                 <Label className="text-green-400 font-tactical tracking-widest text-xs uppercase flex justify-between">
+               <div className="flex flex-col gap-2 p-3 sm:p-4 rounded-xl bg-black/40 border border-white/10">
+                 <Label className="text-green-400 font-tactical tracking-widest text-xs sm:text-sm uppercase flex justify-between font-bold">
                    <span>Teste 2: {isCompressorInverter ? "V - W" : "C - S"}</span>
                    <span className="text-white/50">{isCompressorInverter ? "Bobina 2" : "Comum p/ Auxiliar"}</span>
                  </Label>
                  <div className="relative">
                    <Input 
                      type="number" step="0.1" placeholder="Ex: 3.3"
-                     className="bg-black/60 border-green-500/30 text-green-400 font-mono text-lg pr-8"
+                     className="bg-black/60 border-green-500/30 text-green-400 font-mono text-xl sm:text-2xl font-black pr-8 h-11 sm:h-12"
                      value={val2} onChange={e => setVal2(e.target.value === "" ? "" : Number(e.target.value))}
                    />
-                   <span className="absolute right-3 top-2.5 text-green-400/50 font-mono">Ω</span>
+                   <span className="absolute right-3 top-2.5 sm:top-3 text-green-400/50 font-mono font-bold text-sm sm:text-base">Ω</span>
                  </div>
                </div>
 
-               <div className="flex flex-col gap-2 p-4 rounded-lg bg-black/40 border border-white/10">
-                 <Label className="text-orange-400 font-tactical tracking-widest text-xs uppercase flex justify-between">
+               <div className="flex flex-col gap-2 p-3 sm:p-4 rounded-xl bg-black/40 border border-white/10">
+                 <Label className="text-orange-400 font-tactical tracking-widest text-xs sm:text-sm uppercase flex justify-between font-bold">
                    <span>Teste 3: {isCompressorInverter ? "U - W" : "R - S"}</span>
                    <span className="text-white/50">{isCompressorInverter ? "Bobina 3" : "Marcha p/ Auxiliar"}</span>
                  </Label>
                  <div className="relative">
                    <Input 
                      type="number" step="0.1" placeholder="Ex: 4.4"
-                     className="bg-black/60 border-orange-500/30 text-orange-400 font-mono text-lg pr-8"
+                     className="bg-black/60 border-orange-500/30 text-orange-400 font-mono text-xl sm:text-2xl font-black pr-8 h-11 sm:h-12"
                      value={val3} onChange={e => setVal3(e.target.value === "" ? "" : Number(e.target.value))}
                    />
-                   <span className="absolute right-3 top-2.5 text-orange-400/50 font-mono">Ω</span>
+                   <span className="absolute right-3 top-2.5 sm:top-3 text-orange-400/50 font-mono font-bold text-sm sm:text-base">Ω</span>
                  </div>
                </div>
             </div>
 
-            <div className={`p-4 border rounded-lg transition-colors flex items-center justify-between ${hasGroundFault ? 'bg-rose-500/20 border-rose-500' : 'bg-black/40 border-white/10'}`}>
+            <div className={`p-3.5 sm:p-4 border rounded-xl transition-colors flex items-center justify-between ${hasGroundFault ? 'bg-rose-500/20 border-rose-500' : 'bg-black/40 border-white/10'}`}>
               <div className="space-y-1">
-                <Label className={`font-tactical tracking-widest uppercase ${hasGroundFault ? 'text-rose-400' : 'text-white/70'}`}>Fuga para Massa (Carcaça)</Label>
-                <p className="text-[10px] font-mono text-white/50">O multímetro bipou tocando no pino e no cobre do tubo?</p>
+                <Label className={`font-tactical tracking-widest uppercase text-xs sm:text-sm font-bold ${hasGroundFault ? 'text-rose-400' : 'text-white/70'}`}>Fuga para Massa (Carcaça)</Label>
+                <p className="text-[11px] sm:text-xs font-mono text-white/50">O multímetro bipou tocando no pino e no cobre do tubo?</p>
               </div>
               <Switch checked={hasGroundFault} onCheckedChange={setHasGroundFault} />
             </div>
@@ -202,16 +199,16 @@ export default function CompressorTest() {
       </div>
 
       {/* Coluna da Direita */}
-      <div className={`space-y-6 ${viewMode === 'mobile' ? 'col-span-1' : 'lg:col-span-7'}`}>
+      <div className="space-y-4 sm:space-y-6 col-span-1 lg:col-span-7">
         
-        <Card className={`glass-panel border-2 transition-colors duration-500 ${
+        <Card className={`glass-panel border-2 transition-colors duration-500 p-2.5 sm:p-5 rounded-xl sm:rounded-2xl ${
           diagnosis.status === 'good' ? 'border-[#00FF66]/50 shadow-[0_0_20px_rgba(0,255,102,0.2)]' :
           diagnosis.status === 'warning' ? 'border-yellow-500/50 shadow-[0_0_20px_rgba(234,179,8,0.2)]' :
           diagnosis.status === 'error' ? 'border-rose-500/50 shadow-[0_0_20px_rgba(244,63,94,0.2)]' :
           'border-white/10'
         }`}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display tracking-widest text-lg uppercase">
+          <CardHeader className="p-2 sm:p-4 pb-2">
+            <CardTitle className="flex items-center gap-2 font-display tracking-widest text-base sm:text-xl uppercase font-black">
               {diagnosis.status === 'good' && <CheckCircle2 className="h-6 w-6 text-[#00FF66]" />}
               {diagnosis.status === 'warning' && <AlertTriangle className="h-6 w-6 text-yellow-400 animate-pulse" />}
               {diagnosis.status === 'error' && <AlertCircle className="h-6 w-6 text-rose-500 animate-pulse" />}
@@ -225,8 +222,8 @@ export default function CompressorTest() {
               </span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-white/80 font-mono text-sm leading-relaxed mb-6">
+          <CardContent className="p-2 sm:p-4 pt-2">
+            <p className="text-white/90 font-mono text-sm sm:text-base leading-relaxed mb-6 font-medium">
               {diagnosis.message}
             </p>
 

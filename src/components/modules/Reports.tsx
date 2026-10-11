@@ -12,7 +12,7 @@ export default function Reports() {
     selectedRef: ref, expansion,
     pSuc, tSuc, pLiq, tLiq,
     tExt, tWb,
-    pressureUnit, tempUnit, viewMode
+    pressureUnit, tempUnit
   } = useAppContext();
 
   const [clientName, setClientName] = useState("");
@@ -78,32 +78,32 @@ Gerado via ThermoMaster Pro v2.0
   };
 
   return (
-    <div className="space-y-6">
-      <div className={`grid gap-6 ${viewMode === 'mobile' ? 'grid-cols-1' : 'lg:grid-cols-3'}`}>
+    <div className="space-y-4 sm:space-y-6">
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-3">
         
         {/* Input Form */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="glass-panel border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)]">
-            <CardHeader>
-              <CardTitle className="font-display tracking-widest text-primary text-sm">DADOS DO CLIENTE</CardTitle>
-              <CardDescription className="font-mono text-xs">Informações para emissão do laudo</CardDescription>
+        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+          <Card className="glass-panel border-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)] p-2.5 sm:p-5 rounded-xl sm:rounded-2xl">
+            <CardHeader className="p-2 sm:p-4 pb-2">
+              <CardTitle className="font-display tracking-widest text-primary text-sm sm:text-base">DADOS DO CLIENTE</CardTitle>
+              <CardDescription className="font-mono text-xs sm:text-sm">Informações para emissão do laudo</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-muted-foreground font-tactical tracking-widest text-xs uppercase">Cliente / Empresa</Label>
+            <CardContent className="space-y-4 p-2 sm:p-4 pt-2">
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground font-tactical tracking-widest text-xs sm:text-sm uppercase font-bold">Cliente / Empresa</Label>
                 <Input 
                   type="text" 
-                  className="bg-black/50 border-white/10 text-white font-mono" 
+                  className="bg-black/50 border-white/10 text-white font-mono text-base sm:text-lg h-11 sm:h-12" 
                   placeholder="Ex: Indústria X..."
                   value={clientName} 
                   onChange={e => setClientName(e.target.value)} 
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-muted-foreground font-tactical tracking-widest text-xs uppercase">Identificação do Equipamento</Label>
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground font-tactical tracking-widest text-xs sm:text-sm uppercase font-bold">Identificação do Equipamento</Label>
                 <Input 
                   type="text" 
-                  className="bg-black/50 border-white/10 text-white font-mono"
+                  className="bg-black/50 border-white/10 text-white font-mono text-base sm:text-lg h-11 sm:h-12"
                   placeholder="Ex: Chiller 01, Máquina Telhado..."
                   value={equipmentName} 
                   onChange={e => setEquipmentName(e.target.value)} 
@@ -115,19 +115,19 @@ Gerado via ThermoMaster Pro v2.0
 
         {/* Report Preview */}
         <div className="lg:col-span-2">
-          <Card className="glass-panel border-primary/30 h-full flex flex-col">
-            <CardHeader className="border-b border-white/10 pb-4 bg-black/40">
+          <Card className="glass-panel border-primary/30 h-full flex flex-col rounded-xl sm:rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-white/10 p-3 sm:p-5 bg-black/40">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="font-display tracking-widest text-primary text-lg flex items-center gap-2">
-                    <FileText className="w-5 h-5" /> LAUDO TÉCNICO DE COMISSIONAMENTO
+                  <CardTitle className="font-display tracking-widest text-primary text-base sm:text-lg flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary" /> LAUDO TÉCNICO DE COMISSIONAMENTO
                   </CardTitle>
-                  <CardDescription className="font-mono text-xs mt-1">
+                  <CardDescription className="font-mono text-xs sm:text-sm mt-0.5">
                     Visualização em tempo real do relatório gerado.
                   </CardDescription>
                 </div>
                 <div className="hidden sm:flex gap-2">
-                  <Button variant="outline" size="sm" className="bg-black border-white/10 text-xs font-tactical uppercase" onClick={handleCopy}>
+                  <Button variant="outline" size="sm" className="bg-black border-white/10 text-xs sm:text-sm font-tactical uppercase font-bold" onClick={handleCopy}>
                     {copied ? <Check className="w-4 h-4 mr-2 text-green-400" /> : <Copy className="w-4 h-4 mr-2" />}
                     {copied ? "Copiado!" : "Copiar"}
                   </Button>
@@ -136,16 +136,16 @@ Gerado via ThermoMaster Pro v2.0
             </CardHeader>
             <CardContent className="flex-1 p-0 relative bg-[#0a0a0a]">
               <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(0, 240, 255, 1) 1px, transparent 1px)', backgroundSize: '100% 24px' }}></div>
-              <pre className="font-mono text-xs sm:text-sm text-primary/80 p-6 whitespace-pre-wrap leading-relaxed h-[400px] overflow-y-auto">
+              <pre className="font-mono text-xs sm:text-sm text-primary/90 p-3.5 sm:p-6 whitespace-pre-wrap leading-relaxed h-[400px] overflow-y-auto">
                 {generateReportText()}
               </pre>
             </CardContent>
-            <CardFooter className="bg-black/60 border-t border-primary/20 p-4 flex justify-between">
-              <span className="text-[10px] font-tactical uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+            <CardFooter className="bg-black/60 border-t border-primary/20 p-3 sm:p-4 flex justify-between items-center">
+              <span className="text-[10px] sm:text-xs font-tactical uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Assinatura Digital Verificada (Admin RR)
               </span>
               <div className="flex gap-2 sm:hidden">
-                <Button variant="outline" size="sm" className="bg-primary/20 border-primary/50 text-primary hover:bg-primary/40" onClick={handleCopy}>
+                <Button variant="outline" size="sm" className="bg-primary/20 border-primary/50 text-primary hover:bg-primary/40 font-bold" onClick={handleCopy}>
                   {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
                 </Button>
               </div>

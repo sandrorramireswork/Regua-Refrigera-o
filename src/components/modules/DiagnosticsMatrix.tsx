@@ -21,7 +21,7 @@ export default function DiagnosticsMatrix() {
     tLiq, setTLiq,
     tExt, setTExt,
     tWb, setTWb,
-    pressureUnit, tempUnit, viewMode
+    pressureUnit, tempUnit
   } = useAppContext();
 
   const [isFetchingWeather, setIsFetchingWeather] = useState(false);
@@ -226,14 +226,14 @@ export default function DiagnosticsMatrix() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4 sm:gap-8">
       
       {/* 1. Calculadora P-T (Modo Expert Integrado) */}
-      <Card className="glass-panel border-white/5 relative overflow-hidden mt-2">
+      <Card className="glass-panel border-white/5 relative overflow-hidden mt-1 p-2.5 sm:p-5 rounded-xl sm:rounded-2xl">
         <div className="absolute top-0 right-0 p-32 bg-primary/10 rounded-full blur-[80px] -mr-16 -mt-16 pointer-events-none z-0"></div>
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-2 relative z-10 gap-4">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-4 pb-2 relative z-10 gap-3">
           <div>
-            <CardTitle className="font-display tracking-widest text-lg text-primary">CALCULADORA P-T</CardTitle>
+            <CardTitle className="font-display tracking-widest text-base sm:text-lg text-primary">CALCULADORA P-T</CardTitle>
             <CardDescription className="font-mono uppercase text-xs">Simulador de Saturação</CardDescription>
           </div>
           {refData?.hasGlide && (
@@ -243,51 +243,51 @@ export default function DiagnosticsMatrix() {
             </div>
           )}
         </CardHeader>
-        <CardContent className="space-y-8 relative z-10 pt-4">
-          <div className={`grid gap-8 md:gap-12 ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+        <CardContent className="space-y-4 sm:space-y-6 relative z-10 p-2 sm:p-4 pt-2">
+          <div className="grid gap-4 sm:gap-8 grid-cols-1 md:grid-cols-2">
             
             {/* Bloco Pressão */}
-            <div className="space-y-6 bg-black/40 p-5 md:p-6 rounded-2xl border border-white/5 shadow-inner">
+            <div className="space-y-4 sm:space-y-6 bg-black/40 p-3.5 sm:p-6 rounded-xl sm:rounded-2xl border border-white/5 shadow-inner">
               <div className="flex justify-between items-end">
-                <Label className="text-sm md:text-base font-tactical tracking-widest uppercase neon-text-cyan">Pressão ({pressureUnit})</Label>
+                <Label className="text-xs sm:text-base font-tactical tracking-widest uppercase neon-text-cyan">Pressão ({pressureUnit})</Label>
                 <Input 
                   type="number" 
-                  className="w-28 md:w-32 bg-black/50 text-right text-lg md:text-xl digital-display border-cyan-500/50 focus-visible:ring-cyan-500 text-cyan-400 h-10 md:h-12"
+                  className="w-32 sm:w-36 bg-black/50 text-right text-xl sm:text-2xl digital-display font-black border-cyan-500/50 focus-visible:ring-cyan-500 text-cyan-400 h-11 sm:h-12"
                   value={ptPressure}
                   onChange={(e) => handlePtPressureChange(Number(e.target.value))}
                 />
               </div>
-              <div className="px-2">
+              <div className="px-1">
                 <Slider 
                   value={[ptPressure]} 
                   min={pressureUnit === "psig" ? 0 : 0.1} 
                   max={pressureUnit === "psig" ? 700 : 50} 
                   step={pressureUnit === "psig" ? 1 : 0.1}
                   onValueChange={(val) => handlePtPressureChange(val[0]!)}
-                  className="py-4 cursor-pointer"
+                  className="py-3 cursor-pointer"
                 />
               </div>
             </div>
 
             {/* Bloco Temperatura */}
-            <div className="space-y-6 bg-black/40 p-5 md:p-6 rounded-2xl border border-white/5 shadow-inner">
+            <div className="space-y-4 sm:space-y-6 bg-black/40 p-3.5 sm:p-6 rounded-xl sm:rounded-2xl border border-white/5 shadow-inner">
               <div className="flex justify-between items-end">
-                <Label className="text-sm md:text-base font-tactical tracking-widest uppercase neon-text-orange">T. Saturação ({tempUnit === "F" ? "°F" : "°C"})</Label>
+                <Label className="text-xs sm:text-base font-tactical tracking-widest uppercase neon-text-orange">T. Saturação ({tempUnit === "F" ? "°F" : "°C"})</Label>
                 <Input 
                   type="number" 
-                  className="w-28 md:w-32 bg-black/50 text-right text-lg md:text-xl digital-display border-orange-500/50 focus-visible:ring-orange-500 text-orange-400 h-10 md:h-12"
+                  className="w-32 sm:w-36 bg-black/50 text-right text-xl sm:text-2xl digital-display font-black border-orange-500/50 focus-visible:ring-orange-500 text-orange-400 h-11 sm:h-12"
                   value={ptTemperature}
                   onChange={(e) => handlePtTempChange(Number(e.target.value))}
                 />
               </div>
-              <div className="px-2">
+              <div className="px-1">
                 <Slider 
                   value={[ptTemperature]} 
                   min={tempUnit === "F" ? -76 : -60} 
                   max={tempUnit === "F" ? 176 : 80} 
                   step={0.5}
                   onValueChange={(val) => handlePtTempChange(val[0]!)}
-                  className="py-4 cursor-pointer"
+                  className="py-3 cursor-pointer"
                 />
               </div>
             </div>
@@ -297,11 +297,11 @@ export default function DiagnosticsMatrix() {
       </Card>
 
       {/* 3. SH/SC Matrix */}
-      <div className={`grid gap-6 ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-4'}`}>
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-4">
         
         {/* Inputs Column */}
-        <div className="lg:col-span-1 space-y-6">
-          <Card className="glass-panel border-white/5">
+        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
+          <Card className="glass-panel border-white/5 p-3 sm:p-5 rounded-xl sm:rounded-2xl">
             <CardHeader>
               <CardTitle className="font-display tracking-widest text-primary text-sm">PARÂMETROS DE CAMPO</CardTitle>
             </CardHeader>
@@ -397,37 +397,37 @@ export default function DiagnosticsMatrix() {
       </div>
 
       {/* Analytics, Chart & Diagnosis */}
-      <div className={`${viewMode === 'mobile' ? 'col-span-1' : 'lg:col-span-3'} space-y-6`}>
+      <div className="lg:col-span-3 space-y-4 sm:space-y-6">
         
         {/* Top metrics and Chart */}
-        <div className={`grid gap-4 ${viewMode === 'mobile' ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-3'}`}>
+        <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
           {/* Metrics */}
           <div className="lg:col-span-1 flex flex-col gap-4">
-            <Card className={`glass-panel border-2 ${isSHHigh ? 'border-orange-500/50 shadow-[0_0_20px_rgba(255,140,0,0.2)]' : isSHLow ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'border-[#00FF66]/50 shadow-[0_0_20px_rgba(0,255,102,0.2)]'}`}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-tactical tracking-widest uppercase">Superaquecimento (SH)</CardTitle>
-                <CardDescription className="font-mono text-[10px] uppercase">Alvo: {targetSHMin}{tempUnit === "F" ? "°F" : "K"} - {targetSHMax}{tempUnit === "F" ? "°F" : "K"}</CardDescription>
+            <Card className={`glass-panel border-2 p-3 sm:p-5 rounded-xl sm:rounded-2xl ${isSHHigh ? 'border-orange-500/50 shadow-[0_0_20px_rgba(255,140,0,0.2)]' : isSHLow ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'border-[#00FF66]/50 shadow-[0_0_20px_rgba(0,255,102,0.2)]'}`}>
+              <CardHeader className="p-1 sm:p-2 pb-2">
+                <CardTitle className="text-sm sm:text-base font-tactical tracking-widest uppercase">Superaquecimento (SH)</CardTitle>
+                <CardDescription className="font-mono text-xs uppercase font-semibold">Alvo: {targetSHMin}{tempUnit === "F" ? "°F" : "K"} - {targetSHMax}{tempUnit === "F" ? "°F" : "K"}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className={`digital-display font-bold ${viewMode === 'mobile' ? 'text-3xl' : 'text-4xl'} ${isSHHigh ? 'text-orange-400 drop-shadow-[0_0_12px_rgba(255,140,0,0.8)]' : isSHLow ? 'text-cyan-400 drop-shadow-[0_0_12px_rgba(0,240,255,0.8)]' : 'text-[#00FF66] drop-shadow-[0_0_12px_rgba(0,255,102,0.8)]'}`}>
-                  {realSH.toFixed(1)} <span className={`${viewMode === 'mobile' ? 'text-lg' : 'text-xl'}`}>{tempUnit === "F" ? "°F" : "K"}</span>
+              <CardContent className="p-1 sm:p-2 pt-1">
+                <div className={`digital-display font-black text-4xl sm:text-5xl md:text-6xl ${isSHHigh ? 'text-orange-400 drop-shadow-[0_0_15px_rgba(255,140,0,0.8)]' : isSHLow ? 'text-cyan-400 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]' : 'text-[#00FF66] drop-shadow-[0_0_15px_rgba(0,255,102,0.8)]'}`}>
+                  {realSH.toFixed(1)} <span className="text-xl sm:text-2xl font-bold">{tempUnit === "F" ? "°F" : "K"}</span>
                 </div>
-                <div className="mt-2 text-xs font-mono text-muted-foreground">
+                <div className="mt-2 text-xs sm:text-sm font-mono text-muted-foreground font-semibold">
                   T_evap = {tEvap.toFixed(1)}°{tempUnit}
                 </div>
               </CardContent>
             </Card>
             
-            <Card className={`glass-panel border-2 ${isSCHigh ? 'border-orange-500/50 shadow-[0_0_20px_rgba(255,140,0,0.2)]' : isSCLow ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'border-[#00FF66]/50 shadow-[0_0_20px_rgba(0,255,102,0.2)]'}`}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-tactical tracking-widest uppercase">Subresfriamento (SC)</CardTitle>
-                <CardDescription className="font-mono text-[10px] uppercase">Alvo: {targetSCMin}{tempUnit === "F" ? "°F" : "K"} - {targetSCMax}{tempUnit === "F" ? "°F" : "K"}</CardDescription>
+            <Card className={`glass-panel border-2 p-3 sm:p-5 rounded-xl sm:rounded-2xl ${isSCHigh ? 'border-orange-500/50 shadow-[0_0_20px_rgba(255,140,0,0.2)]' : isSCLow ? 'border-cyan-500/50 shadow-[0_0_20px_rgba(0,240,255,0.2)]' : 'border-[#00FF66]/50 shadow-[0_0_20px_rgba(0,255,102,0.2)]'}`}>
+              <CardHeader className="p-1 sm:p-2 pb-2">
+                <CardTitle className="text-sm sm:text-base font-tactical tracking-widest uppercase">Subresfriamento (SC)</CardTitle>
+                <CardDescription className="font-mono text-xs uppercase font-semibold">Alvo: {targetSCMin}{tempUnit === "F" ? "°F" : "K"} - {targetSCMax}{tempUnit === "F" ? "°F" : "K"}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className={`digital-display font-bold ${viewMode === 'mobile' ? 'text-3xl' : 'text-4xl'} ${isSCHigh ? 'text-orange-400 drop-shadow-[0_0_12px_rgba(255,140,0,0.8)]' : isSCLow ? 'text-cyan-400 drop-shadow-[0_0_12px_rgba(0,240,255,0.8)]' : 'text-[#00FF66] drop-shadow-[0_0_12px_rgba(0,255,102,0.8)]'}`}>
-                  {realSC.toFixed(1)} <span className={`${viewMode === 'mobile' ? 'text-lg' : 'text-xl'}`}>{tempUnit === "F" ? "°F" : "K"}</span>
+              <CardContent className="p-1 sm:p-2 pt-1">
+                <div className={`digital-display font-black text-4xl sm:text-5xl md:text-6xl ${isSCHigh ? 'text-orange-400 drop-shadow-[0_0_15px_rgba(255,140,0,0.8)]' : isSCLow ? 'text-cyan-400 drop-shadow-[0_0_15px_rgba(0,240,255,0.8)]' : 'text-[#00FF66] drop-shadow-[0_0_15px_rgba(0,255,102,0.8)]'}`}>
+                  {realSC.toFixed(1)} <span className="text-xl sm:text-2xl font-bold">{tempUnit === "F" ? "°F" : "K"}</span>
                 </div>
-                <div className="mt-2 text-xs font-mono text-muted-foreground">
+                <div className="mt-2 text-xs sm:text-sm font-mono text-muted-foreground font-semibold">
                   T_cond = {tCond.toFixed(1)}°{tempUnit}
                 </div>
               </CardContent>
@@ -435,7 +435,7 @@ export default function DiagnosticsMatrix() {
           </div>
 
           {/* Chart */}
-          <div className={`${viewMode === 'mobile' ? 'col-span-1' : 'lg:col-span-2'}`}>
+          <div className="lg:col-span-2">
              <DiagnosticsChart 
                realSH={realSH} realSC={realSC} 
                targetSHMin={targetSHMin} targetSHMax={targetSHMax} 
@@ -445,25 +445,25 @@ export default function DiagnosticsMatrix() {
         </div>
 
         {/* Diagnosis & Action Output */}
-        <Card className={`glass-panel border-white/10 ${alertClass}`}>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-display tracking-widest text-primary text-lg">
-              <Icon className={`h-6 w-6 ${statusColor} ${Icon !== CheckCircle2 ? 'animate-pulse' : ''}`} />
+        <Card className={`glass-panel border-white/10 p-3.5 sm:p-6 rounded-xl sm:rounded-2xl ${alertClass}`}>
+          <CardHeader className="p-1 sm:p-2 pb-3">
+            <CardTitle className="flex items-center gap-2 font-display tracking-widest text-primary text-base sm:text-xl font-black">
+              <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${statusColor} ${Icon !== CheckCircle2 ? 'animate-pulse' : ''}`} />
               DIAGNÓSTICO TÉCNICO
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 p-1 sm:p-2">
             <div>
-              <p className={`text-xl font-bold tracking-wide ${statusColor}`}>{diagnosis}</p>
+              <p className={`text-xl sm:text-2xl md:text-3xl font-black tracking-wide ${statusColor}`}>{diagnosis}</p>
             </div>
-            <div className="p-4 bg-black/60 rounded-lg border border-white/10 backdrop-blur-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500 shadow-[0_0_10px_rgba(0,240,255,0.8)]"></div>
-              <Label className="flex items-center gap-2 text-cyan-400 font-tactical tracking-widest uppercase mb-3">
+            <div className="p-3.5 sm:p-5 bg-black/60 rounded-xl border border-white/10 backdrop-blur-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-cyan-500 shadow-[0_0_10px_rgba(0,240,255,0.8)]"></div>
+              <Label className="flex items-center gap-2 text-cyan-400 font-tactical tracking-widest uppercase mb-3 text-xs sm:text-sm font-bold">
                 <TerminalSquare className="w-4 h-4" /> PROCEDIMENTOS RECOMENDADOS
               </Label>
               <ul className="space-y-2 mt-1">
                 {steps.map((step, idx) => (
-                   <li key={idx} className="text-sm font-mono text-white/90 leading-relaxed pl-2">
+                   <li key={idx} className="text-sm sm:text-base font-mono text-white/90 leading-relaxed pl-2 font-medium">
                      {step}
                    </li>
                 ))}

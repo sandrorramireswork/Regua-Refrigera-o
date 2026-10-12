@@ -4,7 +4,7 @@ import { getSaturationTemp } from "@/lib/thermodynamics";
 import { 
   Power, Zap, Fan, ZoomIn, ZoomOut, BookOpen, Activity, 
   Sparkles, Award, Wrench, ShieldAlert, CheckCircle2, AlertTriangle, 
-  TrendingUp, Layers, Lightbulb, Thermometer
+  TrendingUp, Layers, Lightbulb, Thermometer, Gauge, Compass, ShieldCheck, BarChart3
 } from "lucide-react";
 
 export default function DigitalTwin() {
@@ -81,19 +81,12 @@ export default function DigitalTwin() {
   const yPosBaixa = 16 - (ratioBaixa * 45);
   const yPosAlta = 16 - (ratioAlta * 45);
 
-  // Botão para aplicar o cenário de exemplo ideal: 74,9°C de Alta e 5,8°C de Baixa com SH e SC perfeitos
-  const handleApplyExample = () => {
-    setTSuc(5.8);
-    if (pressureUnit === "psig") {
-      setPSuc(102);
-      setPLiq(376);
-      setTLiq(40.0);
-    } else {
-      setPSuc(7.0);
-      setPLiq(26.9);
-      setTLiq(40.0);
-    }
-  };
+  // Estimativas térmicas para análise diagnóstica de campo
+  const deltaTArEvap = Math.max(6, Math.min(16, Number(((tSuc - tEvap) * 0.55 + 9.2).toFixed(1))));
+  const deltaTArCond = Math.max(8, Math.min(22, Number(((tCond - tLiq) * 0.95 + 10.8).toFixed(1))));
+  const qEvap = Number(efeitoFrig.toFixed(0));
+  const wComp = Number((efeitoFrig / Math.max(1.2, estimatedCOP)).toFixed(0));
+  const qCond = qEvap + wComp;
 
   return (
     <div className="mx-auto space-y-6 sm:space-y-8 w-full max-w-7xl">
@@ -282,293 +275,183 @@ export default function DigitalTwin() {
                 <text x="0" y="-44" fill="#3b82f6" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="2" style={{ textShadow: "0 0 10px #3b82f6" }}>EVAPORADOR</text>
               </g>
 
-              {/* ===== PAINEL TÉRMICO UNIFICADO (DESIGN VERTICAL 360x320) ===== */}
+              {/* ===== MINI GRÁFICO TÉRMICO DO CICLO (CENTRALIZADO & ULTRA-LIMPO) ===== */}
               <g transform="translate(400, 300)">
-                {/* Painel de Fundo com Borda Neon e Efeito Vidro Escuro */}
+                {/* Painel Compacto de Fundo com Vidro Escuro e Borda Neon */}
                 <rect 
-                  x="-180" y="-160" width="360" height="320" 
-                  rx="18" 
+                  x="-140" y="-75" width="280" height="150" 
+                  rx="14" 
                   fill="#04070c" 
-                  fillOpacity="0.96" 
+                  fillOpacity="0.95" 
                   stroke="rgba(0, 240, 255, 0.45)" 
-                  strokeWidth="1.8" 
-                  filter="drop-shadow(0 0 35px rgba(0,0,0,0.98))" 
+                  strokeWidth="1.6" 
+                  filter="drop-shadow(0 0 25px rgba(0,0,0,0.95))" 
                 />
 
-                {/* Brackets Técnicos de Canto (Estilo Cockpit Cyber-Tactical) */}
-                <path d="M -180 -138 L -180 -160 L -155 -160" fill="none" stroke="#00f0ff" strokeWidth="2.5" opacity="0.9" />
-                <path d="M 180 -138 L 180 -160 L 155 -160" fill="none" stroke="#ef4444" strokeWidth="2.5" opacity="0.9" />
-                <path d="M -180 138 L -180 160 L -155 160" fill="none" stroke="#00f0ff" strokeWidth="2.5" opacity="0.9" />
-                <path d="M 180 138 L 180 160 L 155 160" fill="none" stroke="#ef4444" strokeWidth="2.5" opacity="0.9" />
+                {/* Brackets Técnicos Cyber nos Cantos */}
+                <path d="M -140 -58 L -140 -75 L -120 -75" fill="none" stroke="#00f0ff" strokeWidth="2" opacity="0.9" />
+                <path d="M 140 -58 L 140 -75 L 120 -75" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.9" />
+                <path d="M -140 58 L -140 75 L -120 75" fill="none" stroke="#00f0ff" strokeWidth="2" opacity="0.9" />
+                <path d="M 140 58 L 140 75 L 120 75" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.9" />
 
-                {/* Cabeçalho do Painel Unificado */}
+                {/* Título do Mini Gráfico */}
                 <text 
-                  x="0" y="-138" 
+                  x="0" y="-56" 
                   fill="#38bdf8" 
-                  fontSize="12" 
+                  fontSize="9.5" 
                   textAnchor="middle" 
                   fontFamily="monospace" 
                   fontWeight="900" 
-                  letterSpacing="2.5"
-                  style={{ textShadow: "0 0 12px rgba(0,240,255,0.7)" }}
+                  letterSpacing="2"
+                  style={{ textShadow: "0 0 10px rgba(0,240,255,0.7)" }}
                 >
-                  PAINEL TÉRMICO UNIFICADO DO CICLO
+                  MINI GRÁFICO TÉRMICO DO CICLO
                 </text>
 
                 {/* Badge Central de Salto Térmico (ΔT) */}
-                <g transform="translate(0, -114)">
-                  <rect x="-44" y="-10.5" width="88" height="21" rx="10.5" fill="#181404" stroke="#fbbf24" strokeWidth="1.5" opacity="0.95" />
-                  <text x="0" y="4.5" fill="#fbbf24" fontSize="10.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                <g transform="translate(0, -39)">
+                  <rect x="-42" y="-9" width="84" height="18" rx="9" fill="#181404" stroke="#fbbf24" strokeWidth="1.3" opacity="0.95" />
+                  <text x="0" y="3.5" fill="#fbbf24" fontSize="9.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
                     ΔT {deltaT} K
                   </text>
                 </g>
 
-                {/* ===== COLUNA ESQUERDA: LADO DE BAIXA (SUCÇÃO) ===== */}
-                <g transform="translate(-90, -85)">
-                  <text x="0" y="0" fill="#38bdf8" fontSize="9.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
-                    ● SUCÇÃO (BAIXA)
-                  </text>
-                  <text 
-                    x="0" y="24" 
-                    fill="#00f0ff" 
-                    fontSize="24" 
-                    textAnchor="middle" 
-                    fontFamily="monospace" 
-                    fontWeight="900"
-                    style={{ textShadow: "0 0 16px #00f0ff" }}
-                  >
-                    {tBaixa.toFixed(1)}°{tempUnit}
-                  </text>
-                </g>
-
-                {/* ===== COLUNA DIREITA: LADO DE ALTA (DESCARGA) ===== */}
-                <g transform="translate(90, -85)">
-                  <text x="0" y="0" fill="#f87171" fontSize="9.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
-                    DESCARGA (ALTA) ●
-                  </text>
-                  <text 
-                    x="0" y="24" 
-                    fill="#ef4444" 
-                    fontSize="24" 
-                    textAnchor="middle" 
-                    fontFamily="monospace" 
-                    fontWeight="900"
-                    style={{ textShadow: "0 0 16px #ef4444" }}
-                  >
-                    {tAlta.toFixed(1)}°{tempUnit}
-                  </text>
-                </g>
-
-                {/* ===== CARTÃO DE SUPERAQUECIMENTO (SH) - 3 CAMADAS VERTICAIS (SEM COLISÃO) ===== */}
-                <g transform="translate(-90, -22)">
-                  <rect 
-                    x="-76" y="-28" width="152" height="58" 
-                    rx="8" 
-                    fill="#021c27" 
-                    stroke={isSHNormal ? "#00f0ff" : "#f97316"} 
-                    strokeWidth="1.5" 
-                  />
-                  {/* Linha 1: Título Centrado */}
-                  <text x="0" y="-14" fill="#38bdf8" fontSize="8.5" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
-                    SUPERAQUECIMENTO (SH)
-                  </text>
-                  {/* Linha 2: Valor Grande em Destaque */}
-                  <text 
-                    x="0" y="6" 
-                    fill={isSHNormal ? "#4ade80" : "#f97316"} 
-                    fontSize="17" 
-                    fontFamily="monospace" 
-                    fontWeight="900" 
-                    textAnchor="middle"
-                    style={{ textShadow: isSHNormal ? "0 0 10px #4ade80" : "0 0 10px #f97316" }}
-                  >
-                    {realSH.toFixed(1)} K
-                  </text>
-                  {/* Linha 3: Badge de Status Inferior */}
-                  <rect x="-70" y="14" width="140" height="13" rx="3.5" fill="#000000" fillOpacity="0.65" stroke={isSHNormal ? "rgba(74,222,128,0.4)" : "rgba(249,115,22,0.4)"} strokeWidth="0.8" />
-                  <text 
-                    x="0" y="23.5" 
-                    fill={isSHNormal ? "#4ade80" : "#f97316"} 
-                    fontSize="7" 
-                    fontFamily="monospace" 
-                    fontWeight="900"
-                    textAnchor="middle"
-                  >
-                    {isSHNormal ? `ALVO ${targetSHMin}-${targetSHMax}K (NOMINAL)` : isSHHigh ? `ALTO (> ${targetSHMax}K RISCO SUBCARGA)` : `BAIXO (< ${targetSHMin}K RISCO GOLPE)`}
-                  </text>
-                </g>
-
-                {/* ===== CARTÃO DE SUB-RESFRIAMENTO (SC) - 3 CAMADAS VERTICAIS (SEM COLISÃO) ===== */}
-                <g transform="translate(90, -22)">
-                  <rect 
-                    x="-76" y="-28" width="152" height="58" 
-                    rx="8" 
-                    fill="#240409" 
-                    stroke={isSCNormal ? "#ef4444" : "#f97316"} 
-                    strokeWidth="1.5" 
-                  />
-                  {/* Linha 1: Título Centrado */}
-                  <text x="0" y="-14" fill="#f87171" fontSize="8.5" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
-                    SUB-RESFRIAMENTO (SC)
-                  </text>
-                  {/* Linha 2: Valor Grande em Destaque */}
-                  <text 
-                    x="0" y="6" 
-                    fill={isSCNormal ? "#4ade80" : "#f97316"} 
-                    fontSize="17" 
-                    fontFamily="monospace" 
-                    fontWeight="900" 
-                    textAnchor="middle"
-                    style={{ textShadow: isSCNormal ? "0 0 10px #4ade80" : "0 0 10px #f97316" }}
-                  >
-                    {realSC.toFixed(1)} K
-                  </text>
-                  {/* Linha 3: Badge de Status Inferior */}
-                  <rect x="-70" y="14" width="140" height="13" rx="3.5" fill="#000000" fillOpacity="0.65" stroke={isSCNormal ? "rgba(74,222,128,0.4)" : "rgba(249,115,22,0.4)"} strokeWidth="0.8" />
-                  <text 
-                    x="0" y="23.5" 
-                    fill={isSCNormal ? "#4ade80" : "#f97316"} 
-                    fontSize="7" 
-                    fontFamily="monospace" 
-                    fontWeight="900"
-                    textAnchor="middle"
-                  >
-                    {isSCNormal ? `ALVO ${targetSCMin}-${targetSCMax}K (NOMINAL)` : isSCHigh ? `ALTO (> ${targetSCMax}K SOBRECARGA)` : `BAIXO (< ${targetSCMin}K FALTA FLUIDO)`}
-                  </text>
-                </g>
-
-                {/* ===== CURVA TÉRMICA & FLUXO DO CICLO ===== */}
-                <g transform="translate(0, 48)">
-                  {/* Linhas de Grade de Fundo do Gráfico */}
-                  <line x1="-140" y1="0" x2="140" y2="0" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
-                  <line x1="-140" y1="20" x2="140" y2="20" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
-                  <line x1="0" y1="-20" x2="0" y2="30" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
+                {/* Curva S Térmica Dinâmica do Ciclo */}
+                <g transform="translate(0, 5)">
+                  {/* Linhas de Grade de Fundo */}
+                  <line x1="-110" y1="0" x2="110" y2="0" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1="-110" y1="18" x2="110" y2="18" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
 
                   {/* Área Preenchida com Gradiente Translúcido */}
                   <path 
-                    d={`M -135 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 135 ${yPosAlta} L 135 26 L -135 26 Z`} 
+                    d={`M -105 ${yPosBaixa} C -40 ${yPosBaixa}, 40 ${yPosAlta}, 105 ${yPosAlta} L 105 18 L -105 18 Z`} 
                     fill="url(#thermalAreaGrad)" 
                   />
 
                   {/* Curva Térmica Dinâmica */}
                   <path 
-                    d={`M -135 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 135 ${yPosAlta}`} 
+                    d={`M -105 ${yPosBaixa} C -40 ${yPosBaixa}, 40 ${yPosAlta}, 105 ${yPosAlta}`} 
                     fill="none" 
                     stroke="url(#thermalCurveGrad)" 
-                    strokeWidth="4" 
-                    filter="drop-shadow(0 0 10px rgba(0,240,255,0.7))" 
+                    strokeWidth="3.5" 
+                    filter="drop-shadow(0 0 8px rgba(0,240,255,0.7))" 
                   />
                   
                   {/* Linha de Fluxo Animada */}
                   <path 
-                    d={`M -135 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 135 ${yPosAlta}`} 
+                    d={`M -105 ${yPosBaixa} C -40 ${yPosBaixa}, 40 ${yPosAlta}, 105 ${yPosAlta}`} 
                     fill="none" 
                     stroke="#ffffff" 
-                    strokeWidth="1.6" 
+                    strokeWidth="1.5" 
                     strokeDasharray="6 6" 
                     className="animate-flow" 
                     opacity="0.9" 
                   />
 
-                  {/* Nó de Baixa com Pulso & Badge T.Suc */}
-                  <circle cx="-135" cy={yPosBaixa} r="7" fill="#00f0ff" opacity="0.3" className="animate-ping" />
-                  <circle cx="-135" cy={yPosBaixa} r="5" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" filter="drop-shadow(0 0 8px #00f0ff)" />
-                  <rect x="-160" y={yPosBaixa - 22} width="50" height="15" rx="4" fill="#040c18" stroke="#00f0ff" strokeWidth="1.2" />
-                  <text x="-135" y={yPosBaixa - 11} fill="#00f0ff" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="900">T.SUC</text>
+                  {/* Nó de Baixa com Pulso & Label */}
+                  <circle cx="-105" cy={yPosBaixa} r="6" fill="#00f0ff" opacity="0.3" className="animate-ping" />
+                  <circle cx="-105" cy={yPosBaixa} r="4.5" fill="#00f0ff" stroke="#ffffff" strokeWidth="1.8" filter="drop-shadow(0 0 6px #00f0ff)" />
+                  <rect x="-135" y={yPosBaixa - 18} width="46" height="13" rx="3.5" fill="#040c18" stroke="#00f0ff" strokeWidth="1" />
+                  <text x="-112" y={yPosBaixa - 9} fill="#00f0ff" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                    {tBaixa.toFixed(1)}°
+                  </text>
 
-                  {/* Nó de Alta com Pulso & Badge T.Desc */}
-                  <circle cx="135" cy={yPosAlta} r="7" fill="#ef4444" opacity="0.3" className="animate-ping" />
-                  <circle cx="135" cy={yPosAlta} r="5" fill="#ef4444" stroke="#ffffff" strokeWidth="2" filter="drop-shadow(0 0 8px #ef4444)" />
-                  <rect x="110" y={yPosAlta - 22} width="50" height="15" rx="4" fill="#180407" stroke="#ef4444" strokeWidth="1.2" />
-                  <text x="135" y={yPosAlta - 11} fill="#ef4444" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="900">T.DESC</text>
+                  {/* Nó de Alta com Pulso & Label */}
+                  <circle cx="105" cy={yPosAlta} r="6" fill="#ef4444" opacity="0.3" className="animate-ping" />
+                  <circle cx="105" cy={yPosAlta} r="4.5" fill="#ef4444" stroke="#ffffff" strokeWidth="1.8" filter="drop-shadow(0 0 6px #ef4444)" />
+                  <rect x="89" y={yPosAlta - 18} width="46" height="13" rx="3.5" fill="#180407" stroke="#ef4444" strokeWidth="1" />
+                  <text x="112" y={yPosAlta - 9} fill="#ef4444" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                    {tAlta.toFixed(1)}°
+                  </text>
                 </g>
 
-                {/* ===== DUAL RÉGUAS TÉRMICAS DE ALVO (SH & SC TARGET GAUGES) ===== */}
-                <g transform="translate(0, 92)">
-                  {/* Régua de Superaquecimento (SH) */}
-                  <g transform="translate(-85, 0)">
-                    <rect x="-60" y="0" width="120" height="6" rx="3" fill="#031a24" stroke="rgba(0,240,255,0.4)" strokeWidth="1" />
-                    {/* Faixa Alvo Verde (5-7K em escala 0 a 16K) */}
-                    <rect x="-22.5" y="0.5" width="15" height="5" rx="1.5" fill="#22c55e" opacity="0.55" />
-                    {/* Cursor Dinâmico */}
-                    <circle cx={Math.max(-56, Math.min(56, -60 + (realSH / 16) * 120))} cy="3" r="4" fill="#00f0ff" stroke="#fff" strokeWidth="1.5" filter="drop-shadow(0 0 6px #00f0ff)" />
-                    <text x="-60" y="12" fill="#94a3b8" fontSize="7" fontFamily="monospace" fontWeight="900">0K</text>
-                    <text x="0" y="12" fill="#38bdf8" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">ALVO SH (5-7K)</text>
-                    <text x="60" y="12" fill="#94a3b8" fontSize="7" textAnchor="end" fontFamily="monospace" fontWeight="900">16K</text>
-                  </g>
+                {/* Réguas Compactas de Alvo SH & SC */}
+                <g transform="translate(0, 35)">
+                  {/* Mini Régua SH */}
+                  <rect x="-105" y="0" width="95" height="5" rx="2.5" fill="#031a24" stroke="rgba(0,240,255,0.4)" strokeWidth="0.8" />
+                  <rect x="-75.5" y="0.5" width="12" height="4" rx="1" fill="#22c55e" opacity="0.6" />
+                  <circle cx={Math.max(-103, Math.min(-12, -105 + (realSH / 16) * 95))} cy="2.5" r="3.2" fill="#00f0ff" stroke="#fff" strokeWidth="1.2" />
+                  <text x="-105" y="10" fill="#64748b" fontSize="6.5" fontFamily="monospace" fontWeight="900">SH</text>
+                  <text x="-10" y="10" fill={isSHNormal ? "#4ade80" : "#f97316"} fontSize="6.5" textAnchor="end" fontFamily="monospace" fontWeight="900">{realSH.toFixed(1)}K</text>
 
-                  {/* Régua de Sub-resfriamento (SC) */}
-                  <g transform="translate(85, 0)">
-                    <rect x="-60" y="0" width="120" height="6" rx="3" fill="#200408" stroke="rgba(239,68,68,0.4)" strokeWidth="1" />
-                    {/* Faixa Alvo Verde (3-5K em escala 0 a 12K) */}
-                    <rect x="-30" y="0.5" width="20" height="5" rx="1.5" fill="#22c55e" opacity="0.55" />
-                    {/* Cursor Dinâmico */}
-                    <circle cx={Math.max(-56, Math.min(56, -60 + (realSC / 12) * 120))} cy="3" r="4" fill="#ef4444" stroke="#fff" strokeWidth="1.5" filter="drop-shadow(0 0 6px #ef4444)" />
-                    <text x="-60" y="12" fill="#94a3b8" fontSize="7" fontFamily="monospace" fontWeight="900">0K</text>
-                    <text x="0" y="12" fill="#f87171" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">ALVO SC (3-5K)</text>
-                    <text x="60" y="12" fill="#94a3b8" fontSize="7" textAnchor="end" fontFamily="monospace" fontWeight="900">12K</text>
-                  </g>
+                  {/* Mini Régua SC */}
+                  <rect x="10" y="0" width="95" height="5" rx="2.5" fill="#200408" stroke="rgba(239,68,68,0.4)" strokeWidth="0.8" />
+                  <rect x="33.8" y="0.5" width="16" height="4" rx="1" fill="#22c55e" opacity="0.6" />
+                  <circle cx={Math.max(12, Math.min(103, 10 + (realSC / 12) * 95))} cy="2.5" r="3.2" fill="#ef4444" stroke="#fff" strokeWidth="1.2" />
+                  <text x="10" y="10" fill="#64748b" fontSize="6.5" fontFamily="monospace" fontWeight="900">SC</text>
+                  <text x="105" y="10" fill={isSCNormal ? "#4ade80" : "#f97316"} fontSize="6.5" textAnchor="end" fontFamily="monospace" fontWeight="900">{realSC.toFixed(1)}K</text>
                 </g>
 
-                {/* ===== STATUS OPERACIONAL UNIFICADO DO CICLO ===== */}
-                <g transform="translate(0, 130)">
+                {/* Status Operacional Compacto */}
+                <g transform="translate(0, 58)">
                   <rect 
-                    x="-130" y="-12" width="260" height="24" 
+                    x="-105" y="-8.5" width="210" height="17" 
                     fill="#050505" 
-                    rx="12" 
+                    rx="8.5" 
                     stroke={statusColor} 
-                    strokeWidth="2" 
+                    strokeWidth="1.5" 
                     opacity="0.95" 
-                    filter={`drop-shadow(0 0 12px ${statusColor})`} 
+                    filter={`drop-shadow(0 0 8px ${statusColor})`} 
                   />
                   <text 
-                    x="0" y="4.5" 
+                    x="0" y="3.5" 
                     fill={statusColor} 
-                    fontSize="11" 
+                    fontSize="8.5" 
                     textAnchor="middle" 
                     fontFamily="monospace" 
                     fontWeight="900" 
-                    letterSpacing="2"
+                    letterSpacing="1.5"
                     className="drop-shadow-md"
                   >
                     {shortStatus}
                   </text>
                 </g>
-
               </g>
 
-              {/* ===== BADGES HUD DE ALTA DEFINIÇÃO (POSICIONAMENTO LIMPO & SEM COLISÕES) ===== */}
+              {/* ===== BADGES HUD DE ALTA DEFINIÇÃO NAS TUBULAÇÕES ===== */}
 
-              {/* 1. Medições de Sucção / Baixa */}
+              {/* 1. Medições de Sucção / Baixa (com indicador de SH direto na linha) */}
               <g transform="translate(155, 475)">
-                <rect x="-56" y="-22" width="112" height="44" rx="7" fill="#030c18" fillOpacity="0.92" stroke="#3b82f6" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(59,130,246,0.45))" />
-                <text x="0" y="-4" fill="#38bdf8" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #38bdf8" }}>
+                <rect x="-58" y="-28" width="116" height="56" rx="8" fill="#030c18" fillOpacity="0.92" stroke="#3b82f6" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(59,130,246,0.45))" />
+                <text x="0" y="-10" fill="#38bdf8" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #38bdf8" }}>
                   {tSuc.toFixed(1)}°{tempUnit}
                 </text>
-                <text x="0" y="14" fill="#60a5fa" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #60a5fa" }}>
+                <text x="0" y="6" fill="#60a5fa" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #60a5fa" }}>
                   {pSuc.toFixed(1)} {pressureUnit}
                 </text>
+                <rect x="-48" y="12" width="96" height="12" rx="3" fill="#000000" fillOpacity="0.75" stroke={isSHNormal ? "rgba(74,222,128,0.5)" : "rgba(249,115,22,0.5)"} strokeWidth="0.8" />
+                <text x="0" y="20.5" fill={isSHNormal ? "#4ade80" : "#f97316"} fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                  SH: {realSH.toFixed(1)} K
+                </text>
               </g>
 
-              {/* 2. Medições de Descarga / Alta (Acima da Tubulação) */}
+              {/* 2. Medições de Descarga / Alta (com indicação da Sat. Condensação) */}
               <g transform="translate(185, 26)">
-                <rect x="-56" y="-20" width="112" height="42" rx="7" fill="#180407" fillOpacity="0.92" stroke="#ef4444" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(239,68,68,0.45))" />
-                <text x="0" y="-4" fill="#f87171" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #ef4444" }}>
+                <rect x="-58" y="-22" width="116" height="50" rx="8" fill="#180407" fillOpacity="0.92" stroke="#ef4444" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(239,68,68,0.45))" />
+                <text x="0" y="-7" fill="#f87171" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #ef4444" }}>
                   {(tCond + 30).toFixed(1)}°{tempUnit}
                 </text>
-                <text x="0" y="14" fill="#ef4444" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #ef4444" }}>
+                <text x="0" y="8" fill="#ef4444" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #ef4444" }}>
                   {pLiq.toFixed(1)} {pressureUnit}
+                </text>
+                <rect x="-48" y="13" width="96" height="12" rx="3" fill="#000000" fillOpacity="0.75" stroke="rgba(239,68,68,0.5)" strokeWidth="0.8" />
+                <text x="0" y="21.5" fill="#f87171" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                  SAT COND: {tCond.toFixed(1)}°
                 </text>
               </g>
 
-              {/* 3. Medições de Linha de Líquido (Acima da Tubulação) */}
+              {/* 3. Medições de Linha de Líquido (com indicador de SC direto na linha) */}
               <g transform="translate(615, 26)">
-                <rect x="-56" y="-20" width="112" height="42" rx="7" fill="#180a03" fillOpacity="0.92" stroke="#f97316" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(249,115,22,0.45))" />
-                <text x="0" y="-4" fill="#fb923c" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #f97316" }}>
+                <rect x="-58" y="-22" width="116" height="50" rx="8" fill="#180a03" fillOpacity="0.92" stroke="#f97316" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(249,115,22,0.45))" />
+                <text x="0" y="-7" fill="#fb923c" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #f97316" }}>
                   {tLiq.toFixed(1)}°{tempUnit}
                 </text>
-                <text x="0" y="14" fill="#f97316" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #f97316" }}>
+                <text x="0" y="8" fill="#f97316" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #f97316" }}>
                   {pLiq.toFixed(1)} {pressureUnit}
+                </text>
+                <rect x="-48" y="13" width="96" height="12" rx="3" fill="#000000" fillOpacity="0.75" stroke={isSCNormal ? "rgba(74,222,128,0.5)" : "rgba(249,115,22,0.5)"} strokeWidth="0.8" />
+                <text x="0" y="21.5" fill={isSCNormal ? "#4ade80" : "#f97316"} fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                  SC: {realSC.toFixed(1)} K
                 </text>
               </g>
 
@@ -583,18 +466,7 @@ export default function DigitalTwin() {
           <span className="font-display tracking-widest text-[10px] md:text-xs text-primary neon-text-cyan font-black">MOTOR DE SIMULAÇÃO TÉRMICA (ATIVO)</span>
         </div>
 
-        {/* Quick Example Loader Button (Top Right) */}
-        <div className="absolute top-4 right-4 z-20">
-          <button 
-            onClick={handleApplyExample}
-            title="Carregar temperaturas exemplo: 74,9°C de Alta e 5,8°C de Baixa com SH e SC nominais"
-            className="flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 bg-cyan-950/80 hover:bg-cyan-900 border border-cyan-400 text-cyan-200 rounded-xl font-mono text-xs md:text-sm font-black transition-all shadow-[0_0_15px_rgba(0,240,255,0.4)]"
-          >
-            <Activity className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
-            <span className="hidden sm:inline">Exemplo 74.9° Alta / 5.8° Baixa (SH & SC OK)</span>
-            <span className="sm:hidden">74.9° / 5.8°</span>
-          </button>
-        </div>
+
 
         {/* Zoom Controls (Bottom Right) */}
         <div className="absolute bottom-4 right-4 flex gap-2 z-20">
@@ -607,6 +479,359 @@ export default function DigitalTwin() {
           <button onClick={handleZoomIn} className="p-2 md:p-3 bg-black/85 border border-white/20 rounded-xl hover:bg-white/10 hover:border-cyan-500/50 text-white shadow-[0_0_15px_rgba(0,0,0,0.6)] transition-all">
             <ZoomIn className="w-4 h-4 md:w-5 md:h-5 text-cyan-400" />
           </button>
+        </div>
+      </div>
+
+      {/* ===== NOVO COCKPIT DE GRÁFICOS TÉCNICOS & DIAGNÓSTICO MULTIVARIADO DE CAMPO ===== */}
+      <div className="space-y-6">
+        
+        {/* Header do Cockpit Gráfico */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 bg-gradient-to-r from-cyan-950/40 via-zinc-950 to-zinc-950 p-4 sm:p-5 rounded-2xl border border-cyan-500/30 shadow-[0_0_25px_rgba(0,240,255,0.1)]">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.25)]">
+              <TrendingUp className="w-6 h-6 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-base sm:text-lg md:text-xl font-display font-black tracking-wider uppercase text-white flex items-center gap-2">
+                Cockpit de Gráficos Técnicos & Termodinâmicos
+              </h3>
+              <p className="text-xs font-mono text-zinc-400 mt-0.5">
+                Monitoramento gráfico de Deltas Térmicos (ΔT), Diagrama P-h, Envelope Copeland e Fluxo Energético
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 px-3 py-1 bg-cyan-950/60 border border-cyan-400/30 rounded-lg text-cyan-300 font-mono text-xs font-bold">
+            <Activity className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
+            <span>TELEMETRIA GRÁFICA ATIVA</span>
+          </div>
+        </div>
+
+        {/* Grid de 4 Gráficos Técnicos Avançados */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* ===== GRÁFICO 1: RADAR DE DELTAS TÉRMICOS (ΔT MULTIVARIADO) ===== */}
+          <div className="bg-zinc-950/80 border border-cyan-500/20 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(0,240,255,0.06)] relative overflow-hidden">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <Thermometer className="w-5 h-5 text-cyan-400" />
+                <h4 className="font-tactical font-black text-sm uppercase text-cyan-300 tracking-wider">
+                  Radar dos Deltas Térmicos (ΔT de Campo)
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-bold">
+                DIAGNÓSTICO MULTIVARIADO
+              </span>
+            </div>
+
+            <div className="space-y-3.5 pt-1">
+              
+              {/* 1. Salto Global Descarga - Sucção */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-zinc-300 font-bold">● ΔT Salto Global (T.Desc - T.Suc)</span>
+                  <span className="text-amber-400 font-black">{deltaT} K</span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden relative">
+                  <div 
+                    className="h-full bg-gradient-to-r from-cyan-500 via-amber-500 to-rose-500 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(100, Math.max(10, (deltaT / 90) * 100))}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono text-zinc-500">
+                  <span>Elevação térmica do compressor</span>
+                  <span className="text-zinc-400">Escala até 90 K</span>
+                </div>
+              </div>
+
+              {/* 2. ΔT Superaquecimento Útil (SH) */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-zinc-300 font-bold">● ΔT Superaquecimento (SH)</span>
+                  <span className={isSHNormal ? "text-emerald-400 font-black" : "text-amber-400 font-black"}>
+                    {realSH.toFixed(1)} K ({isSHNormal ? "Nominal 5-7K" : isSHLow ? "Risco Golpe Líquido" : "Subcarga"})
+                  </span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden relative">
+                  {/* Faixa Alvo Verde */}
+                  <div className="absolute top-0 bottom-0 left-[31%] width-[13%] w-[13%] bg-emerald-500/25 border-x border-emerald-500/50 z-0"></div>
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${isSHNormal ? "bg-emerald-500" : isSHLow ? "bg-rose-500" : "bg-amber-500"}`}
+                    style={{ width: `${Math.min(100, Math.max(8, (realSH / 16) * 100))}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono text-zinc-500">
+                  <span className="text-rose-400/90">&lt; 4K Risco Golpe</span>
+                  <span className="text-emerald-400 font-bold">5 a 7 K (Faixa Ideal)</span>
+                  <span className="text-amber-400">&gt; 9K Perda Rendimento</span>
+                </div>
+              </div>
+
+              {/* 3. ΔT Sub-resfriamento (SC) */}
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-zinc-300 font-bold">● ΔT Sub-resfriamento (SC)</span>
+                  <span className={isSCNormal ? "text-emerald-400 font-black" : "text-rose-400 font-black"}>
+                    {realSC.toFixed(1)} K ({isSCNormal ? "Nominal 3-5K" : isSCLow ? "Falta Fluido" : "Sobrecarga"})
+                  </span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden relative">
+                  {/* Faixa Alvo Verde */}
+                  <div className="absolute top-0 bottom-0 left-[25%] width-[17%] w-[17%] bg-emerald-500/25 border-x border-emerald-500/50 z-0"></div>
+                  <div 
+                    className={`h-full rounded-full transition-all duration-500 ${isSCNormal ? "bg-emerald-500" : isSCLow ? "bg-amber-500" : "bg-rose-500"}`}
+                    style={{ width: `${Math.min(100, Math.max(8, (realSC / 12) * 100))}%` }}
+                  ></div>
+                </div>
+                <div className="flex justify-between text-[10px] font-mono text-zinc-500">
+                  <span className="text-amber-400">&lt; 2K Falta Fluido</span>
+                  <span className="text-emerald-400 font-bold">3 a 5 K (Faixa Ideal)</span>
+                  <span className="text-rose-400">&gt; 6K Sobrecarga</span>
+                </div>
+              </div>
+
+              {/* 4. Deltas de Ar (Evaporador & Condensador) */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div className="bg-zinc-900/60 p-2.5 rounded-xl border border-blue-500/20">
+                  <div className="text-[10px] font-mono text-zinc-400">ΔT Ar Evaporador (Insufl./Retorno)</div>
+                  <div className="text-base font-black font-mono text-cyan-300 mt-0.5">{deltaTArEvap}°C</div>
+                  <div className="text-[9px] font-mono text-emerald-400 mt-0.5">Alvo Nominal: 8 a 12°C</div>
+                </div>
+                <div className="bg-zinc-900/60 p-2.5 rounded-xl border border-orange-500/20">
+                  <div className="text-[10px] font-mono text-zinc-400">ΔT Ar Condensador (Descarga/Amb)</div>
+                  <div className="text-base font-black font-mono text-orange-400 mt-0.5">{deltaTArCond}°C</div>
+                  <div className="text-[9px] font-mono text-emerald-400 mt-0.5">Alvo Nominal: 10 a 15°C</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* ===== GRÁFICO 2: MINI DIAGRAMA P-h (PRESSÃO X ENTALPIA EM TEMPO REAL) ===== */}
+          <div className="bg-zinc-950/80 border border-cyan-500/20 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(0,240,255,0.06)] relative overflow-hidden flex flex-col justify-between">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <Layers className="w-5 h-5 text-yellow-400" />
+                <h4 className="font-tactical font-black text-sm uppercase text-yellow-400 tracking-wider">
+                  Mini Diagrama P-h (Pressão × Entalpia)
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-yellow-950 text-yellow-300 border border-yellow-500/40 font-bold">
+                CICLO TERMODINÂMICO
+              </span>
+            </div>
+
+            {/* Canvas Vetorial do Diagrama Mollier P-h */}
+            <div className="w-full bg-[#03070d] rounded-xl p-2 border border-cyan-500/20 relative aspect-[340/165]">
+              <svg className="w-full h-full" viewBox="0 0 340 165">
+                <defs>
+                  <linearGradient id="mollierGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#22c55e" />
+                    <stop offset="35%" stopColor="#00f0ff" />
+                    <stop offset="70%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#ef4444" />
+                  </linearGradient>
+                </defs>
+
+                {/* Eixos */}
+                <line x1="25" y1="145" x2="325" y2="145" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                <line x1="25" y1="15" x2="25" y2="145" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                <text x="325" y="157" fill="#64748b" fontSize="8" textAnchor="end" fontFamily="monospace">Entalpia h (kJ/kg) →</text>
+                <text x="28" y="18" fill="#64748b" fontSize="8" fontFamily="monospace">↑ Pressão P (log)</text>
+
+                {/* Domo de Saturação (Curva de Sino do Fluido) */}
+                <path 
+                  d="M 40 145 Q 140 30 170 30 Q 200 30 295 145" 
+                  fill="rgba(0, 240, 255, 0.05)" 
+                  stroke="rgba(0, 240, 255, 0.4)" 
+                  strokeWidth="1.5" 
+                  strokeDasharray="3 3" 
+                />
+                <text x="55" y="138" fill="#38bdf8" fontSize="7.5" fontFamily="monospace">Líq. Saturado</text>
+                <text x="240" y="138" fill="#f87171" fontSize="7.5" fontFamily="monospace">Vap. Saturado</text>
+                <circle cx="170" cy="30" r="3" fill="#fbbf24" />
+                <text x="170" y="24" fill="#fbbf24" fontSize="7.5" textAnchor="middle" fontFamily="monospace">Ponto Crítico</text>
+
+                {/* O Ciclo de Refrigeração Real Plotado (Pontos 1, 2, 3, 4) */}
+                {/* Ponto 1: Saída Evap (x=215, y=115) */}
+                {/* Ponto 2: Saída Comp (x=280, y=55) */}
+                {/* Ponto 3: Saída Cond (x=85, y=55) */}
+                {/* Ponto 4: Pós-Expansão (x=85, y=115) */}
+                
+                {/* Linhas do Ciclo */}
+                <path 
+                  d="M 85 115 L 215 115 L 280 55 L 85 55 Z" 
+                  fill="rgba(0, 240, 255, 0.08)" 
+                  stroke="url(#mollierGrad)" 
+                  strokeWidth="2.5" 
+                  filter="drop-shadow(0 0 6px rgba(0,240,255,0.6))"
+                />
+
+                {/* Setas de Fluxo */}
+                <path d="M 150 115 L 158 112 L 158 118 Z" fill="#00f0ff" />
+                <path d="M 245 83 L 252 79 L 248 87 Z" fill="#ef4444" />
+                <path d="M 180 55 L 172 52 L 172 58 Z" fill="#f97316" />
+                <path d="M 85 85 L 82 89 L 88 89 Z" fill="#22c55e" />
+
+                {/* 4 Nós com Marcações */}
+                <circle cx="215" cy="115" r="4.5" fill="#00f0ff" stroke="#fff" strokeWidth="1.2" />
+                <text x="222" y="123" fill="#00f0ff" fontSize="7.5" fontFamily="monospace" fontWeight="bold">1. Sucção (h1)</text>
+
+                <circle cx="280" cy="55" r="4.5" fill="#ef4444" stroke="#fff" strokeWidth="1.2" />
+                <text x="282" y="50" fill="#ef4444" fontSize="7.5" fontFamily="monospace" fontWeight="bold">2. Descarga (h2)</text>
+
+                <circle cx="85" cy="55" r="4.5" fill="#f97316" stroke="#fff" strokeWidth="1.2" />
+                <text x="75" y="48" fill="#f97316" fontSize="7.5" textAnchor="end" fontFamily="monospace" fontWeight="bold">3. Líquido (h3)</text>
+
+                <circle cx="85" cy="115" r="4.5" fill="#22c55e" stroke="#fff" strokeWidth="1.2" />
+                <text x="75" y="123" fill="#22c55e" fontSize="7.5" textAnchor="end" fontFamily="monospace" fontWeight="bold">4. TXV (h4=h3)</text>
+              </svg>
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-mono bg-zinc-900/60 p-2 rounded-xl border border-zinc-800">
+              <span className="text-zinc-400">Efeito Frigorífico Útil (h1 - h4):</span>
+              <span className="text-cyan-300 font-bold">{qEvap} kJ/kg ({ref})</span>
+            </div>
+          </div>
+
+          {/* ===== GRÁFICO 3: ENVELOPE OPERACIONAL DE SEGURANÇA DO COMPRESSOR ===== */}
+          <div className="bg-zinc-950/80 border border-emerald-500/20 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(16,185,129,0.06)] relative overflow-hidden flex flex-col justify-between">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <Compass className="w-5 h-5 text-emerald-400" />
+                <h4 className="font-tactical font-black text-sm uppercase text-emerald-400 tracking-wider">
+                  Envelope Operacional do Compressor
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40 font-bold">
+                MAPA COPELAND / DANFOSS
+              </span>
+            </div>
+
+            {/* Canvas Vetorial do Envelope Operacional 2D */}
+            <div className="w-full bg-[#030a06] rounded-xl p-2 border border-emerald-500/20 relative aspect-[340/165]">
+              <svg className="w-full h-full" viewBox="0 0 340 165">
+                {/* Eixos */}
+                <line x1="30" y1="145" x2="320" y2="145" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                <line x1="30" y1="20" x2="30" y2="145" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                <text x="320" y="157" fill="#64748b" fontSize="8" textAnchor="end" fontFamily="monospace">Temp. Evaporação (°C) →</text>
+                <text x="33" y="18" fill="#64748b" fontSize="8" fontFamily="monospace">↑ Temp. Condensação (°C)</text>
+
+                {/* Grade de Temperatura */}
+                <line x1="30" y1="100" x2="320" y2="100" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="2 2" />
+                <line x1="30" y1="55" x2="320" y2="55" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="2 2" />
+                <text x="25" y="103" fill="#64748b" fontSize="7" textAnchor="end" fontFamily="monospace">35°</text>
+                <text x="25" y="58" fill="#64748b" fontSize="7" textAnchor="end" fontFamily="monospace">50°</text>
+
+                {/* Polígono do Envelope Seguro (Zona Verde Nominal) */}
+                <polygon 
+                  points="65,135 260,135 295,45 130,45 65,85" 
+                  fill="rgba(34, 197, 94, 0.15)" 
+                  stroke="#22c55e" 
+                  strokeWidth="1.8" 
+                />
+                <text x="180" y="85" fill="#4ade80" fontSize="8.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold" opacity="0.85">
+                  ZONA OPERACIONAL SEGURA
+                </text>
+
+                {/* Ponto Atual do Compressor (Crosshair Dinâmico) */}
+                {/* Mapeamento de Coordenadas: Evap -25 a +15 (x: 50 a 290), Cond +20 a +65 (y: 140 a 35) */}
+                {(() => {
+                  const ptX = Math.max(50, Math.min(290, 50 + ((tEvapC + 25) / 40) * 240));
+                  const ptY = Math.max(35, Math.min(140, 140 - ((tCondC - 20) / 45) * 105));
+                  const isSafe = tEvapC >= -20 && tEvapC <= 12 && tCondC <= 60 && compRatio <= 7;
+                  return (
+                    <g transform={`translate(${ptX}, ${ptY})`}>
+                      <circle cx="0" cy="0" r="10" fill={isSafe ? "#22c55e" : "#ef4444"} opacity="0.25" className="animate-ping" />
+                      <circle cx="0" cy="0" r="5" fill={isSafe ? "#22c55e" : "#ef4444"} stroke="#ffffff" strokeWidth="1.8" />
+                      <line x1="-8" y1="0" x2="8" y2="0" stroke="#fff" strokeWidth="1" />
+                      <line x1="0" y1="-8" x2="0" y2="8" stroke="#fff" strokeWidth="1" />
+                      <rect x="-35" y="-22" width="70" height="13" rx="3" fill="#000" stroke={isSafe ? "#22c55e" : "#ef4444"} strokeWidth="1" />
+                      <text x="0" y="-13" fill={isSafe ? "#4ade80" : "#f87171"} fontSize="7" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                        PONTO ATUAL
+                      </text>
+                    </g>
+                  );
+                })()}
+              </svg>
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-mono bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-800">
+              <span className="text-zinc-400">Status do Envelope:</span>
+              <span className={`font-black ${compRatio <= 7 && tCondC <= 60 ? "text-emerald-400" : "text-rose-400"}`}>
+                {compRatio <= 7 && tCondC <= 60 ? "OPERANDO EM ZONA SEGURA (SEM SOBRECARGA)" : "ALERTA: OPERANDO PERTO DO LIMITE TÉRMICO"}
+              </span>
+            </div>
+          </div>
+
+          {/* ===== GRÁFICO 4: BALANÇO ENERGÉTICO & FLUXO DE CALOR (1ª LEI) ===== */}
+          <div className="bg-zinc-950/80 border border-orange-500/20 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(249,115,22,0.06)] relative overflow-hidden flex flex-col justify-between">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <Zap className="w-5 h-5 text-orange-400" />
+                <h4 className="font-tactical font-black text-sm uppercase text-orange-400 tracking-wider">
+                  Balanço Térmico & Fluxo Energético
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-orange-950 text-orange-300 border border-orange-500/40 font-bold">
+                1ª LEI: Qc = Qe + W
+              </span>
+            </div>
+
+            <div className="space-y-4 pt-1">
+              
+              {/* Barra Empilhada Proporcional */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-mono text-zinc-300">
+                  <span>Fluxo Total de Rejeição de Calor:</span>
+                  <span className="text-orange-400 font-bold">{qCond} kJ/kg (100%)</span>
+                </div>
+                <div className="w-full h-4 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden flex">
+                  {/* Qe (Evaporação) */}
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 flex items-center justify-center text-[9px] font-mono text-black font-black"
+                    style={{ width: `${Math.round((qEvap / qCond) * 100)}%` }}
+                    title={`Calor Útil Absorvido: ${qEvap} kJ/kg`}
+                  >
+                    Qe {Math.round((qEvap / qCond) * 100)}%
+                  </div>
+                  {/* W (Trabalho) */}
+                  <div 
+                    className="h-full bg-gradient-to-r from-amber-500 to-rose-500 flex items-center justify-center text-[9px] font-mono text-white font-black"
+                    style={{ width: `${100 - Math.round((qEvap / qCond) * 100)}%` }}
+                    title={`Trabalho do Compressor: ${wComp} kJ/kg`}
+                  >
+                    W {100 - Math.round((qEvap / qCond) * 100)}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Detalhamento dos 3 Componentes Térmicos */}
+              <div className="grid grid-cols-3 gap-2 pt-1 text-center font-mono">
+                <div className="bg-zinc-900/60 p-2 rounded-xl border border-cyan-500/20">
+                  <div className="text-[9px] text-zinc-400">Qe (Evaporador)</div>
+                  <div className="text-sm font-black text-cyan-300 mt-0.5">{qEvap}</div>
+                  <div className="text-[9px] text-zinc-500">kJ/kg (Frio)</div>
+                </div>
+                <div className="bg-zinc-900/60 p-2 rounded-xl border border-amber-500/20">
+                  <div className="text-[9px] text-zinc-400">W (Compressor)</div>
+                  <div className="text-sm font-black text-amber-400 mt-0.5">{wComp}</div>
+                  <div className="text-[9px] text-zinc-500">kJ/kg (Elétrico)</div>
+                </div>
+                <div className="bg-zinc-900/60 p-2 rounded-xl border border-rose-500/20">
+                  <div className="text-[9px] text-zinc-400">Qc (Condensador)</div>
+                  <div className="text-sm font-black text-rose-400 mt-0.5">{qCond}</div>
+                  <div className="text-[9px] text-zinc-500">kJ/kg (Calor)</div>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="flex items-center justify-between text-xs font-mono bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-800">
+              <span className="text-zinc-400">Rendimento COP Calculado:</span>
+              <span className="text-cyan-300 font-bold">{estimatedCOP.toFixed(2)} W térmica / W elétrica</span>
+            </div>
+          </div>
+
         </div>
       </div>
 

@@ -77,9 +77,9 @@ export default function DigitalTwin() {
   const ratioBaixa = Math.max(0, Math.min(1, (tBaixa - scaleMin) / span));
   const ratioAlta = Math.max(0, Math.min(1, (tAlta - scaleMin) / span));
 
-  // Coordenadas visuais da curva no espaço widescreen alargado (x: -120 a +120, y: -10 a +35)
-  const yPosBaixa = 32 - (ratioBaixa * 42);
-  const yPosAlta = 32 - (ratioAlta * 42);
+  // Coordenadas visuais da curva no espaço vertical dinâmico (x: -130 a +130, y: -25 a +25)
+  const yPosBaixa = 16 - (ratioBaixa * 45);
+  const yPosAlta = 16 - (ratioAlta * 45);
 
   // Botão para aplicar o cenário de exemplo ideal: 74,9°C de Alta e 5,8°C de Baixa com SH e SC perfeitos
   const handleApplyExample = () => {
@@ -102,11 +102,11 @@ export default function DigitalTwin() {
       <div className="relative glass-panel border border-white/10 rounded-2xl overflow-hidden bg-[#050505] shadow-[0_0_50px_rgba(0,0,0,0.9)]">
         
         {/* Scrollable Canvas Viewport */}
-        <div className="w-full aspect-[940/480] md:aspect-auto md:h-[560px] overflow-auto custom-scrollbar bg-[#050505]">
+        <div className="w-full aspect-[800/600] md:aspect-auto md:h-[620px] overflow-auto custom-scrollbar bg-[#050505]">
           <div className="flex min-w-full min-h-full w-max items-center justify-center p-3 md:p-6">
             <div 
               className="relative transition-all duration-300 transform-gpu flex-shrink-0" 
-              style={{ width: `${940 * zoom}px`, height: `${480 * zoom}px` }}
+              style={{ width: `${800 * zoom}px`, height: `${600 * zoom}px` }}
             >
               
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/15 via-black to-black z-0 rounded-2xl"></div>
@@ -120,7 +120,7 @@ export default function DigitalTwin() {
                 }}
               ></div>
 
-            <svg className="w-full h-full z-10 relative drop-shadow-2xl" viewBox="0 0 940 480" preserveAspectRatio="xMidYMid meet">
+            <svg className="w-full h-full z-10 relative drop-shadow-2xl" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
               <defs>
                 <filter id="neonGlowBlue" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5" result="blur" /><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
                 <filter id="neonGlowRed" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5" result="blur" /><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -161,359 +161,375 @@ export default function DigitalTwin() {
                 </linearGradient>
               </defs>
 
-              {/* ===== WIDESCREEN PIPES ===== */}
+              {/* ===== TUBULAÇÕES DO CICLO (LAYOUT VERTICAL HARMONIOSO) ===== */}
               
-              {/* 1. DISCHARGE LINE (Red) */}
-              <path d="M 120 220 L 120 70 L 330 70" fill="none" stroke="#ef4444" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowRed)"/>
-              <path d="M 120 220 L 120 70 L 330 70" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow-fast" />
+              {/* 1. LINHA DE DESCARGA (Vermelha) */}
+              <path d="M 100 270 L 100 68 L 270 68" fill="none" stroke="#ef4444" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowRed)"/>
+              <path d="M 100 270 L 100 68 L 270 68" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow-fast" />
 
-              {/* 2. LIQUID LINE (Orange) */}
-              <path d="M 610 70 L 820 70 L 820 130" fill="none" stroke="#f97316" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowOrange)"/>
-              <path d="M 610 70 L 820 70 L 820 130" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow" />
+              {/* 2. LINHA DE LÍQUIDO (Laranja) */}
+              <path d="M 530 68 L 700 68 L 700 127" fill="none" stroke="#f97316" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowOrange)"/>
+              <path d="M 530 68 L 700 68 L 700 127" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow" />
               
-              <path d="M 820 210 L 820 250" fill="none" stroke="#f97316" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowOrange)"/>
-              <path d="M 820 210 L 820 250" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow" />
+              <path d="M 700 203 L 700 335" fill="none" stroke="#f97316" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowOrange)"/>
+              <path d="M 700 203 L 700 335" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow" />
 
-              {/* 3. EXPANSION LINE (Green & Gold) */}
-              <path d="M 820 320 L 820 425 L 610 425" fill="none" stroke="#22c55e" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowGreen)"/>
-              <path d="M 820 320 L 820 425 L 610 425" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow" />
+              {/* 3. LINHA DE EXPANSÃO (Verde & Ouro) */}
+              <path d="M 700 395 L 700 532 L 530 532" fill="none" stroke="#22c55e" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowGreen)"/>
+              <path d="M 700 395 L 700 532 L 530 532" fill="none" stroke="#fbbf24" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow" />
 
-              {/* 4. SUCTION LINE (Blue) */}
-              <path d="M 330 425 L 60 425 L 60 320 L 85 320" fill="none" stroke="#3b82f6" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowBlue)"/>
-              <path d="M 330 425 L 60 425 L 60 320 L 85 320" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow" />
+              {/* 4. LINHA DE SUCÇÃO (Azul) */}
+              <path d="M 270 532 L 40 532 L 40 365 L 63 365" fill="none" stroke="#3b82f6" strokeWidth="6.5" opacity="0.65" filter="url(#neonGlowBlue)"/>
+              <path d="M 270 532 L 40 532 L 40 365 L 63 365" fill="none" stroke="#ffffff" strokeWidth="2.5" strokeDasharray="12 12" className="animate-flow" />
 
-              {/* TXV CAPILLARY BULB (Routed clean along perimeter, never crossing center) */}
-              <path d="M 800 260 C 800 370, 750 460, 240 460 L 240 435" fill="none" stroke="#9ca3af" strokeWidth="1.5" strokeDasharray="4 4" opacity="0.7" />
-              <rect x="230" y="420" width="22" height="10" fill="#b8860b" rx="3" stroke="#ffd700" strokeWidth="0.8" />
+              {/* BULBO SENSOR DA TXV (Roteamento externo pelo contorno, sem obstruir o painel central) */}
+              <path d="M 680 340 C 680 470, 590 575, 200 575 L 200 542" fill="none" stroke="#9ca3af" strokeWidth="1.6" strokeDasharray="4 4" opacity="0.75" />
+              <rect x="188" y="527" width="24" height="10" fill="#b8860b" rx="3" stroke="#ffd700" strokeWidth="1" />
 
 
-              {/* ===== WIDESCREEN COMPONENTS ===== */}
+              {/* ===== COMPONENTES DO MOTOR (DESIGN VERTICAL DEFINIDO) ===== */}
 
-              {/* COMPRESSOR (Left) */}
-              <g transform="translate(120, 320)">
-                <rect x="-35" y="-70" width="70" height="105" fill="url(#compGrad)" rx="10" stroke="#111" strokeWidth="2.5" />
-                <line x1="-24" y1="-45" x2="24" y2="-45" stroke="#081c15" strokeWidth="3" />
-                <line x1="-24" y1="-20" x2="24" y2="-20" stroke="#081c15" strokeWidth="3" />
-                <line x1="-24" y1="5" x2="24" y2="5" stroke="#081c15" strokeWidth="3" />
-                <path d="M -24 -70 Q 0 -100 24 -70 Z" fill="url(#compGrad)" stroke="#111" strokeWidth="2.5" />
-                <rect x="-42" y="35" width="84" height="10" fill="#222" rx="3" stroke="#333" strokeWidth="1" />
+              {/* COMPRESSOR (Esquerda - Mais Alto e Robusto) */}
+              <g transform="translate(100, 365)">
+                <rect x="-37" y="-95" width="74" height="140" fill="url(#compGrad)" rx="12" stroke="#111" strokeWidth="2.5" />
+                <line x1="-28" y1="-68" x2="28" y2="-68" stroke="#081c15" strokeWidth="3" />
+                <line x1="-28" y1="-40" x2="28" y2="-40" stroke="#081c15" strokeWidth="3" />
+                <line x1="-28" y1="-12" x2="28" y2="-12" stroke="#081c15" strokeWidth="3" />
+                <line x1="-28" y1="16" x2="28" y2="16" stroke="#081c15" strokeWidth="3" />
+                <path d="M -26 -95 Q 0 -125 26 -95 Z" fill="url(#compGrad)" stroke="#111" strokeWidth="2.5" />
+                <rect x="-45" y="45" width="90" height="12" fill="#222" rx="3" stroke="#333" strokeWidth="1" />
                 
-                {/* Spinning Rotor Animation */}
+                {/* Rotor Giratório */}
                 <g transform="translate(0, 10)">
-                  <circle cx="0" cy="0" r="16" fill="#111" stroke="#333" strokeWidth="2" />
+                  <circle cx="0" cy="0" r="17" fill="#111" stroke="#333" strokeWidth="2.5" />
                   <g className="animate-spin-fast" style={{ transformOrigin: "0px 0px" }}>
-                    <line x1="-12" y1="0" x2="12" y2="0" stroke="#4ade80" strokeWidth="3" />
-                    <line x1="0" y1="-12" x2="0" y2="12" stroke="#4ade80" strokeWidth="3" />
+                    <line x1="-13" y1="0" x2="13" y2="0" stroke="#4ade80" strokeWidth="3.5" />
+                    <line x1="0" y1="-13" x2="0" y2="13" stroke="#4ade80" strokeWidth="3.5" />
                   </g>
-                  <circle cx="0" cy="0" r="3.5" fill="#fff" />
+                  <circle cx="0" cy="0" r="4" fill="#fff" />
                 </g>
-                <text x="0" y="-8" fill="#4ade80" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="bold">COMP</text>
+                <text x="0" y="-12" fill="#4ade80" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #4ade80" }}>COMP</text>
               </g>
 
-              {/* CONDENSER (Top Center - 3 High Velocity Fans) */}
-              <g transform="translate(470, 70)">
-                <rect x="-140" y="-35" width="280" height="70" fill="url(#steelGrad)" rx="7" stroke="#111" strokeWidth="2.5" />
-                <path d="M -140 -18 L 140 -18 M -140 0 L 140 0 M -140 18 L 140 18" fill="none" stroke="#ef4444" strokeWidth="4.5" opacity="0.8" />
+              {/* CONDENSADOR (Topo Centro - 3 Ventiladores de Alta Vazão) */}
+              <g transform="translate(400, 68)">
+                <rect x="-130" y="-34" width="260" height="68" fill="url(#steelGrad)" rx="7" stroke="#111" strokeWidth="2.5" />
+                <path d="M -130 -17 L 130 -17 M -130 0 L 130 0 M -130 17 L 130 17" fill="none" stroke="#ef4444" strokeWidth="4.5" opacity="0.8" />
                 
                 {/* Fan 1 */}
-                <g transform="translate(-85, 0)">
-                  <circle cx="0" cy="0" r="26" fill="#111" stroke="#333" strokeWidth="3" />
+                <g transform="translate(-75, 0)">
+                  <circle cx="0" cy="0" r="24" fill="#111" stroke="#333" strokeWidth="3" />
                   <g className="animate-spin-fast" style={{ transformOrigin: "0px 0px" }}>
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" />
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" transform="rotate(120)" />
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" transform="rotate(240)" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" transform="rotate(120)" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" transform="rotate(240)" />
                   </g>
                   <circle cx="0" cy="0" r="4.5" fill="#fff" />
                 </g>
                 
                 {/* Fan 2 */}
                 <g transform="translate(0, 0)">
-                  <circle cx="0" cy="0" r="26" fill="#111" stroke="#333" strokeWidth="3" />
+                  <circle cx="0" cy="0" r="24" fill="#111" stroke="#333" strokeWidth="3" />
                   <g className="animate-spin-fast" style={{ transformOrigin: "0px 0px" }}>
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" />
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" transform="rotate(120)" />
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" transform="rotate(240)" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" transform="rotate(120)" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" transform="rotate(240)" />
                   </g>
                   <circle cx="0" cy="0" r="4.5" fill="#fff" />
                 </g>
 
                 {/* Fan 3 */}
-                <g transform="translate(85, 0)">
-                  <circle cx="0" cy="0" r="26" fill="#111" stroke="#333" strokeWidth="3" />
+                <g transform="translate(75, 0)">
+                  <circle cx="0" cy="0" r="24" fill="#111" stroke="#333" strokeWidth="3" />
                   <g className="animate-spin-fast" style={{ transformOrigin: "0px 0px" }}>
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" />
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" transform="rotate(120)" />
-                    <path d="M 0,-4 Q 20,-20 22,-2 Q 20,4 0,4 Z" fill="#9ca3af" transform="rotate(240)" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" transform="rotate(120)" />
+                    <path d="M 0,-4 Q 18,-18 20,-2 Q 18,4 0,4 Z" fill="#9ca3af" transform="rotate(240)" />
                   </g>
                   <circle cx="0" cy="0" r="4.5" fill="#fff" />
                 </g>
 
-                <text x="0" y="55" fill="#ef4444" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="bold">CONDENSADOR</text>
+                <text x="0" y="52" fill="#ef4444" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="2" style={{ textShadow: "0 0 10px #ef4444" }}>CONDENSADOR</text>
               </g>
 
-              {/* FILTER DRIER (Right Top) */}
-              <g transform="translate(820, 170)">
-                <rect x="-18" y="-40" width="36" height="80" fill="#111" rx="18" stroke="#333" strokeWidth="2.5" />
-                <rect x="-18" y="-25" width="36" height="9" fill="#f97316" />
-                <rect x="-18" y="16" width="36" height="9" fill="#f97316" />
+              {/* FILTRO SECADOR (Direita Topo) */}
+              <g transform="translate(700, 165)">
+                <rect x="-18" y="-38" width="36" height="76" fill="#111" rx="18" stroke="#333" strokeWidth="2.5" />
+                <rect x="-18" y="-24" width="36" height="9" fill="#f97316" />
+                <rect x="-18" y="15" width="36" height="9" fill="#f97316" />
                 <circle cx="0" cy="-2" r="6" fill="#22c55e" stroke="#111" strokeWidth="1" />
-                <text x="-25" y="0" fill="#fff" fontSize="8.5" fontFamily="monospace" fontWeight="bold" transform="rotate(-90)">FILTRO</text>
+                <text x="-25" y="0" fill="#fff" fontSize="9" fontFamily="monospace" fontWeight="900" transform="rotate(-90)">FILTRO</text>
               </g>
 
-              {/* TXV (Right Bottom) */}
-              <g transform="translate(820, 285)">
+              {/* VÁLVULA DE EXPANSÃO - TXV (Direita Base) */}
+              <g transform="translate(700, 365)">
                 <rect x="-12" y="-28" width="24" height="60" fill="url(#brassGrad)" rx="5" />
                 <rect x="-24" y="-12" width="48" height="18" fill="url(#brassGrad)" rx="3" />
                 <ellipse cx="0" cy="-28" rx="18" ry="10" fill="url(#steelGrad)" stroke="#111" strokeWidth="1.5" />
-                <text x="-48" y="-8" fill="#22c55e" fontSize="16" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #22c55e" }}>TXV</text>
-                <text x="-48" y="18" fill="#fbbf24" fontSize="20" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #fbbf24" }}>{openingPercent.toFixed(0)}%</text>
-                <text x="-48" y="36" fill="#fbbf24" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #fbbf24" }}>ABERTURA</text>
+                <text x="-48" y="-12" fill="#22c55e" fontSize="16" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #22c55e" }}>TXV</text>
+                <text x="-48" y="14" fill="#fbbf24" fontSize="22" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #fbbf24" }}>{openingPercent.toFixed(0)}%</text>
+                <text x="-48" y="32" fill="#fbbf24" fontSize="11" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #fbbf24" }}>ABERTURA</text>
               </g>
 
-              {/* EVAPORATOR (Bottom Center) */}
-              <g transform="translate(470, 425)">
-                <rect x="-140" y="-35" width="280" height="70" fill="#0f172a" rx="7" stroke="#1e293b" strokeWidth="2.5" />
-                <path d="M -140 -18 L 140 -18 M -140 0 L 140 0 M -140 18 L 140 18" fill="none" stroke="#3b82f6" strokeWidth="4.5" opacity="0.8" />
-                <pattern id="finsWide" width="10" height="10" patternUnits="userSpaceOnUse">
+              {/* EVAPORADOR (Base Centro) */}
+              <g transform="translate(400, 532)">
+                <rect x="-130" y="-34" width="260" height="68" fill="#0f172a" rx="7" stroke="#1e293b" strokeWidth="2.5" />
+                <path d="M -130 -17 L 130 -17 M -130 0 L 130 0 M -130 17 L 130 17" fill="none" stroke="#3b82f6" strokeWidth="4.5" opacity="0.8" />
+                <pattern id="finsVertical" width="10" height="10" patternUnits="userSpaceOnUse">
                    <line x1="0" y1="0" x2="0" y2="10" stroke="#38bdf8" strokeWidth="1.2" opacity="0.35" />
                 </pattern>
-                <rect x="-140" y="-35" width="280" height="70" fill="url(#finsWide)" />
-                <text x="0" y="-45" fill="#3b82f6" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="bold">EVAPORADOR</text>
+                <rect x="-130" y="-34" width="260" height="68" fill="url(#finsVertical)" />
+                <text x="0" y="-44" fill="#3b82f6" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="2" style={{ textShadow: "0 0 10px #3b82f6" }}>EVAPORADOR</text>
               </g>
 
-              {/* ===== O NOVO GRÁFICO TÉRMICO WIDESCREEN ALONGADO (CENTRO PERFEITO) ===== */}
-              <g transform="translate(470, 245)">
-                {/* Painel de Fundo com Borda Neon e Efeito Vidro Escuro Amplo */}
+              {/* ===== PAINEL TÉRMICO UNIFICADO (DESIGN VERTICAL 360x320) ===== */}
+              <g transform="translate(400, 300)">
+                {/* Painel de Fundo com Borda Neon e Efeito Vidro Escuro */}
                 <rect 
-                  x="-185" y="-105" width="370" height="210" 
+                  x="-180" y="-160" width="360" height="320" 
                   rx="18" 
                   fill="#04070c" 
-                  fillOpacity="0.95" 
+                  fillOpacity="0.96" 
                   stroke="rgba(0, 240, 255, 0.45)" 
                   strokeWidth="1.8" 
-                  filter="drop-shadow(0 0 30px rgba(0,0,0,0.98))" 
+                  filter="drop-shadow(0 0 35px rgba(0,0,0,0.98))" 
                 />
 
-                {/* Linhas Técnicas de Canto (Estilo HUD Cyber-Tactical) */}
-                <path d="M -185 -85 L -185 -105 L -160 -105" fill="none" stroke="#00f0ff" strokeWidth="2.5" opacity="0.9" />
-                <path d="M 185 -85 L 185 -105 L 160 -105" fill="none" stroke="#ef4444" strokeWidth="2.5" opacity="0.9" />
-                <path d="M -185 85 L -185 105 L -160 105" fill="none" stroke="#00f0ff" strokeWidth="2.5" opacity="0.9" />
-                <path d="M 185 85 L 185 105 L 160 105" fill="none" stroke="#ef4444" strokeWidth="2.5" opacity="0.9" />
+                {/* Brackets Técnicos de Canto (Estilo Cockpit Cyber-Tactical) */}
+                <path d="M -180 -138 L -180 -160 L -155 -160" fill="none" stroke="#00f0ff" strokeWidth="2.5" opacity="0.9" />
+                <path d="M 180 -138 L 180 -160 L 155 -160" fill="none" stroke="#ef4444" strokeWidth="2.5" opacity="0.9" />
+                <path d="M -180 138 L -180 160 L -155 160" fill="none" stroke="#00f0ff" strokeWidth="2.5" opacity="0.9" />
+                <path d="M 180 138 L 180 160 L 155 160" fill="none" stroke="#ef4444" strokeWidth="2.5" opacity="0.9" />
 
-                {/* Cabeçalho do Painel Unificado Alongado */}
+                {/* Cabeçalho do Painel Unificado */}
                 <text 
-                  x="0" y="-85" 
+                  x="0" y="-138" 
                   fill="#38bdf8" 
-                  fontSize="11" 
+                  fontSize="12" 
                   textAnchor="middle" 
                   fontFamily="monospace" 
                   fontWeight="900" 
-                  letterSpacing="2"
-                  style={{ textShadow: "0 0 10px rgba(0,240,255,0.7)" }}
+                  letterSpacing="2.5"
+                  style={{ textShadow: "0 0 12px rgba(0,240,255,0.7)" }}
                 >
                   PAINEL TÉRMICO UNIFICADO DO CICLO
                 </text>
 
                 {/* Badge Central de Salto Térmico (ΔT) */}
-                <g transform="translate(0, -66)">
-                  <rect x="-35" y="-8.5" width="70" height="17" rx="8.5" fill="#18181b" stroke="#fbbf24" strokeWidth="1.2" opacity="0.95" />
-                  <text x="0" y="3.5" fill="#fbbf24" fontSize="9" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                <g transform="translate(0, -114)">
+                  <rect x="-44" y="-10.5" width="88" height="21" rx="10.5" fill="#181404" stroke="#fbbf24" strokeWidth="1.5" opacity="0.95" />
+                  <text x="0" y="4.5" fill="#fbbf24" fontSize="10.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
                     ΔT {deltaT} K
                   </text>
                 </g>
 
-                {/* ===== COLUNA ESQUERDA: LADO DE BAIXA (SUCÇÃO & SUPERAQUECIMENTO) ===== */}
-                <g transform="translate(-95, -55)">
-                  <text x="0" y="0" fill="#38bdf8" fontSize="8.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">
-                    ● LADO DE BAIXA (SUCÇÃO)
+                {/* ===== COLUNA ESQUERDA: LADO DE BAIXA (SUCÇÃO) ===== */}
+                <g transform="translate(-90, -85)">
+                  <text x="0" y="0" fill="#38bdf8" fontSize="9.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                    ● SUCÇÃO (BAIXA)
                   </text>
                   <text 
-                    x="0" y="20" 
+                    x="0" y="24" 
                     fill="#00f0ff" 
-                    fontSize="20" 
+                    fontSize="24" 
                     textAnchor="middle" 
                     fontFamily="monospace" 
                     fontWeight="900"
-                    style={{ textShadow: "0 0 15px #00f0ff" }}
+                    style={{ textShadow: "0 0 16px #00f0ff" }}
                   >
                     {tBaixa.toFixed(1)}°{tempUnit}
                   </text>
                 </g>
 
-                {/* Cartão de Superaquecimento (SH) - Amplo, sem sobreposição */}
-                <g transform="translate(-95, -15)">
-                  <rect 
-                    x="-75" y="-12" width="150" height="30" 
-                    rx="6" 
-                    fill="#021c27" 
-                    stroke={isSHNormal ? "#00f0ff" : "#f97316"} 
-                    strokeWidth="1.2" 
-                  />
-                  <text x="-67" y="1" fill="#38bdf8" fontSize="8" fontFamily="monospace" fontWeight="bold">
-                    SUPERAQUECIMENTO (SH)
+                {/* ===== COLUNA DIREITA: LADO DE ALTA (DESCARGA) ===== */}
+                <g transform="translate(90, -85)">
+                  <text x="0" y="0" fill="#f87171" fontSize="9.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                    DESCARGA (ALTA) ●
                   </text>
                   <text 
-                    x="67" y="2" 
-                    fill={isSHNormal ? "#4ade80" : "#f97316"} 
-                    fontSize="13" 
-                    fontFamily="monospace" 
-                    fontWeight="900" 
-                    textAnchor="end"
-                  >
-                    {realSH.toFixed(1)} K
-                  </text>
-                  <text 
-                    x="-67" y="13" 
-                    fill={isSHNormal ? "#4ade80" : "#f97316"} 
-                    fontSize="7" 
-                    fontFamily="monospace" 
-                    opacity="0.95"
-                  >
-                    {isSHNormal ? `ALVO ${targetSHMin}-${targetSHMax}K (OPERANDO NOMINAL)` : isSHHigh ? `ALTO (> ${targetSHMax}K RISCO SUBCARGA)` : `BAIXO (< ${targetSHMin}K RISCO GOLPE)`}
-                  </text>
-                </g>
-
-                {/* ===== COLUNA DIREITA: LADO DE ALTA (DESCARGA & SUB-RESFRIAMENTO) ===== */}
-                <g transform="translate(95, -55)">
-                  <text x="0" y="0" fill="#f87171" fontSize="8.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">
-                    LADO DE ALTA (DESCARGA) ●
-                  </text>
-                  <text 
-                    x="0" y="20" 
+                    x="0" y="24" 
                     fill="#ef4444" 
-                    fontSize="20" 
+                    fontSize="24" 
                     textAnchor="middle" 
                     fontFamily="monospace" 
                     fontWeight="900"
-                    style={{ textShadow: "0 0 15px #ef4444" }}
+                    style={{ textShadow: "0 0 16px #ef4444" }}
                   >
                     {tAlta.toFixed(1)}°{tempUnit}
                   </text>
                 </g>
 
-                {/* Cartão de Sub-resfriamento (SC) - Amplo, sem sobreposição */}
-                <g transform="translate(95, -15)">
+                {/* ===== CARTÃO DE SUPERAQUECIMENTO (SH) - 3 CAMADAS VERTICAIS (SEM COLISÃO) ===== */}
+                <g transform="translate(-90, -22)">
                   <rect 
-                    x="-75" y="-12" width="150" height="30" 
-                    rx="6" 
-                    fill="#240409" 
-                    stroke={isSCNormal ? "#ef4444" : "#f97316"} 
-                    strokeWidth="1.2" 
+                    x="-76" y="-28" width="152" height="58" 
+                    rx="8" 
+                    fill="#021c27" 
+                    stroke={isSHNormal ? "#00f0ff" : "#f97316"} 
+                    strokeWidth="1.5" 
                   />
-                  <text x="-67" y="1" fill="#f87171" fontSize="8" fontFamily="monospace" fontWeight="bold">
-                    SUB-RESFRIAMENTO (SC)
+                  {/* Linha 1: Título Centrado */}
+                  <text x="0" y="-14" fill="#38bdf8" fontSize="8.5" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
+                    SUPERAQUECIMENTO (SH)
                   </text>
+                  {/* Linha 2: Valor Grande em Destaque */}
                   <text 
-                    x="67" y="2" 
-                    fill={isSCNormal ? "#4ade80" : "#f97316"} 
-                    fontSize="13" 
+                    x="0" y="6" 
+                    fill={isSHNormal ? "#4ade80" : "#f97316"} 
+                    fontSize="17" 
                     fontFamily="monospace" 
                     fontWeight="900" 
-                    textAnchor="end"
+                    textAnchor="middle"
+                    style={{ textShadow: isSHNormal ? "0 0 10px #4ade80" : "0 0 10px #f97316" }}
                   >
-                    {realSC.toFixed(1)} K
+                    {realSH.toFixed(1)} K
                   </text>
+                  {/* Linha 3: Badge de Status Inferior */}
+                  <rect x="-70" y="14" width="140" height="13" rx="3.5" fill="#000000" fillOpacity="0.65" stroke={isSHNormal ? "rgba(74,222,128,0.4)" : "rgba(249,115,22,0.4)"} strokeWidth="0.8" />
                   <text 
-                    x="-67" y="13" 
-                    fill={isSCNormal ? "#4ade80" : "#f97316"} 
+                    x="0" y="23.5" 
+                    fill={isSHNormal ? "#4ade80" : "#f97316"} 
                     fontSize="7" 
                     fontFamily="monospace" 
-                    opacity="0.95"
+                    fontWeight="900"
+                    textAnchor="middle"
                   >
-                    {isSCNormal ? `ALVO ${targetSCMin}-${targetSCMax}K (OPERANDO NOMINAL)` : isSCHigh ? `ALTO (> ${targetSCMax}K SOBRECARGA)` : `BAIXO (< ${targetSCMin}K FALTA FLUIDO)`}
+                    {isSHNormal ? `ALVO ${targetSHMin}-${targetSHMax}K (NOMINAL)` : isSHHigh ? `ALTO (> ${targetSHMax}K RISCO SUBCARGA)` : `BAIXO (< ${targetSHMin}K RISCO GOLPE)`}
                   </text>
                 </g>
 
-                {/* ===== GRÁFICO VISUAL: CURVA TÉRMICA WIDESCREEN & ELEVAÇÃO DO CICLO ===== */}
-                <g transform="translate(0, 24)">
-                  {/* Linhas de Grade de Fundo do Gráfico */}
-                  <line x1="-140" y1="2" x2="140" y2="2" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
-                  <line x1="-140" y1="20" x2="140" y2="20" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
-                  <line x1="0" y1="-10" x2="0" y2="30" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
+                {/* ===== CARTÃO DE SUB-RESFRIAMENTO (SC) - 3 CAMADAS VERTICAIS (SEM COLISÃO) ===== */}
+                <g transform="translate(90, -22)">
+                  <rect 
+                    x="-76" y="-28" width="152" height="58" 
+                    rx="8" 
+                    fill="#240409" 
+                    stroke={isSCNormal ? "#ef4444" : "#f97316"} 
+                    strokeWidth="1.5" 
+                  />
+                  {/* Linha 1: Título Centrado */}
+                  <text x="0" y="-14" fill="#f87171" fontSize="8.5" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
+                    SUB-RESFRIAMENTO (SC)
+                  </text>
+                  {/* Linha 2: Valor Grande em Destaque */}
+                  <text 
+                    x="0" y="6" 
+                    fill={isSCNormal ? "#4ade80" : "#f97316"} 
+                    fontSize="17" 
+                    fontFamily="monospace" 
+                    fontWeight="900" 
+                    textAnchor="middle"
+                    style={{ textShadow: isSCNormal ? "0 0 10px #4ade80" : "0 0 10px #f97316" }}
+                  >
+                    {realSC.toFixed(1)} K
+                  </text>
+                  {/* Linha 3: Badge de Status Inferior */}
+                  <rect x="-70" y="14" width="140" height="13" rx="3.5" fill="#000000" fillOpacity="0.65" stroke={isSCNormal ? "rgba(74,222,128,0.4)" : "rgba(249,115,22,0.4)"} strokeWidth="0.8" />
+                  <text 
+                    x="0" y="23.5" 
+                    fill={isSCNormal ? "#4ade80" : "#f97316"} 
+                    fontSize="7" 
+                    fontFamily="monospace" 
+                    fontWeight="900"
+                    textAnchor="middle"
+                  >
+                    {isSCNormal ? `ALVO ${targetSCMin}-${targetSCMax}K (NOMINAL)` : isSCHigh ? `ALTO (> ${targetSCMax}K SOBRECARGA)` : `BAIXO (< ${targetSCMin}K FALTA FLUIDO)`}
+                  </text>
+                </g>
 
-                  {/* Área Preenchida com Gradiente Translúcido Widescreen */}
+                {/* ===== CURVA TÉRMICA & FLUXO DO CICLO ===== */}
+                <g transform="translate(0, 48)">
+                  {/* Linhas de Grade de Fundo do Gráfico */}
+                  <line x1="-140" y1="0" x2="140" y2="0" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1="-140" y1="20" x2="140" y2="20" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1="0" y1="-20" x2="0" y2="30" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
+
+                  {/* Área Preenchida com Gradiente Translúcido */}
                   <path 
-                    d={`M -130 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 130 ${yPosAlta} L 130 28 L -130 28 Z`} 
+                    d={`M -135 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 135 ${yPosAlta} L 135 26 L -135 26 Z`} 
                     fill="url(#thermalAreaGrad)" 
                   />
 
-                  {/* Curva Térmica Dinâmica Widescreen */}
+                  {/* Curva Térmica Dinâmica */}
                   <path 
-                    d={`M -130 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 130 ${yPosAlta}`} 
+                    d={`M -135 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 135 ${yPosAlta}`} 
                     fill="none" 
                     stroke="url(#thermalCurveGrad)" 
-                    strokeWidth="3.8" 
+                    strokeWidth="4" 
                     filter="drop-shadow(0 0 10px rgba(0,240,255,0.7))" 
                   />
                   
                   {/* Linha de Fluxo Animada */}
                   <path 
-                    d={`M -130 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 130 ${yPosAlta}`} 
+                    d={`M -135 ${yPosBaixa} C -50 ${yPosBaixa}, 50 ${yPosAlta}, 135 ${yPosAlta}`} 
                     fill="none" 
                     stroke="#ffffff" 
-                    strokeWidth="1.5" 
+                    strokeWidth="1.6" 
                     strokeDasharray="6 6" 
                     className="animate-flow" 
-                    opacity="0.9"
+                    opacity="0.9" 
                   />
 
-                  {/* Nó de Baixa com Pulso (Ciano) */}
-                  <circle cx="-130" cy={yPosBaixa} r="7" fill="#00f0ff" opacity="0.3" className="animate-ping" />
-                  <circle cx="-130" cy={yPosBaixa} r="5" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" filter="drop-shadow(0 0 8px #00f0ff)" />
-                  <text x="-130" y={yPosBaixa - 9} fill="#38bdf8" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">T.Suc</text>
+                  {/* Nó de Baixa com Pulso & Badge T.Suc */}
+                  <circle cx="-135" cy={yPosBaixa} r="7" fill="#00f0ff" opacity="0.3" className="animate-ping" />
+                  <circle cx="-135" cy={yPosBaixa} r="5" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" filter="drop-shadow(0 0 8px #00f0ff)" />
+                  <rect x="-160" y={yPosBaixa - 22} width="50" height="15" rx="4" fill="#040c18" stroke="#00f0ff" strokeWidth="1.2" />
+                  <text x="-135" y={yPosBaixa - 11} fill="#00f0ff" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="900">T.SUC</text>
 
-                  {/* Nó de Alta com Pulso (Vermelho) */}
-                  <circle cx="130" cy={yPosAlta} r="7" fill="#ef4444" opacity="0.3" className="animate-ping" />
-                  <circle cx="130" cy={yPosAlta} r="5" fill="#ef4444" stroke="#ffffff" strokeWidth="2" filter="drop-shadow(0 0 8px #ef4444)" />
-                  <text x="130" y={yPosAlta - 9} fill="#f87171" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">T.Desc</text>
+                  {/* Nó de Alta com Pulso & Badge T.Desc */}
+                  <circle cx="135" cy={yPosAlta} r="7" fill="#ef4444" opacity="0.3" className="animate-ping" />
+                  <circle cx="135" cy={yPosAlta} r="5" fill="#ef4444" stroke="#ffffff" strokeWidth="2" filter="drop-shadow(0 0 8px #ef4444)" />
+                  <rect x="110" y={yPosAlta - 22} width="50" height="15" rx="4" fill="#180407" stroke="#ef4444" strokeWidth="1.2" />
+                  <text x="135" y={yPosAlta - 11} fill="#ef4444" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="900">T.DESC</text>
                 </g>
 
-                {/* ===== DUAL RÉGUAS TÉRMICAS WIDESCREEN DE ALVO (SH & SC TARGET GAUGES) ===== */}
-                <g transform="translate(0, 56)">
+                {/* ===== DUAL RÉGUAS TÉRMICAS DE ALVO (SH & SC TARGET GAUGES) ===== */}
+                <g transform="translate(0, 92)">
                   {/* Régua de Superaquecimento (SH) */}
                   <g transform="translate(-85, 0)">
-                    <rect x="-60" y="0" width="120" height="5.5" rx="2.7" fill="#031a24" stroke="rgba(0,240,255,0.3)" strokeWidth="0.8" />
+                    <rect x="-60" y="0" width="120" height="6" rx="3" fill="#031a24" stroke="rgba(0,240,255,0.4)" strokeWidth="1" />
                     {/* Faixa Alvo Verde (5-7K em escala 0 a 16K) */}
-                    <rect x="-22.5" y="0.5" width="15" height="4.5" rx="1.5" fill="#22c55e" opacity="0.5" />
+                    <rect x="-22.5" y="0.5" width="15" height="5" rx="1.5" fill="#22c55e" opacity="0.55" />
                     {/* Cursor Dinâmico */}
-                    <circle cx={Math.max(-56, Math.min(56, -60 + (realSH / 16) * 120))} cy="2.7" r="3.5" fill="#00f0ff" stroke="#fff" strokeWidth="1.2" filter="drop-shadow(0 0 5px #00f0ff)" />
-                    <text x="-60" y="11" fill="#64748b" fontSize="6.5" fontFamily="monospace">0K</text>
-                    <text x="0" y="11" fill="#38bdf8" fontSize="6.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">ZONA ALVO SH (5-7K)</text>
-                    <text x="60" y="11" fill="#64748b" fontSize="6.5" textAnchor="end" fontFamily="monospace">16K</text>
+                    <circle cx={Math.max(-56, Math.min(56, -60 + (realSH / 16) * 120))} cy="3" r="4" fill="#00f0ff" stroke="#fff" strokeWidth="1.5" filter="drop-shadow(0 0 6px #00f0ff)" />
+                    <text x="-60" y="12" fill="#94a3b8" fontSize="7" fontFamily="monospace" fontWeight="900">0K</text>
+                    <text x="0" y="12" fill="#38bdf8" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">ALVO SH (5-7K)</text>
+                    <text x="60" y="12" fill="#94a3b8" fontSize="7" textAnchor="end" fontFamily="monospace" fontWeight="900">16K</text>
                   </g>
 
                   {/* Régua de Sub-resfriamento (SC) */}
                   <g transform="translate(85, 0)">
-                    <rect x="-60" y="0" width="120" height="5.5" rx="2.7" fill="#200408" stroke="rgba(239,68,68,0.3)" strokeWidth="0.8" />
+                    <rect x="-60" y="0" width="120" height="6" rx="3" fill="#200408" stroke="rgba(239,68,68,0.4)" strokeWidth="1" />
                     {/* Faixa Alvo Verde (3-5K em escala 0 a 12K) */}
-                    <rect x="-30" y="0.5" width="20" height="4.5" rx="1.5" fill="#22c55e" opacity="0.5" />
+                    <rect x="-30" y="0.5" width="20" height="5" rx="1.5" fill="#22c55e" opacity="0.55" />
                     {/* Cursor Dinâmico */}
-                    <circle cx={Math.max(-56, Math.min(56, -60 + (realSC / 12) * 120))} cy="2.7" r="3.5" fill="#ef4444" stroke="#fff" strokeWidth="1.2" filter="drop-shadow(0 0 5px #ef4444)" />
-                    <text x="-60" y="11" fill="#64748b" fontSize="6.5" fontFamily="monospace">0K</text>
-                    <text x="0" y="11" fill="#f87171" fontSize="6.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">ZONA ALVO SC (3-5K)</text>
-                    <text x="60" y="11" fill="#64748b" fontSize="6.5" textAnchor="end" fontFamily="monospace">12K</text>
+                    <circle cx={Math.max(-56, Math.min(56, -60 + (realSC / 12) * 120))} cy="3" r="4" fill="#ef4444" stroke="#fff" strokeWidth="1.5" filter="drop-shadow(0 0 6px #ef4444)" />
+                    <text x="-60" y="12" fill="#94a3b8" fontSize="7" fontFamily="monospace" fontWeight="900">0K</text>
+                    <text x="0" y="12" fill="#f87171" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">ALVO SC (3-5K)</text>
+                    <text x="60" y="12" fill="#94a3b8" fontSize="7" textAnchor="end" fontFamily="monospace" fontWeight="900">12K</text>
                   </g>
                 </g>
 
                 {/* ===== STATUS OPERACIONAL UNIFICADO DO CICLO ===== */}
-                <g transform="translate(0, 80)">
+                <g transform="translate(0, 130)">
                   <rect 
-                    x="-120" y="-10" width="240" height="20" 
+                    x="-130" y="-12" width="260" height="24" 
                     fill="#050505" 
-                    rx="10" 
+                    rx="12" 
                     stroke={statusColor} 
-                    strokeWidth="1.8" 
+                    strokeWidth="2" 
                     opacity="0.95" 
-                    filter={`drop-shadow(0 0 10px ${statusColor})`} 
+                    filter={`drop-shadow(0 0 12px ${statusColor})`} 
                   />
                   <text 
-                    x="0" y="4" 
+                    x="0" y="4.5" 
                     fill={statusColor} 
-                    fontSize="10" 
+                    fontSize="11" 
                     textAnchor="middle" 
                     fontFamily="monospace" 
                     fontWeight="900" 
-                    className="tracking-widest drop-shadow-md"
+                    letterSpacing="2"
+                    className="drop-shadow-md"
                   >
                     {shortStatus}
                   </text>
@@ -521,31 +537,40 @@ export default function DigitalTwin() {
 
               </g>
 
-              {/* ===== LABELS WITH LIVE DATA WIDESCREEN ===== */}
+              {/* ===== BADGES HUD DE ALTA DEFINIÇÃO (POSICIONAMENTO LIMPO & SEM COLISÕES) ===== */}
 
-              {/* Suction Label */}
-              <text x="180" y="405" fill="#3b82f6" fontSize="20" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #3b82f6" }}>
-                {tSuc.toFixed(1)}°{tempUnit}
-              </text>
-              <text x="180" y="445" fill="#3b82f6" fontSize="20" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #3b82f6" }}>
-                {pSuc.toFixed(1)} {pressureUnit}
-              </text>
+              {/* 1. Medições de Sucção / Baixa */}
+              <g transform="translate(155, 475)">
+                <rect x="-56" y="-22" width="112" height="44" rx="7" fill="#030c18" fillOpacity="0.92" stroke="#3b82f6" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(59,130,246,0.45))" />
+                <text x="0" y="-4" fill="#38bdf8" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #38bdf8" }}>
+                  {tSuc.toFixed(1)}°{tempUnit}
+                </text>
+                <text x="0" y="14" fill="#60a5fa" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #60a5fa" }}>
+                  {pSuc.toFixed(1)} {pressureUnit}
+                </text>
+              </g>
 
-              {/* Discharge Label */}
-              <text x="210" y="48" fill="#ef4444" fontSize="20" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #ef4444" }}>
-                {(tCond + 30).toFixed(1)}°{tempUnit}
-              </text>
-              <text x="210" y="88" fill="#ef4444" fontSize="20" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #ef4444" }}>
-                {pLiq.toFixed(1)} {pressureUnit}
-              </text>
+              {/* 2. Medições de Descarga / Alta (Acima da Tubulação) */}
+              <g transform="translate(185, 26)">
+                <rect x="-56" y="-20" width="112" height="42" rx="7" fill="#180407" fillOpacity="0.92" stroke="#ef4444" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(239,68,68,0.45))" />
+                <text x="0" y="-4" fill="#f87171" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #ef4444" }}>
+                  {(tCond + 30).toFixed(1)}°{tempUnit}
+                </text>
+                <text x="0" y="14" fill="#ef4444" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #ef4444" }}>
+                  {pLiq.toFixed(1)} {pressureUnit}
+                </text>
+              </g>
 
-              {/* Liquid Label */}
-              <text x="730" y="48" fill="#f97316" fontSize="20" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #f97316" }}>
-                {tLiq.toFixed(1)}°{tempUnit}
-              </text>
-              <text x="730" y="88" fill="#f97316" fontSize="20" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #f97316" }}>
-                {pLiq.toFixed(1)} {pressureUnit}
-              </text>
+              {/* 3. Medições de Linha de Líquido (Acima da Tubulação) */}
+              <g transform="translate(615, 26)">
+                <rect x="-56" y="-20" width="112" height="42" rx="7" fill="#180a03" fillOpacity="0.92" stroke="#f97316" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(249,115,22,0.45))" />
+                <text x="0" y="-4" fill="#fb923c" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #f97316" }}>
+                  {tLiq.toFixed(1)}°{tempUnit}
+                </text>
+                <text x="0" y="14" fill="#f97316" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #f97316" }}>
+                  {pLiq.toFixed(1)} {pressureUnit}
+                </text>
+              </g>
 
             </svg>
             </div>

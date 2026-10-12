@@ -17,17 +17,24 @@ import {
   Upload, 
   Check, 
   UserCheck,
-  AlertCircle
+  AlertCircle,
+  Hourglass,
+  CheckCircle,
+  Ban
 } from "lucide-react";
 import { 
   getStoredAccounts, 
   adminRegisterClient, 
   adminDeleteClient, 
   adminToggleClientPro, 
+  adminApproveTrial,
+  adminApprovePro,
+  adminClearAllClients,
   resetAccountDevice, 
   generate9DigitKey, 
   formatPhone, 
   formatClientWhatsAppMessage,
+  formatApprovedNotificationWhatsApp,
   adminExportAccounts,
   adminImportAccounts,
   UserAccount,
@@ -72,7 +79,7 @@ export default function MasterAdminPanel() {
     toast.info("Nova chave gerada:", { description: newKey });
   };
 
-  // Submeter cadastro
+  // Submeter cadastro pelo Admin
   const handleCreateClient = (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientPhone.trim()) {
@@ -94,7 +101,6 @@ export default function MasterAdminPanel() {
       if (res.account) {
         setLastRegistered(res.account);
       }
-      // Limpa formulário mantendo nova chave pronta
       setClientName("");
       setClientPhone("");
       setDeviceId("");
@@ -104,11 +110,43 @@ export default function MasterAdminPanel() {
     }
   };
 
-  // Excluir cliente
+  // Aprovar Teste Grátis de 2 Dias
+  const handleApproveTrial = (phone: string, name: string) => {
+    const res = adminApproveTrial(phone);
+    if (res.success) {
+      toast.success(`Teste de 2 dias liberado para ${name}!`);
+      refreshAccounts();
+    } else {
+      toast.error("Falha", { description: res.message });
+    }
+  };
+
+  // Aprovar PRO Vitalício
+  const handleApprovePro = (phone: string, name: string) => {
+    const res = adminApprovePro(phone);
+    if (res.success) {
+      toast.success(`Licença PRO Vitalícia liberada para ${name}!`);
+      refreshAccounts();
+    } else {
+      toast.error("Falha", { description: res.message });
+    }
+  };
+
+  // Zerar todos os clientes
+  const handleClearAllClients = () => {
+    if (confirm("ATENÇÃO: Deseja realmente zerar todos os clientes cadastrados? O Master Admin será preservado intacto.")) {
+      const res = adminClearAllClients();
+      toast.success(res.message);
+      refreshAccounts();
+      setLastRegistered(null);
+    }
+  };
+
+  // Excluir cliente individual
   const handleDelete = (phone: string, name: string) => {
     if (confirm(`Tem certeza que deseja excluir o cliente ${name}?`)) {
       adminDeleteClient(phone);
-      toast.success(`Cliente ${name} excluído com sucesso.`);
+      toast.success(`Cliente ${name} excluído.`);
       refreshAccounts();
     }
   };
@@ -159,7 +197,13 @@ export default function MasterAdminPanel() {
     }
   };
 
-  // Filtragem de clientes
+  // Fila de Espera (Aguardando Liberação do Admin)
+  const pendingAccounts = accounts.filter(a => !a.isApproved && !a.isPro);
+  
+  // Clientes Já Liberados / Ativos
+  const activeAccounts = accounts.filter(a => a.isApproved || a.isPro);
+
+  // Filtragem de clientes ativos
   const filteredAccounts = accounts.filter(acc => {
     const term = searchTerm.toLowerCase();
     return (
@@ -172,7 +216,7 @@ export default function MasterAdminPanel() {
 
   const totalClients = accounts.length;
   const proClients = accounts.filter(a => a.isPro).length;
-  const trialClients = accounts.filter(a => !a.isPro).length;
+  const trialClients = accounts.filter(a => !a.isPro && a.isApproved).length;
   const linkedDevices = accounts.filter(a => !!a.deviceId).length;
 
   return (
@@ -194,11 +238,20 @@ export default function MasterAdminPanel() {
             CADASTRO E GESTÃO DE CLIENTES
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 font-mono">
-            Acesso Restrito ao Administrador Sandro RR • Cadastro de Celular, Chave de Acesso (9 Dígitos) e Liberação de Aparelho
+            Acesso Restrito ao Administrador Sandro RR • Fila de Espera, Liberação de Aparelho e Chaves de 9 Dígitos
           </p>
         </div>
 
-        <div className="flex items-center gap-2 z-10 self-start md:self-center">
+        <div className="flex flex-wrap items-center gap-2 z-10 self-start md:self-center">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearAllClients}
+            className="border-red-500/40 text-red-400 hover:bg-red-500/10 font-mono text-xs gap-1.5 h-9"
+            title="Zerar todos os clientes cadastrados"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Zerar Base
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -206,16 +259,16 @@ export default function MasterAdminPanel() {
             className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 font-mono text-xs gap-1.5 h-9"
             title="Copiar JSON com todos os clientes"
           >
-            <Download className="w-3.5 h-3.5" /> Exportar Base
+            <Download className="w-3.5 h-3.5" /> Exportar
           </Button>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowSyncModal(true)}
             className="border-amber-500/40 text-amber-300 hover:bg-amber-500/10 font-mono text-xs gap-1.5 h-9"
-            title="Sincronizar ou colar clientes de outro aparelho"
+            title="Importar base de clientes"
           >
-            <Upload className="w-3.5 h-3.5" /> Importar JSON
+            <Upload className="w-3.5 h-3.5" /> Importar
           </Button>
         </div>
       </div>
@@ -232,6 +285,16 @@ export default function MasterAdminPanel() {
           </CardContent>
         </Card>
 
+        <Card className="bg-yellow-950/30 border-yellow-500/50 shadow-lg shadow-yellow-500/10">
+          <CardContent className="p-3.5 sm:p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-yellow-400 font-bold">Fila de Espera</p>
+              <p className="text-xl sm:text-2xl font-black font-mono text-yellow-300 mt-0.5 animate-pulse">{pendingAccounts.length}</p>
+            </div>
+            <Hourglass className="w-6 h-6 text-yellow-400 animate-spin duration-1000" />
+          </CardContent>
+        </Card>
+
         <Card className="bg-amber-950/20 border-amber-500/30 shadow-lg shadow-amber-500/5">
           <CardContent className="p-3.5 sm:p-4 flex items-center justify-between">
             <div>
@@ -242,20 +305,10 @@ export default function MasterAdminPanel() {
           </CardContent>
         </Card>
 
-        <Card className="bg-cyan-950/20 border-cyan-500/30 shadow-lg shadow-cyan-500/5">
-          <CardContent className="p-3.5 sm:p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-cyan-400">Em Teste (48h)</p>
-              <p className="text-xl sm:text-2xl font-black font-mono text-cyan-300 mt-0.5">{trialClients}</p>
-            </div>
-            <Clock className="w-6 h-6 text-cyan-400" />
-          </CardContent>
-        </Card>
-
         <Card className="bg-emerald-950/20 border-emerald-500/30 shadow-lg shadow-emerald-500/5">
           <CardContent className="p-3.5 sm:p-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-emerald-400">Aparelhos Travados</p>
+              <p className="text-[10px] sm:text-xs font-mono uppercase tracking-wider text-emerald-400">Aparelhos Vinculados</p>
               <p className="text-xl sm:text-2xl font-black font-mono text-emerald-300 mt-0.5">{linkedDevices}</p>
             </div>
             <Smartphone className="w-6 h-6 text-emerald-400" />
@@ -263,21 +316,119 @@ export default function MasterAdminPanel() {
         </Card>
       </div>
 
-      {/* Grid Principal: Formulário de Cadastro à Esquerda + Ação Rápida */}
+      {/* SEÇÃO ESPECIAL: FILA DE ESPERA (CLIENTES AGUARDANDO LIBERAÇÃO) */}
+      <Card className="bg-yellow-950/20 border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.15)] relative overflow-hidden">
+        <CardHeader className="pb-3 border-b border-yellow-500/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Hourglass className="w-5 h-5 text-yellow-400 animate-pulse" />
+              <CardTitle className="text-lg font-tactical uppercase text-yellow-300 tracking-wider">
+                Fila de Espera • Clientes Aguardando Liberação ({pendingAccounts.length})
+              </CardTitle>
+            </div>
+            <span className="text-[11px] font-mono text-yellow-400/80 bg-yellow-500/10 px-2.5 py-1 rounded-full border border-yellow-500/30">
+              {pendingAccounts.length > 0 ? "Ação Requerida do Admin" : "Fila Limpa - Nenhum Pendente"}
+            </span>
+          </div>
+          <CardDescription className="text-xs font-mono text-zinc-300">
+            Estes clientes se cadastraram no aplicativo e estão bloqueados aguardando você liberar o acesso.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="pt-4">
+          {pendingAccounts.length === 0 ? (
+            <div className="text-center py-6 space-y-1">
+              <CheckCircle className="w-8 h-8 text-emerald-400 mx-auto opacity-80" />
+              <p className="text-xs font-mono text-zinc-400">Não há solicitações pendentes na fila no momento.</p>
+              <p className="text-[11px] font-mono text-zinc-600">Novos técnicos cadastrados aparecerão aqui para você aprovar.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {pendingAccounts.map((acc) => (
+                <div 
+                  key={acc.phone} 
+                  className="bg-black/80 border border-yellow-500/40 rounded-xl p-3.5 space-y-3 shadow-lg"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-white font-mono font-bold text-sm">{acc.name}</h4>
+                      <p className="text-xs font-mono text-cyan-400 mt-0.5">📱 {acc.formattedPhone || acc.phone}</p>
+                    </div>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 font-bold uppercase animate-pulse">
+                      Aguardando
+                    </span>
+                  </div>
+
+                  <div className="bg-zinc-950 p-2 rounded-lg border border-white/5 space-y-1 text-[11px] font-mono">
+                    <div className="flex justify-between items-center">
+                      <span className="text-zinc-400">Chave de Acesso:</span>
+                      <span className="text-yellow-300 font-bold font-mono">🔑 {acc.generatedAccessKey}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-zinc-400 text-[10px]">
+                      <span>Aparelho (ID):</span>
+                      <span className="truncate max-w-[150px] text-zinc-300">{acc.deviceId || "Será vinculado"}</span>
+                    </div>
+                  </div>
+
+                  {/* Botões de Aprovação Imediata */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                    <Button
+                      size="sm"
+                      onClick={() => handleApproveTrial(acc.phone, acc.name)}
+                      className="bg-cyan-600 hover:bg-cyan-500 text-white font-tactical text-[11px] h-8 px-2.5 flex-1 uppercase tracking-wider"
+                    >
+                      <Check className="w-3.5 h-3.5 mr-1" />
+                      Liberar Teste (2 Dias)
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleApprovePro(acc.phone, acc.name)}
+                      className="bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-tactical font-black text-[11px] h-8 px-2.5 flex-1 uppercase tracking-wider"
+                    >
+                      <Zap className="w-3.5 h-3.5 mr-1 fill-black" />
+                      Liberar PRO Vitalício
+                    </Button>
+                    <a
+                      href={formatApprovedNotificationWhatsApp(acc)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center bg-emerald-600 hover:bg-emerald-500 text-white p-2 rounded-lg"
+                      title="Enviar notificação de liberação no WhatsApp"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                    </a>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleDelete(acc.phone, acc.name)}
+                      className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-8 w-8"
+                      title="Recusar solicitação"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Grid: Formulário de Cadastro à Esquerda + Base Completa à Direita */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Formulário de Cadastro de Novo Cliente */}
+        {/* Formulário de Cadastro Manual pelo Admin */}
         <div className="lg:col-span-5 space-y-4">
           <Card className="bg-black/70 border-amber-500/40 shadow-[0_0_25px_rgba(234,179,8,0.1)] relative">
             <CardHeader className="pb-3 border-b border-white/5">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-amber-400" />
                 <CardTitle className="text-lg font-tactical tracking-wider uppercase text-amber-300">
-                  Novo Cadastro de Cliente
+                  Cadastrar Cliente Direto
                 </CardTitle>
               </div>
               <CardDescription className="text-xs font-mono text-zinc-400">
-                Cadastre o celular e a chave de acesso exclusiva de 9 dígitos para liberação do cliente.
+                Cadastre o celular e a chave de acesso exclusiva de 9 dígitos para liberação imediata.
               </CardDescription>
             </CardHeader>
 
@@ -407,13 +558,13 @@ export default function MasterAdminPanel() {
                   className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-tactical font-black text-sm h-12 rounded-xl shadow-[0_0_20px_rgba(234,179,8,0.4)] tracking-wider uppercase transition-all"
                 >
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  SALVAR E CADASTRAR CLIENTE
+                  CADASTRAR E LIBERAR CLIENTE
                 </Button>
               </form>
             </CardContent>
           </Card>
 
-          {/* Card de Envio Rápido do Último Cliente Cadastrado */}
+          {/* Envio rápido do último cliente */}
           {lastRegistered && (
             <Card className="bg-emerald-950/20 border-emerald-500/40 p-4 rounded-xl space-y-3 animate-in fade-in-50 duration-300">
               <div className="flex items-center justify-between">
@@ -449,10 +600,10 @@ export default function MasterAdminPanel() {
               <div>
                 <CardTitle className="text-lg font-tactical tracking-wider uppercase text-white flex items-center gap-2">
                   <Users className="w-5 h-5 text-amber-400" />
-                  Base de Clientes Cadastrados ({filteredAccounts.length})
+                  Base Geral de Clientes ({filteredAccounts.length})
                 </CardTitle>
                 <CardDescription className="text-xs font-mono text-zinc-400">
-                  Consulte as chaves geradas, envie liberações via WhatsApp e gerencie aparelhos.
+                  Consulte status, chaves geradas e aparelhos vinculados.
                 </CardDescription>
               </div>
 
@@ -473,10 +624,10 @@ export default function MasterAdminPanel() {
                 <div className="text-center py-12 space-y-2">
                   <AlertCircle className="w-8 h-8 text-zinc-600 mx-auto" />
                   <p className="text-sm font-mono text-zinc-400">
-                    {searchTerm ? "Nenhum cliente encontrado com os termos pesquisados." : "Nenhum cliente cadastrado ainda."}
+                    {searchTerm ? "Nenhum cliente encontrado com os termos pesquisados." : "Nenhum cliente cadastrado no momento."}
                   </p>
                   <p className="text-xs font-mono text-zinc-600">
-                    Utilize o formulário ao lado para cadastrar o primeiro cliente.
+                    Base zerada com sucesso. Quando os clientes se cadastrarem, aparecerão aqui.
                   </p>
                 </div>
               ) : (
@@ -484,7 +635,11 @@ export default function MasterAdminPanel() {
                   {filteredAccounts.map((acc) => (
                     <div 
                       key={acc.phone} 
-                      className="bg-black/80 border border-white/10 hover:border-amber-500/40 rounded-xl p-3.5 sm:p-4 space-y-3 transition-all hover:shadow-[0_0_15px_rgba(234,179,8,0.1)]"
+                      className={`bg-black/80 border rounded-xl p-3.5 sm:p-4 space-y-3 transition-all ${
+                        !acc.isApproved && !acc.isPro
+                          ? "border-yellow-500/60 shadow-[0_0_15px_rgba(234,179,8,0.2)]"
+                          : "border-white/10 hover:border-amber-500/40"
+                      }`}
                     >
                       {/* Topo do Card */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -492,13 +647,19 @@ export default function MasterAdminPanel() {
                           <span className="text-white font-mono font-bold text-sm sm:text-base">
                             {acc.name}
                           </span>
-                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-bold uppercase ${
-                            acc.isPro 
-                              ? "bg-amber-500/20 text-yellow-300 border-amber-500/40" 
-                              : "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
-                          }`}>
-                            {acc.isPro ? "PRO Vitalício" : "Teste 48h"}
-                          </span>
+                          {!acc.isApproved && !acc.isPro ? (
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-yellow-500 bg-yellow-500/20 text-yellow-300 font-bold uppercase animate-pulse">
+                              ⏳ Fila de Espera
+                            </span>
+                          ) : (
+                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-bold uppercase ${
+                              acc.isPro 
+                                ? "bg-amber-500/20 text-yellow-300 border-amber-500/40" 
+                                : "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
+                            }`}>
+                              {acc.isPro ? "PRO Vitalício" : "Teste 48h"}
+                            </span>
+                          )}
                         </div>
 
                         <span className="text-xs font-mono text-zinc-400">
@@ -539,13 +700,33 @@ export default function MasterAdminPanel() {
                       {/* Barra de Ações Rápidas do Admin */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/5">
                         <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Ações para cliente pendente */}
+                          {!acc.isApproved && !acc.isPro && (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => handleApproveTrial(acc.phone, acc.name)}
+                                className="bg-cyan-600 hover:bg-cyan-500 text-white text-[10.5px] font-mono h-7 px-2"
+                              >
+                                <Check className="w-3 h-3 mr-1" /> Liberar Teste
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleApprovePro(acc.phone, acc.name)}
+                                className="bg-amber-500 hover:bg-amber-400 text-black font-bold text-[10.5px] font-mono h-7 px-2"
+                              >
+                                <Zap className="w-3 h-3 mr-1 fill-black" /> Liberar PRO
+                              </Button>
+                            </>
+                          )}
+
                           {/* Enviar Mensagem no WhatsApp */}
                           <a
-                            href={formatClientWhatsAppMessage(acc)}
+                            href={formatApprovedNotificationWhatsApp(acc)}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1.5 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-500/40 text-[11px] font-mono font-bold py-1 px-2.5 rounded-lg transition-all"
-                            title="Enviar mensagem oficial com a chave no WhatsApp do cliente"
+                            title="Enviar mensagem oficial de liberação no WhatsApp"
                           >
                             <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
                             Enviar WhatsApp
@@ -577,13 +758,13 @@ export default function MasterAdminPanel() {
                             {acc.isPro ? "Mudar p/ Teste" : "Tornar PRO"}
                           </Button>
 
-                          {/* Resetar Aparelho (Permitir troca de celular) */}
+                          {/* Resetar Aparelho */}
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleResetDevice(acc.phone, acc.name)}
                             className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 text-[11px] font-mono h-7 px-2"
-                            title="Desvincular aparelho deste cliente para ele poder logar em outro celular"
+                            title="Desvincular aparelho deste cliente"
                           >
                             <Smartphone className="w-3 h-3 mr-1" /> Reset Dev
                           </Button>
@@ -618,7 +799,7 @@ export default function MasterAdminPanel() {
                 <Upload className="w-5 h-5" /> Importar / Sincronizar Base de Clientes
               </CardTitle>
               <CardDescription className="text-xs font-mono text-zinc-400">
-                Cole abaixo o texto JSON exportado do seu outro aparelho ou computador para carregar os clientes.
+                Cole abaixo o texto JSON exportado de outro aparelho para sincronizar os clientes.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

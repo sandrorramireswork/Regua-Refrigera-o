@@ -6,8 +6,10 @@ export interface UserAccount {
   phone: string;              // apenas dígitos (ex: 51995394808)
   formattedPhone: string;     // formatado (ex: (51) 99539-4808)
   registeredAt: number;       // timestamp de criação
-  trialExpiresAt: number;     // timestamp de expiração (2 dias após o registro)
+  trialExpiresAt: number;     // timestamp de expiração (2 dias após aprovação)
   isPro: boolean;             // acesso vitalício liberado
+  isApproved: boolean;        // liberado pelo admin (false = na fila de espera!)
+  approvedAt?: number;        // timestamp da liberação
   deviceId: string;           // identificador único do aparelho vinculado (Single Device Lock)
   generatedAccessKey: string; // chave aleatória de 9 dígitos gerada pelo app (ex: 489-102-753)
   licenseKey?: string;        // chave de liberação utilizada
@@ -35,6 +37,7 @@ export const VALID_LICENSE_KEYS = [
 const STORAGE_KEY_SESSION = "thermomaster_session_user";
 const STORAGE_KEY_ACCOUNTS = "thermomaster_phone_accounts";
 const STORAGE_KEY_DEVICE = "thermomaster_device_id";
+const STORAGE_KEY_RESET_FLAG = "thermomaster_cleared_clients_v3";
 
 /**
  * Remove caracteres não numéricos de um telefone
@@ -97,6 +100,21 @@ export function generate9DigitKey(): string {
 export function getStoredAccounts(): UserAccount[] {
   if (typeof window === "undefined") return [];
   try {
+    // Limpeza automática de clientes de teste anteriores conforme solicitação do usuário
+    if (!localStorage.getItem(STORAGE_KEY_RESET_FLAG)) {
+      const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
+      if (raw) {
+        const parsed: UserAccount[] = JSON.parse(raw);
+        const adminOnly = parsed.filter(a => a.isAdmin);
+        localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(adminOnly));
+        const active = getActiveSession();
+        if (active && !active.isAdmin) {
+          localStorage.removeItem(STORAGE_KEY_SESSION);
+        }
+      }
+      localStorage.setItem(STORAGE_KEY_RESET_FLAG, "true");
+    }
+
     const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
     if (!raw) return [];
     return JSON.parse(raw);
@@ -162,9 +180,10 @@ export function setActiveSession(account: UserAccount | null): void {
 /**
  * Registra novo técnico para início de teste gratuito de 2 dias com bloqueio de aparelho único
  */
-export function registerFreeTrial(name: string, phoneInput: string): { success: boolean; account?: UserAccount; message?: string } {
+export function registerFreeTrial(name: string, phoneInput: string): { success: boolean; account?: UserAccount; message?: string; isWaitingApproval?: boolean } {
   const digits = cleanPhone(phoneInput);
   const currentDeviceId = getDeviceId();
+  const now = Date.now();
 
   if (!name.trim() || name.trim().length < 2) {
     return { success: false, message: "Informe seu nome completo ou razão social para o cadastro." };
@@ -175,7 +194,6 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
 
   const accounts = getStoredAccounts();
   const existing = accounts.find(a => a.phone === digits);
-  const now = Date.now();
 
   if (existing) {
     // Verificação de Segurança de Aparelho Único
@@ -187,7 +205,6 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
       };
     }
 
-    // Se o aparelho não estava registrado (legado), vincula agora
     if (!existing.deviceId) {
       existing.deviceId = currentDeviceId;
     }
@@ -200,9 +217,17 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
     if (existing.isPro) {
       return { success: true, account: existing, message: `Bem-vindo de volta, ${existing.name}! Sua Licença Vitalícia está ativa neste aparelho.` };
     }
-    if (now < existing.trialExpiresAt) {
+    if (existing.isApproved && now < existing.trialExpiresAt) {
       const remaining = getRemainingTrialTime(existing.trialExpiresAt);
       return { success: true, account: existing, message: `Bem-vindo de volta! Você possui ainda ${remaining.text} do seu teste grátis.` };
+    }
+    if (!existing.isApproved && !existing.isAdmin) {
+      return { 
+        success: true, 
+        isWaitingApproval: true, 
+        account: existing, 
+        message: `Sua solicitação está na fila de espera. Aguardando liberação do administrador Sandro RR.` 
+      };
     }
 
     // Teste expirado
@@ -213,15 +238,16 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
     };
   }
 
-  // Novo cadastro Free de 2 dias vinculado exclusivamente a este aparelho
+  // Novo cadastro: entra como PENDENTE na Fila de Espera do Admin!
   const key9 = generate9DigitKey();
   const newAccount: UserAccount = {
     name: name.trim(),
     phone: digits,
     formattedPhone: formatPhone(digits),
     registeredAt: now,
-    trialExpiresAt: now + TRIAL_DURATION_MS,
+    trialExpiresAt: 0, // só começa a contar a partir do momento em que o admin aprovar!
     isPro: false,
+    isApproved: false, // NA FILA DE ESPERA!
     isAdmin: false,
     deviceId: currentDeviceId,
     generatedAccessKey: key9
@@ -232,15 +258,16 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
 
   return {
     success: true,
+    isWaitingApproval: true,
     account: newAccount,
-    message: `Conta ativada com sucesso! Você tem 2 dias de acesso gratuito completo vinculado a este aparelho.`
+    message: `Cadastro recebido! Você está na fila de espera aguardando liberação pelo administrador Sandro RR.`
   };
 }
 
 /**
  * Login direto pelo número de celular cadastrado com verificação estrita de aparelho único
  */
-export function loginWithPhone(phoneInput: string): { success: boolean; account?: UserAccount; message?: string } {
+export function loginWithPhone(phoneInput: string): { success: boolean; account?: UserAccount; message?: string; isWaitingApproval?: boolean } {
   const digits = cleanPhone(phoneInput);
   const currentDeviceId = getDeviceId();
 
@@ -252,7 +279,7 @@ export function loginWithPhone(phoneInput: string): { success: boolean; account?
   const existing = accounts.find(a => a.phone === digits);
 
   if (!existing) {
-    return { success: false, message: "Número de celular não localizado. Faça seu cadastro gratuito de 2 dias." };
+    return { success: false, message: "Número de celular não localizado. Faça sua solicitação de cadastro." };
   }
 
   // Validação de Segurança: Aparelho Único
@@ -272,6 +299,15 @@ export function loginWithPhone(phoneInput: string): { success: boolean; account?
   }
   saveAccount(existing);
   setActiveSession(existing);
+
+  if (!existing.isApproved && !existing.isAdmin && !existing.isPro) {
+    return { 
+      success: true, 
+      isWaitingApproval: true, 
+      account: existing, 
+      message: `Sua solicitação está na fila de espera aguardando liberação do administrador Sandro RR.` 
+    };
+  }
 
   return { success: true, account: existing, message: `Login realizado com sucesso! Olá, ${existing.name}.` };
 }
@@ -305,6 +341,7 @@ export function activateLicense(licenseKey: string, phoneToActivate?: string): {
 
     if (isMasterKey || isClient9DigitKey) {
       target.isPro = true;
+      target.isApproved = true; // aprova a conta caso estivesse na fila de espera
       target.licenseKey = licenseKey.trim();
       target.deviceId = target.deviceId || currentDeviceId;
       saveAccount(target);
@@ -435,6 +472,7 @@ export function loginAsAdmin(): UserAccount {
     registeredAt: Date.now(),
     trialExpiresAt: Date.now() + (3650 * 24 * 60 * 60 * 1000), // 10 anos
     isPro: true,
+    isApproved: true,
     isAdmin: true,
     deviceId: currentDeviceId,
     generatedAccessKey: "999-888-777",
@@ -613,4 +651,106 @@ export function adminImportAccounts(jsonStr: string): { success: boolean; count:
     const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
     return { success: false, count: 0, message: `Erro ao importar: ${errorMsg}` };
   }
+}
+
+/**
+ * Aprova o teste grátis de 2 dias para um cliente que está na fila de espera
+ */
+export function adminApproveTrial(phone: string): { success: boolean; message: string; account?: UserAccount } {
+  const digits = cleanPhone(phone);
+  const accounts = getStoredAccounts();
+  const target = accounts.find(a => a.phone === digits);
+  if (!target) return { success: false, message: "Cliente não localizado na fila de espera." };
+
+  target.isApproved = true;
+  target.approvedAt = Date.now();
+  target.trialExpiresAt = Date.now() + TRIAL_DURATION_MS; // 48h começam a contar AGORA a partir da aprovação do admin!
+  saveAccount(target);
+  return { 
+    success: true, 
+    message: `Teste de 48h liberado com sucesso para ${target.name}!`, 
+    account: target 
+  };
+}
+
+/**
+ * Aprova a licença PRO Vitalícia permanente para um cliente na fila de espera
+ */
+export function adminApprovePro(phone: string): { success: boolean; message: string; account?: UserAccount } {
+  const digits = cleanPhone(phone);
+  const accounts = getStoredAccounts();
+  const target = accounts.find(a => a.phone === digits);
+  if (!target) return { success: false, message: "Cliente não localizado na fila de espera." };
+
+  target.isApproved = true;
+  target.isPro = true;
+  target.approvedAt = Date.now();
+  target.licenseKey = target.generatedAccessKey;
+  saveAccount(target);
+  return { 
+    success: true, 
+    message: `Licença PRO Vitalícia liberada com sucesso para ${target.name}!`, 
+    account: target 
+  };
+}
+
+/**
+ * Zera todos os clientes cadastrados até agora mantendo apenas o Master Admin (Sandro RR)
+ */
+export function adminClearAllClients(): { success: boolean; count: number; message: string } {
+  const accounts = getStoredAccounts();
+  const adminOnly = accounts.filter(a => a.isAdmin);
+  const removedCount = accounts.length - adminOnly.length;
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(adminOnly));
+    const session = getActiveSession();
+    if (session && !session.isAdmin) {
+      localStorage.removeItem(STORAGE_KEY_SESSION);
+    }
+  }
+  return { 
+    success: true, 
+    count: removedCount, 
+    message: `${removedCount} clientes de teste foram zerados com sucesso. O Master Admin foi preservado intacto.` 
+  };
+}
+
+/**
+ * Link de WhatsApp para o cliente notificar o Admin Sandro RR sobre seu cadastro na fila de espera
+ */
+export function generateWaitingApprovalWhatsAppLink(account: UserAccount): string {
+  const message = `Olá Sandro RR! Acabei de me cadastrar no aplicativo TermoMaster Pro e aguardo liberação na fila de espera.
+
+📋 *DADOS DO MEU CADASTRO:*
+• Nome: *${account.name}*
+• Celular: *${account.formattedPhone || account.phone}*
+• Aparelho (ID): *${account.deviceId}*
+🔑 *Chave Gerada para este aparelho:* 👉 *${account.generatedAccessKey}*
+
+Por favor, aprove meu acesso pelo seu aplicativo!`;
+
+  return `https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * Notificação enviada pelo Admin para o WhatsApp do cliente quando seu acesso for liberado
+ */
+export function formatApprovedNotificationWhatsApp(client: UserAccount): string {
+  const typeText = client.isPro 
+    ? "Sua Licença PRO Vitalícia permanente foi aprovada com sucesso!" 
+    : "Seu Teste Gratuito de 2 Dias foi liberado com sucesso pelo administrador!";
+  
+  const message = `Olá ${client.name}! ${typeText}
+
+🔑 *SUA CHAVE DE ACESSO OFICIAL (9 DÍGITOS):*
+👉 *${client.generatedAccessKey}*
+
+📱 *COMO ACESSAR:*
+1. Abra o aplicativo TermoMaster Pro no seu celular.
+2. Seu acesso já está liberado para este aparelho! Caso solicitado, insira a chave: *${client.generatedAccessKey}*.
+
+Bons trabalhos!
+_Eng. Sandro RR • TermoMaster Pro_`;
+
+  return `https://wa.me/55${client.phone}?text=${encodeURIComponent(message)}`;
 }

@@ -5,6 +5,8 @@ export interface UserAccount {
   name: string;
   phone: string;              // apenas dígitos (ex: 51995394808)
   formattedPhone: string;     // formatado (ex: (51) 99539-4808)
+  username?: string;          // login do técnico (opcional)
+  password?: string;          // senha de acesso do técnico
   registeredAt: number;       // timestamp de criação
   trialExpiresAt: number;     // timestamp de expiração (2 dias após aprovação)
   isPro: boolean;             // acesso vitalício liberado
@@ -313,6 +315,119 @@ export function loginWithPhone(phoneInput: string): { success: boolean; account?
 }
 
 /**
+ * Login Unificado: Tanto o Master Admin quanto os clientes entram na mesma caixa de entrada!
+ * - Admin: Login 'Sandro RR' (ou 'admin' / '5551995394808') + Senha 'Sa2026'
+ * - Cliente: Login (Nome, Usuário ou Celular cadastrado na aba Admin) + Senha
+ */
+export function loginUnified(
+  loginInput: string, 
+  passwordInput: string
+): { success: boolean; account?: UserAccount; message: string; isWaitingApproval?: boolean } {
+  const trimmedLogin = loginInput.trim();
+  const trimmedPass = passwordInput.trim();
+  const digitsLogin = cleanPhone(trimmedLogin);
+  const currentDeviceId = getDeviceId();
+
+  if (!trimmedLogin) {
+    return { success: false, message: "Informe seu login ou celular cadastrado." };
+  }
+  if (!trimmedPass) {
+    return { success: false, message: "Informe sua senha de acesso." };
+  }
+
+  // 1. VERIFICAÇÃO DE ENTRADA DO MASTER ADMIN (SANDRO RR)
+  const isAdminLogin = 
+    trimmedLogin.toLowerCase() === "sandro rr" ||
+    trimmedLogin.toLowerCase() === "sandro" ||
+    trimmedLogin.toLowerCase() === "admin" ||
+    digitsLogin === "5551995394808" ||
+    digitsLogin === "51995394808";
+
+  if (isAdminLogin && trimmedPass === "Sa2026") {
+    const adminAcc = loginAsAdmin();
+    return {
+      success: true,
+      account: adminAcc,
+      message: "Bem-vindo, Sandro RR! Sessão Master autenticada."
+    };
+  }
+
+  // 2. VERIFICAÇÃO DE CLIENTE CADASTRADO PELO ADMIN
+  const accounts = getStoredAccounts();
+  const existing = accounts.find(a => {
+    if (a.isAdmin) return false;
+    const phoneMatch = digitsLogin.length >= 8 && cleanPhone(a.phone).includes(digitsLogin);
+    const nameMatch = a.name.trim().toLowerCase() === trimmedLogin.toLowerCase();
+    const usernameMatch = a.username && a.username.trim().toLowerCase() === trimmedLogin.toLowerCase();
+    return phoneMatch || nameMatch || usernameMatch;
+  });
+
+  if (!existing) {
+    return {
+      success: false,
+      message: "Conta não localizada. Fale com Sandro RR pelo WhatsApp abaixo para cadastrar seu acesso grátis por 48h."
+    };
+  }
+
+  // Validação de Senha do Cliente:
+  let passValid = false;
+  if (existing.password) {
+    passValid = existing.password === trimmedPass;
+  } else {
+    // Aceita qualquer senha >= 3 caracteres ou telefone/chave se for primeiro acesso
+    const phoneDigits = cleanPhone(existing.phone);
+    if (
+      trimmedPass === phoneDigits || 
+      trimmedPass === phoneDigits.slice(-4) || 
+      trimmedPass === phoneDigits.slice(-6) ||
+      cleanKey(existing.generatedAccessKey) === cleanKey(trimmedPass) ||
+      trimmedPass.length >= 3
+    ) {
+      passValid = true;
+      existing.password = trimmedPass; // vincula a senha informada para próximos acessos
+      saveAccount(existing);
+    }
+  }
+
+  if (!passValid) {
+    return { 
+      success: false, 
+      message: "Senha incorreta. Verifique os dados ou fale com o Admin no WhatsApp abaixo." 
+    };
+  }
+
+  // Validação de Segurança: 1 Único Aparelho por Cliente
+  if (existing.deviceId && existing.deviceId !== currentDeviceId && !existing.isAdmin) {
+    return {
+      success: false,
+      message: `Aparelho não autorizado (${existing.deviceId}). O acesso é protegido e restrito a 1 único celular. Contate o Admin no WhatsApp para transferir.`
+    };
+  }
+
+  if (!existing.deviceId) {
+    existing.deviceId = currentDeviceId;
+  }
+  saveAccount(existing);
+  setActiveSession(existing);
+
+  // Se estiver na fila de espera aguardando liberação
+  if (!existing.isApproved && !existing.isPro) {
+    return {
+      success: true,
+      isWaitingApproval: true,
+      account: existing,
+      message: `Sua conta foi localizada, mas está aguardando liberação na aba Master Admin. Fale com Sandro RR no WhatsApp abaixo.`
+    };
+  }
+
+  return {
+    success: true,
+    account: existing,
+    message: `Acesso liberado! Bem-vindo, ${existing.name}.`
+  };
+}
+
+/**
  * Ativa a licença vitalícia permanente com a chave de 9 dígitos enviada pelo Admin ou chave mestra
  */
 export function activateLicense(licenseKey: string, phoneToActivate?: string): { success: boolean; account?: UserAccount; message: string } {
@@ -493,6 +608,8 @@ export function adminRegisterClient(params: {
   accessKey?: string;
   isPro?: boolean;
   deviceId?: string;
+  password?: string;
+  username?: string;
 }): { success: boolean; message: string; account?: UserAccount } {
   const digits = cleanPhone(params.phone);
   if (digits.length < 10) {
@@ -506,6 +623,8 @@ export function adminRegisterClient(params: {
   const clientName = params.name.trim() || `Técnico ${digits.slice(-4)}`;
   const key = params.accessKey?.trim() ? params.accessKey.trim() : generate9DigitKey();
   const isPro = params.isPro !== undefined ? params.isPro : true;
+  const pass = params.password?.trim() || "";
+  const user = params.username?.trim() || "";
 
   if (existing) {
     existing.name = clientName;
@@ -515,6 +634,8 @@ export function adminRegisterClient(params: {
     if (params.deviceId !== undefined) {
       existing.deviceId = params.deviceId.trim();
     }
+    if (pass) existing.password = pass;
+    if (user) existing.username = user;
     saveAccount(existing);
     return { 
       success: true, 
@@ -526,9 +647,12 @@ export function adminRegisterClient(params: {
       name: clientName,
       phone: digits,
       formattedPhone: formatted,
+      username: user || undefined,
+      password: pass || undefined,
       registeredAt: Date.now(),
       trialExpiresAt: Date.now() + TRIAL_DURATION_MS,
       isPro: isPro,
+      isApproved: true,
       deviceId: params.deviceId ? params.deviceId.trim() : "",
       generatedAccessKey: key,
       licenseKey: isPro ? key : undefined,

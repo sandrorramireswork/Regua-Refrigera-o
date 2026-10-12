@@ -32,6 +32,7 @@ import {
   setActiveSession, 
   registerFreeTrial, 
   loginWithPhone, 
+  loginUnified,
   activateLicense, 
   getRemainingTrialTime, 
   generateWhatsAppBuyLink, 
@@ -498,36 +499,19 @@ function DashboardContent({
                 </p>
               </div>
 
-              <div className="relative py-1">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
-                </div>
-                <div className="relative flex justify-center text-[10px] uppercase font-mono">
-                  <span className="bg-black px-2 text-zinc-400">Ativar Chave de 9 Dígitos</span>
-                </div>
-              </div>
-
-              <form onSubmit={handleModalActivate} className="space-y-3">
-                <div className="space-y-1 relative">
-                  <div className="absolute left-3 top-3 text-amber-500/60"><Key className="w-4 h-4" /></div>
-                  <Input
-                    placeholder="DIGITE A CHAVE DE 9 DÍGITOS (EX: 849-201-736)"
-                    value={upgradeKeyInput}
-                    onChange={(e) => setUpgradeKeyInput(e.target.value)}
-                    className="bg-black/70 border-amber-500/30 text-amber-300 font-mono pl-10 h-10 text-xs sm:text-sm uppercase"
-                  />
-                </div>
-                {upgradeError && (
-                  <p className="text-rose-400 text-xs font-mono text-center">{upgradeError}</p>
-                )}
+              <div className="pt-2 border-t border-white/10 space-y-2">
                 <Button
-                  type="submit"
-                  className="w-full bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/30 font-tactical tracking-widest text-xs h-10 uppercase"
+                  type="button"
+                  onClick={() => {
+                    onRefreshSession();
+                    toast.info("Verificando status da licença...");
+                  }}
+                  className="w-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 hover:bg-cyan-500/30 font-tactical tracking-widest text-xs h-10 uppercase"
                 >
-                  <Check className="w-4 h-4 mr-1.5" />
-                  DESBLOQUEAR LICENÇA
+                  <RefreshCw className="w-4 h-4 mr-1.5" />
+                  VERIFICAR SE O ADMIN JÁ LIBEROU
                 </Button>
-              </form>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -541,36 +525,10 @@ function Dashboard() {
   const [session, setSession] = useState<UserAccount | null>(() => getActiveSession());
   const [currentTime, setCurrentTime] = useState(Date.now());
 
-  // Tabs de Login: 'trial', 'login', 'activate', 'admin'
-  const [authTab, setAuthTab] = useState<"trial" | "login" | "activate" | "admin">("trial");
-
-  // Form states - Teste Grátis
-  const [regName, setRegName] = useState("");
-  const [regPhone, setRegPhone] = useState("");
-  const [regError, setRegError] = useState("");
-
-  // Form states - Login por celular
-  const [loginPhone, setLoginPhone] = useState("");
+  // Form states - Login Unificado (Admin e Clientes entram pela mesma caixa de entrada)
+  const [loginInput, setLoginInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
-
-  // Form states - Ativação por Chave
-  const [activateKey, setActivateKey] = useState("");
-  const [activatePhone, setActivatePhone] = useState("");
-  const [activateError, setActivateError] = useState("");
-  const [activateSuccess, setActivateSuccess] = useState("");
-
-  // Form states - Admin Master
-  const [adminUser, setAdminUser] = useState("");
-  const [adminPass, setAdminPass] = useState("");
-  const [adminError, setAdminError] = useState("");
-
-  // Paywall states (quando expirado)
-  const [paywallKey, setPaywallKey] = useState("");
-  const [paywallError, setPaywallError] = useState("");
-
-  // Fila de Espera states
-  const [waitingKey, setWaitingKey] = useState("");
-  const [waitingKeyError, setWaitingKeyError] = useState("");
 
   // Atualização periódica do tempo para contagem regressiva
   useEffect(() => {
@@ -591,66 +549,26 @@ function Dashboard() {
     toast.info("Sessão finalizada com sucesso.");
   };
 
-  // 1. Registro de Teste Grátis de 2 Dias (Enviado para a Fila de Espera)
-  const handleRegisterTrial = (e: React.FormEvent) => {
+  // Login Unificado: Tanto o Admin Sandro RR quanto os clientes entram por aqui
+  const handleUnifiedLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setRegError("");
-    const res = registerFreeTrial(regName, regPhone);
+    setLoginError("");
+    const res = loginUnified(loginInput, passwordInput);
     if (!res.success) {
-      setRegError(res.message || "Erro ao registrar conta.");
+      setLoginError(res.message);
       toast.error("Atenção", { description: res.message });
       return;
     }
 
     if (res.account) {
-      setSession(res.account);
-      toast.success("Cadastro Registrado com Sucesso!", { 
-        description: "Você está na fila de espera. Envie uma mensagem ao Admin para liberação pelo aplicativo." 
-      });
-      try {
-        const link = generateWaitingApprovalWhatsAppLink(res.account);
-        window.open(link, "_blank");
-      } catch {}
-    }
-  };
-
-  // 2. Login por Celular
-  const handleLoginPhone = (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError("");
-    const res = loginWithPhone(loginPhone);
-    if (!res.success) {
-      setLoginError(res.message || "Número não localizado.");
-      toast.error("Falha no login", { description: res.message });
-      return;
-    }
-
-    if (res.account) {
-      setSession(res.account);
-      if (res.isWaitingApproval) {
-        toast.info("Solicitação na Fila de Espera", { description: res.message });
+      setSession({ ...res.account });
+      if (res.account.isAdmin) {
+        toast.success("Bem-vindo, Sandro RR!", { description: "Sessão Master de Engenharia autenticada." });
+      } else if (res.isWaitingApproval) {
+        toast.info("Aguardando Liberação", { description: res.message });
       } else {
         toast.success("Acesso Liberado!", { description: res.message });
       }
-    }
-  };
-
-  // Ativação por Chave na tela de Fila de Espera
-  const handleWaitingKeyActivate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!waitingKey.trim()) return;
-    setWaitingKeyError("");
-    const res = activateLicense(waitingKey, session?.phone);
-    if (res.success) {
-      toast.success("Licença Ativada com Sucesso!", { description: res.message });
-      if (res.account) {
-        setSession({ ...res.account });
-      } else {
-        refreshSession();
-      }
-    } else {
-      setWaitingKeyError(res.message);
-      toast.error("Falha na ativação", { description: res.message });
     }
   };
 
@@ -664,70 +582,13 @@ function Dashboard() {
       });
     } else {
       toast.info("Ainda na Fila de Espera", { 
-        description: "O Admin Sandro RR ainda não liberou seu cadastro. Clique no botão de WhatsApp para avisá-lo." 
+        description: "O Admin Sandro RR ainda não liberou seu cadastro. Clique no botão de WhatsApp abaixo para falar com ele." 
       });
     }
   };
 
-  // 3. Ativação Direta de Chave
-  const handleActivateKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    setActivateError("");
-    setActivateSuccess("");
-    if (!activateKey.trim()) {
-      setActivateError("Informe o código de liberação.");
-      return;
-    }
-    const res = activateLicense(activateKey, activatePhone);
-    if (!res.success) {
-      setActivateError(res.message);
-      toast.error("Chave Inválida", { description: res.message });
-      return;
-    }
-    setActivateSuccess(res.message);
-    toast.success("Sucesso!", { description: res.message });
-    if (res.account) {
-      setSession(res.account);
-    } else {
-      refreshSession();
-    }
-  };
-
-  // 4. Login Admin Master
-  const handleAdminLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (adminUser === "Sandro RR" && adminPass === "Sa2026") {
-      const adminAcc = loginAsAdmin();
-      setSession(adminAcc);
-      setAdminError("");
-      toast.success("Bem-vindo, Sandro RR!", { description: "Sessão de Engenharia Master autenticada." });
-      return;
-    }
-    setAdminError("Credenciais de engenharia inválidas.");
-  };
-
-  // 5. Ativação via Paywall
-  const handlePaywallActivate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!paywallKey.trim()) return;
-    const res = activateLicense(paywallKey, session?.phone);
-    if (res.success) {
-      toast.success("Licença Vitalícia Desbloqueada!", { description: res.message });
-      setPaywallKey("");
-      setPaywallError("");
-      if (res.account) {
-        setSession(res.account);
-      } else {
-        refreshSession();
-      }
-    } else {
-      setPaywallError(res.message);
-      toast.error("Chave inválida", { description: res.message });
-    }
-  };
-
   // ==========================================
-  // CENÁRIO A: NÃO AUTENTICADO (TELA DE LOGIN/CADASTRO)
+  // CENÁRIO A: NÃO AUTENTICADO (TELA DE LOGIN E SENHA APENAS)
   // ==========================================
   if (!session) {
     return (
@@ -736,10 +597,10 @@ function Dashboard() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 via-black to-black z-0"></div>
         <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
         
-        <Card className="w-full max-w-lg glass-panel border-primary/50 relative z-10 shadow-[0_0_50px_rgba(0,240,255,0.15)] animate-in zoom-in-95 duration-500">
-          <CardHeader className="text-center pb-4 pt-6 sm:pt-8">
+        <Card className="w-full max-w-md glass-panel border-primary/50 relative z-10 shadow-[0_0_50px_rgba(0,240,255,0.15)] animate-in zoom-in-95 duration-500">
+          <CardHeader className="text-center pb-3 pt-6 sm:pt-8">
             <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 border border-primary/50 shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center justify-center mb-4">
-              <Phone className="w-8 h-8 text-primary animate-pulse" />
+              <Activity className="w-8 h-8 text-primary animate-pulse" />
             </div>
             
             <div className="flex flex-col items-center">
@@ -755,412 +616,78 @@ function Dashboard() {
               Plataforma Técnica de Engenharia Térmica & Diagnóstico
             </CardDescription>
 
-            {/* Navegação entre abas de autenticação */}
-            <div className="grid grid-cols-3 gap-1 bg-black/60 p-1 rounded-xl border border-white/10 mt-5">
-              <button
-                type="button"
-                onClick={() => setAuthTab("trial")}
-                className={`py-2 px-1 text-[10px] sm:text-[11px] font-tactical uppercase tracking-wider rounded-lg transition-all ${
-                  authTab === "trial" 
-                    ? "bg-primary text-black font-black shadow-[0_0_15px_rgba(0,240,255,0.5)]" 
-                    : "text-zinc-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Teste Grátis (2 Dias)
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAuthTab("login")}
-                className={`py-2 px-1 text-[10px] sm:text-[11px] font-tactical uppercase tracking-wider rounded-lg transition-all ${
-                  authTab === "login" 
-                    ? "bg-primary text-black font-black shadow-[0_0_15px_rgba(0,240,255,0.5)]" 
-                    : "text-zinc-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Já Tenho Conta
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAuthTab("activate")}
-                className={`py-2 px-1 text-[10px] sm:text-[11px] font-tactical uppercase tracking-wider rounded-lg transition-all ${
-                  authTab === "activate" 
-                    ? "bg-amber-400 text-black font-black shadow-[0_0_15px_rgba(234,179,8,0.5)]" 
-                    : "text-zinc-400 hover:text-white hover:bg-white/5"
-                }`}
-              >
-                Ativar Chave PRO
-              </button>
+            {/* Destaque oficial de Acesso Grátis de 48 Horas */}
+            <div className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/40 shadow-[0_0_15px_rgba(0,240,255,0.25)] text-primary font-mono text-xs font-bold uppercase tracking-wider mx-auto">
+              <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
+              <span>ACESSO GRÁTIS POR 48 HORAS</span>
             </div>
           </CardHeader>
 
-          <CardContent className="pt-2 pb-6">
-            
-            {/* MODO 1: SOLICITAÇÃO DE CADASTRO / ENTRAR NA FILA DE ESPERA (PADRÃO) */}
-            {authTab === "trial" && (
-              <form onSubmit={handleRegisterTrial} className="space-y-4 animate-in fade-in-50 duration-300">
-                <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 text-center space-y-1">
-                  <div className="flex items-center justify-center gap-1.5 text-primary text-xs font-bold font-mono uppercase tracking-wider">
-                    <Sparkles className="w-4 h-4 text-primary shrink-0" />
-                    <span>Cadastro Técnico • Fila de Espera (48h)</span>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 font-mono leading-relaxed">
-                    Preencha seus dados para entrar na fila de espera. O Admin Sandro RR liberará seu teste gratuito pelo aplicativo.
-                  </p>
+          <CardContent className="pt-2 pb-6 space-y-4">
+            {/* FORMULÁRIO UNIFICADO: APENAS LOGIN E SENHA */}
+            <form onSubmit={handleUnifiedLogin} className="space-y-4">
+              <div className="space-y-2 relative">
+                <div className="absolute left-3.5 top-3.5 text-primary/60"><User className="w-4 h-4" /></div>
+                <Input 
+                  placeholder="LOGIN OU CELULAR" 
+                  className="bg-black/60 border-white/10 text-white font-mono pl-10 h-11 text-xs sm:text-sm uppercase tracking-wider" 
+                  value={loginInput}
+                  onChange={(e) => setLoginInput(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <div className="space-y-2 relative">
+                <div className="absolute left-3.5 top-3.5 text-primary/60"><Lock className="w-4 h-4" /></div>
+                <Input 
+                  type="password"
+                  placeholder="SENHA DE ACESSO" 
+                  className="bg-black/60 border-white/10 text-white font-mono pl-10 h-11 text-xs sm:text-sm tracking-wider" 
+                  value={passwordInput}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  required
+                />
+              </div>
+
+              {loginError && (
+                <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono text-center leading-relaxed">
+                  {loginError}
                 </div>
+              )}
 
-                <div className="space-y-2 relative">
-                  <div className="absolute left-3 top-3 text-primary/60"><User className="w-4 h-4" /></div>
-                  <Input 
-                    placeholder="SEU NOME COMPLETO OU EMPRESA" 
-                    className="bg-black/60 border-white/10 text-white font-mono pl-10 h-11 text-xs sm:text-sm uppercase" 
-                    value={regName}
-                    onChange={(e) => setRegName(e.target.value)}
-                    required
-                  />
-                </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-primary text-black font-black hover:bg-primary/90 hover:shadow-[0_0_25px_rgba(0,240,255,0.6)] transition-all h-12 font-tactical tracking-widest uppercase text-xs sm:text-sm"
+              >
+                <Unlock className="w-4 h-4 mr-2" />
+                ENTRAR NO APLICATIVO
+              </Button>
 
-                <div className="space-y-2 relative">
-                  <div className="absolute left-3 top-3 text-primary/60"><Phone className="w-4 h-4" /></div>
-                  <Input 
-                    type="tel"
-                    placeholder="NÚMERO DE CELULAR COM DDD: (XX) 9XXXX-XXXX" 
-                    className="bg-black/60 border-white/10 text-white font-mono pl-10 h-11 text-xs sm:text-sm" 
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(formatPhone(e.target.value))}
-                    required
-                  />
-                </div>
+              <div className="flex items-center justify-center gap-1.5 text-[10px] text-zinc-500 font-mono">
+                <Smartphone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <span>Segurança: Válido para 1 único aparelho • ID: {getDeviceId()}</span>
+              </div>
+            </form>
 
-                {regError && (
-                  <div className="text-rose-500 text-xs font-mono uppercase tracking-widest text-center animate-pulse">
-                    {regError}
-                  </div>
-                )}
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-primary text-black font-black hover:bg-primary/90 hover:shadow-[0_0_25px_rgba(0,240,255,0.6)] transition-all h-12 font-tactical tracking-widest uppercase text-xs sm:text-sm"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  SOLICITAR ACESSO & ENTRAR NA FILA DE ESPERA
-                </Button>
-
-                {/* Vantagens incluídas */}
-                <div className="grid grid-cols-2 gap-2 pt-2 text-[10.5px] font-mono text-zinc-400">
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>48h de Acesso Pleno</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Régua PT & Superaq.</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Gêmeo Digital & Motor</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Relatórios Técnicos PDF</span>
-                  </div>
-                </div>
-
-                <div className="pt-2 flex items-center justify-center gap-1.5 text-[10px] text-zinc-400 font-mono border-t border-white/5">
-                  <Smartphone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                  <span>Segurança: Válido para 1 único aparelho (ID: {getDeviceId()})</span>
-                </div>
-
-                {/* Links limpos alternativos (sem botões de atalho) */}
-                <div className="pt-3 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] font-mono text-zinc-400">
-                  <button 
-                    type="button" 
-                    onClick={() => setAuthTab("login")}
-                    className="hover:text-cyan-400 transition-colors text-left"
-                  >
-                    Já é cadastrado? <span className="text-cyan-400 underline underline-offset-2">Fazer Login</span>
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setAuthTab("activate")}
-                    className="hover:text-amber-400 transition-colors text-right"
-                  >
-                    Possui Chave PRO? <span className="text-amber-400 underline underline-offset-2">Ativar Chave</span>
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* MODO 2: JÁ SOU CADASTRADO (LOGIN POR CELULAR) */}
-            {authTab === "login" && (
-              <form onSubmit={handleLoginPhone} className="space-y-4 animate-in fade-in-50 duration-300">
-                <div className="bg-black/60 border border-white/10 rounded-xl p-3 text-center">
-                  <div className="flex items-center justify-center gap-1.5 text-cyan-400 text-xs font-bold font-mono uppercase tracking-wider mb-1">
-                    <Phone className="w-3.5 h-3.5" />
-                    <span>Acessar Conta Cadastrada</span>
-                  </div>
-                  <p className="text-xs text-zinc-300 font-mono">
-                    Informe seu número de celular com DDD para retornar ao aplicativo ou checar sua liberação.
-                  </p>
-                </div>
-
-                <div className="space-y-2 relative">
-                  <div className="absolute left-3 top-3 text-primary/60"><Phone className="w-4 h-4" /></div>
-                  <Input 
-                    type="tel"
-                    placeholder="CELULAR CADASTRADO: (XX) 9XXXX-XXXX" 
-                    className="bg-black/60 border-white/10 text-white font-mono pl-10 h-11 text-xs sm:text-sm" 
-                    value={loginPhone}
-                    onChange={(e) => setLoginPhone(formatPhone(e.target.value))}
-                    required
-                  />
-                </div>
-
-                {loginError && (
-                  <div className="text-rose-500 text-xs font-mono uppercase tracking-widest text-center animate-pulse">
-                    {loginError}
-                  </div>
-                )}
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-cyan-500/20 text-cyan-400 border border-cyan-500/50 hover:bg-cyan-500/40 hover:shadow-[0_0_20px_rgba(0,240,255,0.4)] transition-all h-12 font-tactical tracking-widest uppercase text-xs sm:text-sm"
-                >
-                  <Unlock className="w-4 h-4 mr-2" />
-                  ENTRAR NO APLICATIVO
-                </Button>
-
-                <div className="pt-2 flex items-center justify-center gap-1.5 text-[10px] text-zinc-400 font-mono border-t border-white/5">
-                  <Smartphone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                  <span>Acesso protegido vinculado a 1 único aparelho por número</span>
-                </div>
-
-                {/* Navegação de retorno */}
-                <div className="pt-2 flex items-center justify-between text-[11px] font-mono text-zinc-400">
-                  <button 
-                    type="button" 
-                    onClick={() => setAuthTab("trial")}
-                    className="hover:text-primary transition-colors"
-                  >
-                    ← Voltar para Solicitação
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setAuthTab("activate")}
-                    className="hover:text-amber-400 transition-colors"
-                  >
-                    Ativar Chave PRO
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* MODO 3: ATIVAR CHAVE PRO */}
-            {authTab === "activate" && (
-              <form onSubmit={handleActivateKey} className="space-y-4 animate-in fade-in-50 duration-300">
-                <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 text-center space-y-1">
-                  <span className="text-xs font-bold font-mono text-amber-400 uppercase tracking-wider block">
-                    Liberação Vitalícia por R$ {APP_PRICE_REAIS}
-                  </span>
-                  <p className="text-[11px] text-zinc-300 font-mono">
-                    Insira a chave oficial de 9 dígitos recebida de Sandro RR no WhatsApp após confirmação do PIX.
-                  </p>
-                </div>
-
-                <div className="space-y-2 relative">
-                  <div className="absolute left-3 top-3 text-amber-500/60"><Key className="w-4 h-4" /></div>
-                  <Input 
-                    placeholder="CHAVE DE 9 DÍGITOS (EX: 849-201-736)" 
-                    className="bg-black/60 border-amber-500/40 text-amber-300 font-mono pl-10 h-11 text-xs sm:text-sm uppercase" 
-                    value={activateKey}
-                    onChange={(e) => setActivateKey(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2 relative">
-                  <div className="absolute left-3 top-3 text-zinc-400"><Phone className="w-4 h-4" /></div>
-                  <Input 
-                    type="tel"
-                    placeholder="CELULAR DO TITULAR (OPCIONAL)" 
-                    className="bg-black/60 border-white/10 text-white font-mono pl-10 h-11 text-xs sm:text-sm" 
-                    value={activatePhone}
-                    onChange={(e) => setActivatePhone(formatPhone(e.target.value))}
-                  />
-                </div>
-
-                {activateError && (
-                  <div className="text-rose-500 text-xs font-mono uppercase tracking-widest text-center animate-pulse">
-                    {activateError}
-                  </div>
-                )}
-
-                {activateSuccess && (
-                  <div className="text-emerald-400 text-xs font-mono uppercase tracking-widest text-center animate-pulse">
-                    {activateSuccess}
-                  </div>
-                )}
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-amber-400 text-black font-black hover:bg-amber-300 hover:shadow-[0_0_20px_rgba(234,179,8,0.5)] transition-all h-12 font-tactical tracking-widest uppercase text-xs sm:text-sm"
-                >
-                  <Check className="w-4 h-4 mr-2" />
-                  DESBLOQUEAR ACESSO VITALÍCIO
-                </Button>
-
-                <div className="pt-2 text-center">
-                  <a 
-                    href={`https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent(`Olá Sandro! Gostaria de comprar a licença definitiva do aplicativo TermoMaster Pro no valor de R$ ${APP_PRICE_REAIS} via PIX!`)}`}
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-400 hover:text-emerald-300 transition-colors uppercase tracking-wider"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Comprar Chave no WhatsApp (R$ {APP_PRICE_REAIS})
-                  </a>
-                </div>
-
-                <div className="pt-2 text-center border-t border-white/5">
-                  <button 
-                    type="button" 
-                    onClick={() => setAuthTab("trial")}
-                    className="text-[11px] font-mono text-zinc-400 hover:text-primary transition-colors"
-                  >
-                    ← Voltar para Solicitação de Cadastro
-                  </button>
-                </div>
-              </form>
-            )}
-
-            {/* MODO 4: ADMIN MASTER (SANDRO RR) */}
-            {authTab === "admin" && (
-              <form onSubmit={handleAdminLogin} className="space-y-4 animate-in fade-in-50 duration-300">
-                <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-3 text-center">
-                  <span className="text-xs font-mono text-red-400 uppercase tracking-widest font-bold">
-                    ACESSO DE ENGENHARIA MASTER
-                  </span>
-                </div>
-
-                <div className="space-y-2 relative">
-                  <div className="absolute left-3 top-3 text-zinc-400"><User className="w-4 h-4" /></div>
-                  <Input 
-                    placeholder="USUÁRIO MASTER" 
-                    className="bg-black/60 border-white/10 text-white font-mono pl-10 h-10 text-xs" 
-                    value={adminUser}
-                    onChange={(e) => setAdminUser(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2 relative">
-                  <div className="absolute left-3 top-3 text-zinc-400"><Lock className="w-4 h-4" /></div>
-                  <Input 
-                    type="password"
-                    placeholder="SENHA MASTER" 
-                    className="bg-black/60 border-white/10 text-white font-mono pl-10 h-10 text-xs" 
-                    value={adminPass}
-                    onChange={(e) => setAdminPass(e.target.value)}
-                  />
-                </div>
-
-                {adminError && (
-                  <div className="text-rose-500 text-xs font-mono uppercase tracking-widest text-center">
-                    {adminError}
-                  </div>
-                )}
-
-                <Button 
-                  type="submit" 
-                  className="w-full bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/40 h-10 font-tactical text-xs tracking-widest uppercase"
-                >
-                  AUTENTICAR MASTER
-                </Button>
-
-                {/* Consulta de Clientes, Chaves de 9 Dígitos e Aparelhos (Admin Sandro RR) */}
-                <div className="pt-3 border-t border-white/10 space-y-2">
-                  <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block font-bold text-center">
-                    CONSULTA DE CHAVES GERADAS (PIX)
-                  </span>
-                  
-                  {getStoredAccounts().filter(a => !a.isAdmin).length === 0 ? (
-                    <p className="text-[10px] text-zinc-500 font-mono text-center py-2">
-                      Nenhum cliente cadastrado ainda neste navegador.
-                    </p>
-                  ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                      {getStoredAccounts().filter(a => !a.isAdmin).map((acc) => (
-                        <div key={acc.phone} className="bg-black/80 border border-white/10 rounded-lg p-2.5 space-y-1 text-[11px] font-mono">
-                          <div className="flex justify-between items-center">
-                            <span className="text-white font-bold truncate max-w-[160px]">{acc.name}</span>
-                            <span className={acc.isPro ? "text-amber-400 font-bold" : acc.isApproved ? "text-cyan-400" : "text-yellow-400"}>
-                              {acc.isPro ? "PRO VITALÍCIO" : acc.isApproved ? "TESTE 2 DIAS" : "NA FILA DE ESPERA"}
-                            </span>
-                          </div>
-                          <div className="flex justify-between items-center text-zinc-400 text-[10px]">
-                            <span>Cel: {acc.formattedPhone || acc.phone}</span>
-                            <span className="truncate max-w-[120px]" title={acc.deviceId}>Dev: {acc.deviceId || "Livre"}</span>
-                          </div>
-                          <div className="flex justify-between items-center pt-1 border-t border-white/5">
-                            <span className="text-cyan-300 font-bold tracking-wider">
-                              🔑 {acc.generatedAccessKey}
-                            </span>
-                            <div className="flex gap-1">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const text = `Olá ${acc.name}! Confirmamos o recebimento do seu PIX de R$ 39,90 no TermoMaster Pro. Sua chave de liberação oficial para este aparelho é: *${acc.generatedAccessKey}*. Insira no seu aplicativo para liberar o acesso vitalício!`;
-                                  navigator.clipboard.writeText(text);
-                                  toast.success("Mensagem com chave de 9 dígitos copiada!");
-                                }}
-                                className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-[9.5px] uppercase"
-                                title="Copiar resposta com chave para enviar no WhatsApp"
-                              >
-                                Copiar Msg
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  resetAccountDevice(acc.phone);
-                                  toast.success("Aparelho desvinculado com sucesso!");
-                                  setCurrentTime(Date.now());
-                                }}
-                                className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[9.5px] uppercase"
-                                title="Permitir que o cliente troque de aparelho celular"
-                              >
-                                Reset Dev
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </form>
-            )}
-
-            {/* Rodapé da tela de login */}
-            <div className="mt-6 pt-4 border-t border-white/5 flex items-center justify-between text-[10px] font-mono text-zinc-500">
+            {/* LOGO ABAIXO: WHATSAPP PARA CONTATO */}
+            <div className="pt-4 border-t border-white/10 space-y-2.5 text-center">
+              <span className="text-[11px] font-mono text-zinc-400 uppercase tracking-wider block font-bold">
+                Não tem cadastro ou precisa de liberação?
+              </span>
               <a 
-                href={`https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent("Olá Sandro! Tenho dúvidas sobre o TermoMaster Pro.")}`}
+                href={`https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent("Olá Sandro! Gostaria de solicitar meu cadastro e liberação de 48 horas grátis no aplicativo TermoMaster Pro.")}`}
                 target="_blank" 
                 rel="noreferrer"
-                className="hover:text-emerald-400 transition-colors flex items-center gap-1"
+                className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-xs sm:text-sm py-3.5 px-3 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-[1.01] tracking-wider uppercase text-center"
               >
-                <MessageCircle className="w-3.5 h-3.5" />
-                Suporte Comercial
+                <MessageCircle className="w-5 h-5 fill-white shrink-0" />
+                <span>WHATSAPP PARA CONTATO (+55 51 99539-4808)</span>
               </a>
-
-              <button 
-                type="button" 
-                onClick={() => setAuthTab(authTab === "admin" ? "trial" : "admin")}
-                className="hover:text-zinc-300 transition-colors uppercase tracking-widest"
-              >
-                {authTab === "admin" ? "Voltar ao Início" : "Acesso Engenharia Master"}
-              </button>
+              <p className="text-[10px] text-zinc-500 font-mono">
+                Os cadastros de novos técnicos são realizados diretamente pelo administrador.
+              </p>
             </div>
-
           </CardContent>
         </Card>
       </div>
@@ -1177,7 +704,7 @@ function Dashboard() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-950/30 via-black to-black z-0"></div>
         <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
-        <Card className="w-full max-w-lg glass-panel border-cyan-500/60 relative z-10 shadow-[0_0_60px_rgba(0,240,255,0.25)] animate-in zoom-in-95 duration-500">
+        <Card className="w-full max-w-md glass-panel border-cyan-500/60 relative z-10 shadow-[0_0_60px_rgba(0,240,255,0.25)] animate-in zoom-in-95 duration-500">
           <CardHeader className="text-center pb-3 pt-6 sm:pt-8">
             <div className="mx-auto w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/60 shadow-[0_0_25px_rgba(0,240,255,0.4)] flex items-center justify-center mb-3">
               <Hourglass className="w-8 h-8 text-cyan-400 animate-spin" style={{ animationDuration: "6s" }} />
@@ -1193,7 +720,7 @@ function Dashboard() {
             </CardTitle>
 
             <CardDescription className="font-mono text-zinc-300 text-xs sm:text-sm mt-1 leading-relaxed">
-              Olá, <span className="text-white font-bold">{session.name}</span>! Seu cadastro foi recebido com sucesso e enviado para a aba <strong className="text-cyan-400">MASTER ADMIN</strong>.
+              Olá, <span className="text-white font-bold">{session.name}</span>! Sua conta está aguardando liberação de <strong className="text-cyan-400">Sandro RR</strong> pelo aplicativo.
             </CardDescription>
           </CardHeader>
 
@@ -1213,34 +740,13 @@ function Dashboard() {
                 <span className="text-zinc-300 font-bold">{session.deviceId || getDeviceId()}</span>
               </div>
               <div className="flex justify-between items-center text-zinc-400 pt-1.5 border-t border-white/5">
-                <span>STATUS DA LICENÇA:</span>
+                <span>STATUS:</span>
                 <span className="text-amber-400 font-bold animate-pulse">⏳ AGUARDANDO LIBERAÇÃO NO APP</span>
               </div>
             </div>
 
-            {/* Como funciona o processo */}
-            <div className="bg-cyan-950/20 border border-cyan-500/30 rounded-xl p-3.5 space-y-2">
-              <span className="text-[11px] font-mono uppercase text-cyan-400 font-bold flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-cyan-400" /> Fluxo de Liberação Oficial
-              </span>
-              <div className="text-[10.5px] text-zinc-300 font-mono space-y-1.5 leading-relaxed">
-                <div className="flex items-start gap-1.5">
-                  <span className="text-cyan-400 font-bold">1.</span>
-                  <span>O Admin <strong>Sandro RR (+55 51 99539-4808)</strong> recebeu seu pedido na aba Master Admin.</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-cyan-400 font-bold">2.</span>
-                  <span>Clique no botão abaixo para enviar mensagem no WhatsApp do Admin avisando do seu cadastro.</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-cyan-400 font-bold">3.</span>
-                  <span>Assim que o Admin liberar seu teste ou chave pelo aplicativo dele, seu acesso desbloqueará aqui.</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Botão de WhatsApp para avisar o Admin */}
-            <div className="space-y-2">
+            {/* Ações Diretas */}
+            <div className="space-y-2 pt-1">
               <a 
                 href={generateWaitingApprovalWhatsAppLink(session)} 
                 target="_blank"
@@ -1251,7 +757,6 @@ function Dashboard() {
                 <span>AVISAR ADMIN NO WHATSAPP (+55 51 99539-4808)</span>
               </a>
 
-              {/* Botão de Checagem se já foi liberado */}
               <Button 
                 onClick={handleCheckApproval}
                 variant="outline"
@@ -1262,39 +767,15 @@ function Dashboard() {
               </Button>
             </div>
 
-            {/* Ativação por Chave enviada pelo Admin */}
-            <div className="pt-2 border-t border-white/10 space-y-2">
-              <span className="text-[11px] font-mono text-zinc-300 uppercase tracking-wider block text-center">
-                Recebeu a Chave de 9 dígitos de Sandro RR? Digite abaixo:
-              </span>
-              <form onSubmit={handleWaitingKeyActivate} className="flex gap-2">
-                <Input 
-                  placeholder="DIGITE A CHAVE (EX: 849-201-736)" 
-                  value={waitingKey}
-                  onChange={(e) => setWaitingKey(e.target.value)}
-                  className="bg-black/60 border-amber-500/40 text-amber-300 font-mono text-xs uppercase"
-                />
-                <Button 
-                  type="submit"
-                  className="bg-amber-400 text-black hover:bg-amber-300 font-tactical text-xs tracking-wider shrink-0 uppercase font-black"
-                >
-                  DESBLOQUEAR
-                </Button>
-              </form>
-              {waitingKeyError && (
-                <p className="text-rose-400 text-xs font-mono text-center">{waitingKeyError}</p>
-              )}
-            </div>
-
             {/* Trocar de conta */}
-            <div className="flex justify-center pt-2">
+            <div className="flex justify-center pt-2 border-t border-white/10">
               <button 
                 type="button" 
                 onClick={handleLogout}
                 className="text-xs font-mono text-zinc-500 hover:text-zinc-300 uppercase tracking-widest transition-colors flex items-center gap-1.5"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                Trocar de Número / Nova Solicitação
+                Trocar de Conta / Sair
               </button>
             </div>
           </CardContent>
@@ -1363,72 +844,29 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Protocolo de Segurança: Chave enviada exclusivamente ao Admin */}
-            <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3.5 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-[11px] font-mono uppercase text-emerald-400 font-bold flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Liberação Segura via WhatsApp
-                </span>
-                <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
-                  Aguardando PIX
-                </span>
-              </div>
-              <div className="text-[10.5px] text-zinc-300 font-mono bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1.5 leading-relaxed">
-                <div className="flex items-start gap-1.5">
-                  <span className="text-emerald-400 font-bold">1.</span>
-                  <span>A chave de 9 dígitos deste aparelho é enviada <strong>diretamente para o WhatsApp do Admin Sandro RR</strong> (+55 51 99539-4808).</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-emerald-400 font-bold">2.</span>
-                  <span>Após efetuar o PIX de R$ {APP_PRICE_REAIS}, envie o comprovante no WhatsApp do Admin.</span>
-                </div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-emerald-400 font-bold">3.</span>
-                  <span>O próprio Admin enviará a chave de acesso de 9 dígitos para você digitar e liberar o sistema permanentemente.</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Botão de WhatsApp Oficial com dados do cliente e chave de 9 dígitos enviada ao Admin */}
-            <div className="space-y-2">
+            {/* Liberação via WhatsApp sem necessidade de chave para o cliente */}
+            <div className="space-y-3">
               <a 
-                href={generateWhatsAppBuyLink(session.name, session.phone, session.generatedAccessKey)} 
+                href={`https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent(`Olá Sandro RR! Meu teste de 48h no TermoMaster Pro expirou. Sou o técnico ${session.name} (Cel: ${session.formattedPhone || session.phone}). Gostaria de realizar o PIX de R$ ${APP_PRICE_REAIS} para liberar a licença definitiva vitalícia no meu aparelho!`)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-xs sm:text-sm py-4 px-3 rounded-xl shadow-[0_0_25px_rgba(34,197,94,0.5)] transition-all hover:scale-[1.02] tracking-wider uppercase text-center"
               >
                 <MessageCircle className="w-6 h-6 fill-white shrink-0" />
-                <span>ENVIAR DADOS & CHAVE AO ADMIN (+55 51 99539-4808)</span>
+                <span>LIBERAR VIA WHATSAPP (+55 51 99539-4808)</span>
               </a>
-              <p className="text-[10.5px] text-zinc-400 text-center font-mono">
-                Após notificação do PIX de R$ {APP_PRICE_REAIS}, o admin Sandro RR enviará a chave de acesso para você desbloquear abaixo.
-              </p>
-            </div>
 
-            {/* Ativação via Chave Recebida */}
-            <div className="pt-2 border-t border-white/10">
-              <form onSubmit={handlePaywallActivate} className="space-y-3">
-                <span className="text-[11px] font-mono text-zinc-300 uppercase tracking-wider block text-center">
-                  Digite a chave de 9 dígitos enviada pelo Admin:
-                </span>
-                <div className="flex gap-2">
-                  <Input 
-                    placeholder="DIGITE A CHAVE (EX: 849-201-736)" 
-                    value={paywallKey}
-                    onChange={(e) => setPaywallKey(e.target.value)}
-                    className="bg-black/60 border-amber-500/40 text-amber-300 font-mono text-xs sm:text-sm uppercase"
-                  />
-                  <Button 
-                    type="submit"
-                    className="bg-amber-500/20 text-amber-400 border border-amber-500/50 hover:bg-amber-500/40 font-tactical text-xs tracking-wider shrink-0 uppercase"
-                  >
-                    ATIVAR
-                  </Button>
-                </div>
-                {paywallError && (
-                  <p className="text-rose-400 text-xs font-mono text-center">{paywallError}</p>
-                )}
-              </form>
+              <Button
+                type="button"
+                onClick={() => {
+                  refreshSession();
+                  toast.info("Verificando se o Admin já liberou sua conta...");
+                }}
+                className="w-full bg-amber-500/20 text-amber-300 border border-amber-500/50 hover:bg-amber-500/30 font-tactical text-xs tracking-wider h-11 uppercase"
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                VERIFICAR SE O ADMIN JÁ LIBEROU
+              </Button>
             </div>
 
             {/* Trocar de conta */}

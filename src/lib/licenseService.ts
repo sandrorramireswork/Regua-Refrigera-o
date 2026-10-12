@@ -7,15 +7,17 @@ export interface UserAccount {
   formattedPhone: string;     // formatado (ex: (51) 99539-4808)
   username?: string;          // login do técnico (opcional)
   password?: string;          // senha de acesso do técnico
+  hasPassword?: boolean;      // indicador se o cliente já definiu sua senha pessoal
   registeredAt: number;       // timestamp de criação
   trialExpiresAt: number;     // timestamp de expiração (2 dias após aprovação)
-  isPro: boolean;             // acesso vitalício liberado
-  isApproved: boolean;        // liberado pelo admin (false = na fila de espera!)
+  isPro: boolean;             // acesso vitalício liberado (R$ 39,90)
+  isApproved: boolean;        // liberado/ativado pelo admin (false = aguardando ativação!)
   approvedAt?: number;        // timestamp da liberação
   deviceId: string;           // identificador único do aparelho vinculado (Single Device Lock)
   generatedAccessKey: string; // chave aleatória de 9 dígitos gerada pelo app (ex: 489-102-753)
   licenseKey?: string;        // chave de liberação utilizada
   isAdmin?: boolean;          // conta de engenharia/administrador master
+  lastSyncAt?: number;        // timestamp da última sincronização
 }
 
 export const TRIAL_DURATION_DAYS = 2;
@@ -36,10 +38,12 @@ export const VALID_LICENSE_KEYS = [
   "TERMO-PRO-LIFETIME"
 ];
 
-const STORAGE_KEY_SESSION = "thermomaster_session_user";
-const STORAGE_KEY_ACCOUNTS = "thermomaster_phone_accounts";
-const STORAGE_KEY_DEVICE = "thermomaster_device_id";
-const STORAGE_KEY_RESET_FLAG = "thermomaster_cleared_clients_v3";
+export const STORAGE_KEY_SESSION = "thermomaster_session_user";
+export const STORAGE_KEY_ACCOUNTS = "thermomaster_phone_accounts";
+export const STORAGE_KEY_ACCOUNTS_BACKUP = "thermomaster_phone_accounts_backup_v1";
+export const STORAGE_KEY_DEVICE = "thermomaster_device_id";
+export const STORAGE_KEY_RESET_FLAG = "thermomaster_cleared_clients_v3";
+export const STORAGE_KEY_LAST_SYNC = "thermomaster_last_sync_time";
 
 /**
  * Remove caracteres não numéricos de um telefone
@@ -66,6 +70,28 @@ export function formatPhone(value: string): string {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   }
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+}
+
+/**
+ * Normaliza telefone para o formato internacional com prefixo 55 para links de WhatsApp
+ */
+export function getWhatsAppPhone(phone: string): string {
+  const digits = cleanPhone(phone);
+  return digits.startsWith("55") ? digits : `55${digits}`;
+}
+
+/**
+ * Compara dois telefones aceitando com ou sem código do país (55) e máscaras
+ */
+export function isPhoneMatching(p1: string, p2: string): boolean {
+  const d1 = cleanPhone(p1);
+  const d2 = cleanPhone(p2);
+  if (!d1 || !d2) return false;
+  if (d1 === d2) return true;
+  if (d1.length >= 8 && d2.length >= 8) {
+    return d1.endsWith(d2) || d2.endsWith(d1);
+  }
+  return false;
 }
 
 /**
@@ -102,43 +128,42 @@ export function generate9DigitKey(): string {
 export function getStoredAccounts(): UserAccount[] {
   if (typeof window === "undefined") return [];
   try {
-    // Limpeza automática de clientes de teste anteriores conforme solicitação do usuário
-    if (!localStorage.getItem(STORAGE_KEY_RESET_FLAG)) {
-      const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
-      if (raw) {
-        const parsed: UserAccount[] = JSON.parse(raw);
-        const adminOnly = parsed.filter(a => a.isAdmin);
-        localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(adminOnly));
-        const active = getActiveSession();
-        if (active && !active.isAdmin) {
-          localStorage.removeItem(STORAGE_KEY_SESSION);
-        }
-      }
-      localStorage.setItem(STORAGE_KEY_RESET_FLAG, "true");
-    }
-
     const raw = localStorage.getItem(STORAGE_KEY_ACCOUNTS);
-    if (!raw) return [];
-    return JSON.parse(raw);
+    if (raw) {
+      const parsed: UserAccount[] = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+    // Recuperação de emergência através do backup redundante
+    const backupRaw = localStorage.getItem(STORAGE_KEY_ACCOUNTS_BACKUP);
+    if (backupRaw) {
+      const backupParsed: UserAccount[] = JSON.parse(backupRaw);
+      if (Array.isArray(backupParsed) && backupParsed.length > 0) {
+        localStorage.setItem(STORAGE_KEY_ACCOUNTS, backupRaw);
+        return backupParsed;
+      }
+    }
+    return [];
   } catch {
     return [];
   }
 }
 
 /**
- * Salva ou atualiza uma conta no repositório local
+ * Salva ou atualiza uma conta no repositório local e no backup de segurança
  */
 export function saveAccount(account: UserAccount): void {
   if (typeof window === "undefined") return;
   try {
     const accounts = getStoredAccounts();
-    const existingIndex = accounts.findIndex(a => a.phone === account.phone);
+    const existingIndex = accounts.findIndex(a => isPhoneMatching(a.phone, account.phone));
     if (existingIndex >= 0) {
       accounts[existingIndex] = account;
     } else {
       accounts.push(account);
     }
-    localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(accounts));
+    const json = JSON.stringify(accounts);
+    localStorage.setItem(STORAGE_KEY_ACCOUNTS, json);
+    localStorage.setItem(STORAGE_KEY_ACCOUNTS_BACKUP, json);
   } catch (err) {
     console.error("Erro ao salvar conta:", err);
   }
@@ -278,7 +303,7 @@ export function loginWithPhone(phoneInput: string): { success: boolean; account?
   }
 
   const accounts = getStoredAccounts();
-  const existing = accounts.find(a => a.phone === digits);
+  const existing = accounts.find(a => isPhoneMatching(a.phone, digits));
 
   if (!existing) {
     return { success: false, message: "Número de celular não localizado. Faça sua solicitação de cadastro." };
@@ -315,6 +340,82 @@ export function loginWithPhone(phoneInput: string): { success: boolean; account?
 }
 
 /**
+ * Localiza cliente para verificar se ele já tem senha ou se precisa criar no primeiro acesso
+ */
+export function findClientForFirstAccess(loginOrPhone: string): {
+  found: boolean;
+  needsPasswordCreation: boolean;
+  account?: UserAccount;
+  message?: string;
+} {
+  const trimmed = loginOrPhone.trim();
+  const digits = cleanPhone(trimmed);
+  if (!trimmed) {
+    return { found: false, needsPasswordCreation: false, message: "Informe seu login ou celular." };
+  }
+  const accounts = getStoredAccounts();
+  const existing = accounts.find(a => {
+    if (a.isAdmin) return false;
+    const phoneMatch = digits.length >= 8 && (isPhoneMatching(a.phone, digits) || cleanPhone(a.phone).includes(digits));
+    const nameMatch = a.name.trim().toLowerCase() === trimmed.toLowerCase();
+    const userMatch = Boolean(a.username && a.username.trim().toLowerCase() === trimmed.toLowerCase());
+    return Boolean(phoneMatch || nameMatch || userMatch);
+  });
+
+  if (!existing) {
+    return {
+      found: false,
+      needsPasswordCreation: false,
+      message: "Conta não localizada. Fale com Sandro RR pelo WhatsApp abaixo para cadastrar seu acesso."
+    };
+  }
+
+  const needsPassword = !existing.password && !existing.hasPassword;
+  return {
+    found: true,
+    needsPasswordCreation: needsPassword,
+    account: existing,
+    message: needsPassword 
+      ? `Olá, ${existing.name}! Crie sua senha de acesso pessoal.` 
+      : `Olá, ${existing.name}! Digite sua senha de acesso cadastrada.`
+  };
+}
+
+/**
+ * Cadastra a senha pessoal do cliente no primeiro acesso
+ * Nota: Após criar a senha, a conta fica aguardando ativação pelo Admin na aba Master Admin!
+ */
+export function clientCreatePassword(phone: string, newPassword: string): {
+  success: boolean;
+  account?: UserAccount;
+  message: string;
+} {
+  const digits = cleanPhone(phone);
+  const pass = newPassword.trim();
+  if (pass.length < 3) {
+    return { success: false, message: "A senha deve conter no mínimo 3 caracteres." };
+  }
+  const accounts = getStoredAccounts();
+  const existing = accounts.find(a => isPhoneMatching(a.phone, digits));
+  if (!existing) {
+    return { success: false, message: "Conta não localizada para cadastro de senha." };
+  }
+
+  existing.password = pass;
+  existing.hasPassword = true;
+  existing.isApproved = false; // AGUARDANDO ATIVAÇÃO DO ADMIN NA ABA MASTER ADMIN!
+  existing.deviceId = getDeviceId(); // Vincula aparelho único
+  saveAccount(existing);
+  setActiveSession(existing);
+
+  return {
+    success: true,
+    account: existing,
+    message: "Senha cadastrada com sucesso! Sua conta agora está aguardando ATIVAÇÃO pelo Administrador Sandro RR na aba de Master Admin."
+  };
+}
+
+/**
  * Login Unificado: Tanto o Master Admin quanto os clientes entram na mesma caixa de entrada!
  * - Admin: Login 'Sandro RR' (ou 'admin' / '5551995394808') + Senha 'Sa2026'
  * - Cliente: Login (Nome, Usuário ou Celular cadastrado na aba Admin) + Senha
@@ -322,7 +423,13 @@ export function loginWithPhone(phoneInput: string): { success: boolean; account?
 export function loginUnified(
   loginInput: string, 
   passwordInput: string
-): { success: boolean; account?: UserAccount; message: string; isWaitingApproval?: boolean } {
+): { 
+  success: boolean; 
+  account?: UserAccount; 
+  message: string; 
+  isWaitingApproval?: boolean;
+  needsPasswordCreation?: boolean;
+} {
   const trimmedLogin = loginInput.trim();
   const trimmedPass = passwordInput.trim();
   const digitsLogin = cleanPhone(trimmedLogin);
@@ -330,9 +437,6 @@ export function loginUnified(
 
   if (!trimmedLogin) {
     return { success: false, message: "Informe seu login ou celular cadastrado." };
-  }
-  if (!trimmedPass) {
-    return { success: false, message: "Informe sua senha de acesso." };
   }
 
   // 1. VERIFICAÇÃO DE ENTRADA DO MASTER ADMIN (SANDRO RR)
@@ -343,13 +447,17 @@ export function loginUnified(
     digitsLogin === "5551995394808" ||
     digitsLogin === "51995394808";
 
-  if (isAdminLogin && trimmedPass === "Sa2026") {
-    const adminAcc = loginAsAdmin();
-    return {
-      success: true,
-      account: adminAcc,
-      message: "Bem-vindo, Sandro RR! Sessão Master autenticada."
-    };
+  if (isAdminLogin) {
+    if (trimmedPass === "Sa2026") {
+      const adminAcc = loginAsAdmin();
+      return {
+        success: true,
+        account: adminAcc,
+        message: "Bem-vindo, Sandro RR! Sessão Master autenticada."
+      };
+    } else {
+      return { success: false, message: "Senha de Engenharia incorreta." };
+    }
   }
 
   // 2. VERIFICAÇÃO DE CLIENTE CADASTRADO PELO ADMIN
@@ -358,45 +466,40 @@ export function loginUnified(
     if (a.isAdmin) return false;
     const phoneMatch = digitsLogin.length >= 8 && cleanPhone(a.phone).includes(digitsLogin);
     const nameMatch = a.name.trim().toLowerCase() === trimmedLogin.toLowerCase();
-    const usernameMatch = a.username && a.username.trim().toLowerCase() === trimmedLogin.toLowerCase();
-    return phoneMatch || nameMatch || usernameMatch;
+    const usernameMatch = Boolean(a.username && a.username.trim().toLowerCase() === trimmedLogin.toLowerCase());
+    return Boolean(phoneMatch || nameMatch || usernameMatch);
   });
 
   if (!existing) {
     return {
       success: false,
-      message: "Conta não localizada. Fale com Sandro RR pelo WhatsApp abaixo para cadastrar seu acesso grátis por 48h."
+      message: "Conta não localizada. Fale com Sandro RR pelo WhatsApp abaixo para cadastrar seu acesso."
     };
   }
 
-  // Validação de Senha do Cliente:
-  let passValid = false;
-  if (existing.password) {
-    passValid = existing.password === trimmedPass;
-  } else {
-    // Aceita qualquer senha >= 3 caracteres ou telefone/chave se for primeiro acesso
-    const phoneDigits = cleanPhone(existing.phone);
-    if (
-      trimmedPass === phoneDigits || 
-      trimmedPass === phoneDigits.slice(-4) || 
-      trimmedPass === phoneDigits.slice(-6) ||
-      cleanKey(existing.generatedAccessKey) === cleanKey(trimmedPass) ||
-      trimmedPass.length >= 3
-    ) {
-      passValid = true;
-      existing.password = trimmedPass; // vincula a senha informada para próximos acessos
-      saveAccount(existing);
-    }
+  // SE O CLIENTE AINDA NÃO TEM SENHA CADASTRADA:
+  if (!existing.password && !existing.hasPassword) {
+    return {
+      success: false,
+      needsPasswordCreation: true,
+      account: existing,
+      message: "Primeiro acesso detectado! Por favor, crie sua senha pessoal de acesso."
+    };
   }
 
-  if (!passValid) {
+  if (!trimmedPass) {
+    return { success: false, message: "Informe sua senha de acesso." };
+  }
+
+  // Validação estrita de senha do cliente
+  if (existing.password && existing.password !== trimmedPass) {
     return { 
       success: false, 
-      message: "Senha incorreta. Verifique os dados ou fale com o Admin no WhatsApp abaixo." 
+      message: "Senha incorreta. Verifique os dados digitados ou fale com o Admin no WhatsApp." 
     };
   }
 
-  // Validação de Segurança: 1 Único Aparelho por Cliente
+  // Validação de Segurança: 1 Único Aparelho por Cliente (Single Device Lock)
   if (existing.deviceId && existing.deviceId !== currentDeviceId && !existing.isAdmin) {
     return {
       success: false,
@@ -410,13 +513,13 @@ export function loginUnified(
   saveAccount(existing);
   setActiveSession(existing);
 
-  // Se estiver na fila de espera aguardando liberação
-  if (!existing.isApproved && !existing.isPro) {
+  // SE A CONTA NÃO FOI ATIVADA PELO ADMIN NA ABA MASTER ADMIN (SEJA PRO OU TESTE):
+  if (!existing.isApproved) {
     return {
       success: true,
       isWaitingApproval: true,
       account: existing,
-      message: `Sua conta foi localizada, mas está aguardando liberação na aba Master Admin. Fale com Sandro RR no WhatsApp abaixo.`
+      message: `Sua conta foi localizada, mas está aguardando ativação na aba Master Admin. Fale com Sandro RR no WhatsApp abaixo.`
     };
   }
 
@@ -564,7 +667,7 @@ Sandro, estou enviando o comprovante do PIX. Assim que confirmar, por favor me e
 export function resetAccountDevice(phone: string): { success: boolean; message: string } {
   const digits = cleanPhone(phone);
   const accounts = getStoredAccounts();
-  const target = accounts.find(a => a.phone === digits);
+  const target = accounts.find(a => isPhoneMatching(a.phone, digits));
 
   if (!target) {
     return { success: false, message: "Conta não localizada." };
@@ -617,7 +720,7 @@ export function adminRegisterClient(params: {
   }
 
   const accounts = getStoredAccounts();
-  const existing = accounts.find(a => a.phone === digits);
+  const existing = accounts.find(a => isPhoneMatching(a.phone, digits));
 
   const formatted = formatPhone(digits);
   const clientName = params.name.trim() || `Técnico ${digits.slice(-4)}`;
@@ -634,7 +737,10 @@ export function adminRegisterClient(params: {
     if (params.deviceId !== undefined) {
       existing.deviceId = params.deviceId.trim();
     }
-    if (pass) existing.password = pass;
+    if (pass) {
+      existing.password = pass;
+      existing.hasPassword = true;
+    }
     if (user) existing.username = user;
     saveAccount(existing);
     return { 
@@ -649,10 +755,11 @@ export function adminRegisterClient(params: {
       formattedPhone: formatted,
       username: user || undefined,
       password: pass || undefined,
+      hasPassword: !!pass,
       registeredAt: Date.now(),
       trialExpiresAt: Date.now() + TRIAL_DURATION_MS,
       isPro: isPro,
-      isApproved: true,
+      isApproved: false, // CLIENTE FICA AGUARDANDO ATIVAÇÃO DO ADMIN NA ABA MASTER ADMIN!
       deviceId: params.deviceId ? params.deviceId.trim() : "",
       generatedAccessKey: key,
       licenseKey: isPro ? key : undefined,
@@ -661,10 +768,140 @@ export function adminRegisterClient(params: {
     saveAccount(newAccount);
     return { 
       success: true, 
-      message: `Cliente ${clientName} cadastrado com sucesso! Chave: ${key}`, 
+      message: `Cliente ${clientName} cadastrado com sucesso! Status: Aguardando criação de senha e ativação na aba Master Admin. Chave: ${key}`, 
       account: newAccount 
     };
   }
+}
+
+/**
+ * Ativa ou Desativa a conta do cliente diretamente no Master Admin
+ * Conforme solicitação: "o admin precisa liberar o acesso ativando a conta na aba de master admin"
+ */
+export function adminToggleAccountActivation(phone: string): { 
+  success: boolean; 
+  isApproved: boolean; 
+  message: string; 
+  account?: UserAccount 
+} {
+  const digits = cleanPhone(phone);
+  const accounts = getStoredAccounts();
+  const target = accounts.find(a => isPhoneMatching(a.phone, digits));
+  if (!target) {
+    return { success: false, isApproved: false, message: "Cliente não localizado." };
+  }
+
+  target.isApproved = !target.isApproved;
+  if (target.isApproved) {
+    target.approvedAt = Date.now();
+    if (!target.isPro) {
+      target.trialExpiresAt = Date.now() + TRIAL_DURATION_MS; // 48h começam a contar AGORA a partir da ativação
+    }
+  }
+
+  saveAccount(target);
+  adminSaveAndSyncAll();
+
+  const statusText = target.isApproved 
+    ? `Conta de ${target.name} ATIVADA com sucesso! Acesso liberado no aplicativo.` 
+    : `Conta de ${target.name} DESATIVADA/BLOQUEADA. O acesso foi suspenso.`;
+
+  return {
+    success: true,
+    isApproved: target.isApproved,
+    message: statusText,
+    account: target
+  };
+}
+
+/**
+ * Salva e sincroniza toda a base de clientes com backup de segurança redundante
+ * Conforme solicitação: "e apos tudo sincronizado salvar o cliente"
+ */
+export function adminSaveAndSyncAll(): { 
+  success: boolean; 
+  count: number; 
+  timestamp: number; 
+  message: string 
+} {
+  const accounts = getStoredAccounts();
+  const now = Date.now();
+  const updated = accounts.map(a => ({ ...a, lastSyncAt: now }));
+
+  if (typeof window !== "undefined") {
+    try {
+      const json = JSON.stringify(updated);
+      localStorage.setItem(STORAGE_KEY_ACCOUNTS, json);
+      localStorage.setItem(STORAGE_KEY_ACCOUNTS_BACKUP, json);
+      localStorage.setItem(STORAGE_KEY_LAST_SYNC, now.toString());
+      // Emite evento para sincronizar abas do mesmo navegador
+      window.dispatchEvent(new Event("storage"));
+    } catch (err) {
+      console.error("Erro ao sincronizar e salvar clientes:", err);
+    }
+  }
+
+  return {
+    success: true,
+    count: updated.length,
+    timestamp: now,
+    message: `Base sincronizada e salva com sucesso! (${updated.length} clientes protegidos)`
+  };
+}
+
+/**
+ * Rotina de Segurança Anti-Pirataria e Auto-Sync executada a cada 5 minutos
+ * Conforme solicitação: "a cada 5 minutos o aplicativo atualizar e salvar as alterações isso tudo para manter o aplicativo seguro para venda e não ser atacado por pessoas com ma intenção"
+ */
+export function performSecuritySyncCheck(): { 
+  status: 'ok' | 'session_revoked' | 'trial_expired' | 'device_mismatch'; 
+  message?: string; 
+  account?: UserAccount | null;
+} {
+  // 1. Salva e sincroniza base atual
+  adminSaveAndSyncAll();
+
+  const session = getActiveSession();
+  if (!session || session.isAdmin) {
+    return { status: 'ok', account: session };
+  }
+
+  const accounts = getStoredAccounts();
+  const current = accounts.find(a => isPhoneMatching(a.phone, session.phone));
+
+  // 2. Se a conta foi excluída ou desativada pelo Admin na aba Master Admin:
+  if (!current || !current.isApproved) {
+    setActiveSession(null);
+    return {
+      status: 'session_revoked',
+      message: 'Acesso Revogado: Sua conta foi desativada ou está aguardando ativação pelo Administrador Sandro RR.',
+      account: null
+    };
+  }
+
+  // 3. Se for teste gratuito de 48h e o tempo expirou:
+  if (!current.isPro && getRemainingTrialTime(current.trialExpiresAt).expired) {
+    return {
+      status: 'trial_expired',
+      message: 'Seu período de teste de 48 horas expirou. Adquira a licença vitalícia por R$ 39,90 via PIX.',
+      account: current
+    };
+  }
+
+  // 4. Verificação de Aparelho Único (Single Device Lock):
+  const currentDeviceId = getDeviceId();
+  if (current.deviceId && current.deviceId !== currentDeviceId) {
+    setActiveSession(null);
+    return {
+      status: 'device_mismatch',
+      message: `Aparelho não autorizado (${current.deviceId}). O acesso é protegido e restrito a 1 único celular.`,
+      account: null
+    };
+  }
+
+  // Mantém a sessão ativa sincronizada
+  setActiveSession(current);
+  return { status: 'ok', account: current };
 }
 
 /**
@@ -672,7 +909,7 @@ export function adminRegisterClient(params: {
  */
 export function adminDeleteClient(phone: string): { success: boolean; message: string } {
   const digits = cleanPhone(phone);
-  const accounts = getStoredAccounts().filter(a => a.phone !== digits);
+  const accounts = getStoredAccounts().filter(a => !isPhoneMatching(a.phone, digits));
   if (typeof window !== "undefined") {
     localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(accounts));
   }
@@ -685,7 +922,7 @@ export function adminDeleteClient(phone: string): { success: boolean; message: s
 export function adminToggleClientPro(phone: string): { success: boolean; isPro: boolean; message: string } {
   const digits = cleanPhone(phone);
   const accounts = getStoredAccounts();
-  const target = accounts.find(a => a.phone === digits);
+  const target = accounts.find(a => isPhoneMatching(a.phone, digits));
   if (!target) {
     return { success: false, isPro: false, message: "Cliente não localizado." };
   }
@@ -716,7 +953,7 @@ export function formatClientWhatsAppMessage(client: UserAccount): string {
 Seu acesso é protegido e válido para este aparelho. Qualquer dúvida estou à disposição!
 _Eng. Sandro RR • TermoMaster Pro_`;
 
-  return `https://wa.me/55${client.phone}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${getWhatsAppPhone(client.phone)}?text=${encodeURIComponent(message)}`;
 }
 
 /**
@@ -783,7 +1020,7 @@ export function adminImportAccounts(jsonStr: string): { success: boolean; count:
 export function adminApproveTrial(phone: string): { success: boolean; message: string; account?: UserAccount } {
   const digits = cleanPhone(phone);
   const accounts = getStoredAccounts();
-  const target = accounts.find(a => a.phone === digits);
+  const target = accounts.find(a => isPhoneMatching(a.phone, digits));
   if (!target) return { success: false, message: "Cliente não localizado na fila de espera." };
 
   target.isApproved = true;
@@ -803,7 +1040,7 @@ export function adminApproveTrial(phone: string): { success: boolean; message: s
 export function adminApprovePro(phone: string): { success: boolean; message: string; account?: UserAccount } {
   const digits = cleanPhone(phone);
   const accounts = getStoredAccounts();
-  const target = accounts.find(a => a.phone === digits);
+  const target = accounts.find(a => isPhoneMatching(a.phone, digits));
   if (!target) return { success: false, message: "Cliente não localizado na fila de espera." };
 
   target.isApproved = true;
@@ -876,5 +1113,5 @@ export function formatApprovedNotificationWhatsApp(client: UserAccount): string 
 Bons trabalhos!
 _Eng. Sandro RR • TermoMaster Pro_`;
 
-  return `https://wa.me/55${client.phone}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${getWhatsAppPhone(client.phone)}?text=${encodeURIComponent(message)}`;
 }

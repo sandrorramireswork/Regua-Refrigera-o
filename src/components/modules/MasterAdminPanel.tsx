@@ -37,6 +37,8 @@ import {
   formatApprovedNotificationWhatsApp,
   adminExportAccounts,
   adminImportAccounts,
+  adminToggleAccountActivation,
+  adminSaveAndSyncAll,
   UserAccount,
   APP_PRICE_REAIS
 } from "@/lib/licenseService";
@@ -59,6 +61,7 @@ export default function MasterAdminPanel() {
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState("");
+  const [lastSyncTime, setLastSyncTime] = useState(Date.now());
 
   // Import / Export modal state
   const [showSyncModal, setShowSyncModal] = useState(false);
@@ -70,6 +73,38 @@ export default function MasterAdminPanel() {
   // Atualiza lista local
   const refreshAccounts = () => {
     setAccounts(getStoredAccounts().filter(a => !a.isAdmin));
+  };
+
+  // Auto-sync a cada 5 minutos no Master Admin
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      refreshAccounts();
+      setLastSyncTime(Date.now());
+    }, 300000); // 5 minutos
+    return () => clearInterval(timer);
+  }, []);
+
+  // Alternar ativação da conta (Liberar/Desativar no app)
+  const handleToggleActivation = (phone: string) => {
+    const res = adminToggleAccountActivation(phone);
+    if (res.success) {
+      if (res.isApproved) {
+        toast.success(res.message);
+      } else {
+        toast.warning(res.message);
+      }
+      refreshAccounts();
+    } else {
+      toast.error("Falha", { description: res.message });
+    }
+  };
+
+  // Salvar e Sincronizar toda a base manualmente
+  const handleSaveAndSync = () => {
+    const res = adminSaveAndSyncAll();
+    toast.success(res.message);
+    setLastSyncTime(res.timestamp);
+    refreshAccounts();
   };
 
   // Gerar nova chave no formulário
@@ -243,6 +278,14 @@ export default function MasterAdminPanel() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 z-10 self-start md:self-center">
+          <Button
+            size="sm"
+            onClick={handleSaveAndSync}
+            className="bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-xs gap-1.5 h-9 shadow-[0_0_15px_rgba(34,197,94,0.4)] uppercase tracking-wider"
+            title="Salvar e sincronizar todos os clientes com backup seguro"
+          >
+            <ShieldCheck className="w-4 h-4" /> Salvar & Sincronizar
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -643,21 +686,31 @@ export default function MasterAdminPanel() {
                     >
                       {/* Topo do Card */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-white font-mono font-bold text-sm sm:text-base">
                             {acc.name}
                           </span>
-                          {!acc.isApproved && !acc.isPro ? (
-                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-yellow-500 bg-yellow-500/20 text-yellow-300 font-bold uppercase animate-pulse">
-                              ⏳ Fila de Espera
+
+                          <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-bold uppercase ${
+                            acc.isPro 
+                              ? "bg-amber-500/20 text-yellow-300 border-amber-500/40" 
+                              : "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
+                          }`}>
+                            {acc.isPro ? "PRO Vitalício" : "Teste 48h"}
+                          </span>
+
+                          {/* Status de Senha e Ativação do Admin */}
+                          {!acc.hasPassword && !acc.password ? (
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-yellow-500/40 bg-yellow-500/10 text-yellow-300">
+                              🟡 Aguardando Senha
+                            </span>
+                          ) : !acc.isApproved ? (
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-amber-500 bg-amber-500/25 text-amber-300 font-bold uppercase animate-pulse">
+                              🟠 Senha Criada • Aguardando Ativação
                             </span>
                           ) : (
-                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border font-bold uppercase ${
-                              acc.isPro 
-                                ? "bg-amber-500/20 text-yellow-300 border-amber-500/40" 
-                                : "bg-cyan-500/20 text-cyan-300 border-cyan-500/40"
-                            }`}>
-                              {acc.isPro ? "PRO Vitalício" : "Teste 48h"}
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-emerald-500/60 bg-emerald-500/20 text-emerald-300 font-bold uppercase">
+                              🟢 Conta Ativada
                             </span>
                           )}
                         </div>
@@ -700,6 +753,28 @@ export default function MasterAdminPanel() {
                       {/* Barra de Ações Rápidas do Admin */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-white/5">
                         <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Botão Oficial de Ativação / Desativação da Conta */}
+                          {!acc.isApproved ? (
+                            <Button
+                              size="sm"
+                              onClick={() => handleToggleActivation(acc.phone)}
+                              className="bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-[11px] font-tactical h-7 px-2.5 shadow-[0_0_12px_rgba(234,179,8,0.4)] tracking-wider uppercase"
+                              title="Ativar conta e liberar acesso deste cliente no aplicativo"
+                            >
+                              <Zap className="w-3.5 h-3.5 mr-1 fill-black" /> Ativar Conta
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleToggleActivation(acc.phone)}
+                              className="border-rose-500/40 text-rose-300 hover:bg-rose-500/10 text-[11px] font-mono h-7 px-2.5"
+                              title="Desativar e bloquear acesso deste cliente"
+                            >
+                              <Ban className="w-3 h-3 mr-1" /> Desativar
+                            </Button>
+                          )}
+
                           {/* Ações para cliente pendente */}
                           {!acc.isApproved && !acc.isPro && (
                             <>

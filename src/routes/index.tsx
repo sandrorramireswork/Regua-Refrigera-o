@@ -33,6 +33,10 @@ import {
   registerFreeTrial, 
   loginWithPhone, 
   loginUnified,
+  clientCreatePassword,
+  findClientForFirstAccess,
+  performSecuritySyncCheck,
+  adminSaveAndSyncAll,
   activateLicense, 
   getRemainingTrialTime, 
   generateWhatsAppBuyLink, 
@@ -294,6 +298,12 @@ function DashboardContent({
                 </div>
               )}
 
+              {/* Badge Oficial de Proteção Anti-Pirataria e Auto-Sync */}
+              <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 font-mono text-[10px] tracking-wider uppercase">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span>PROTEÇÃO ATIVA • SYNC 5M</span>
+              </div>
+
               {/* Botão Sair / Trocar de Conta */}
               <Button
                 variant="ghost"
@@ -530,12 +540,47 @@ function Dashboard() {
   const [passwordInput, setPasswordInput] = useState("");
   const [loginError, setLoginError] = useState("");
 
-  // Atualização periódica do tempo para contagem regressiva
+  // Modo de Primeiro Acesso (Criação de Senha pelo Cliente após cadastro do Admin)
+  const [isFirstAccess, setIsFirstAccess] = useState(false);
+  const [firstAccessAccount, setFirstAccessAccount] = useState<UserAccount | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Auto-Sync e Monitoramento de Segurança Anti-Pirataria
   useEffect(() => {
-    const timer = setInterval(() => {
+    // 1. Relógio a cada 30 segundos
+    const clockTimer = setInterval(() => {
       setCurrentTime(Date.now());
     }, 30000);
-    return () => clearInterval(timer);
+
+    // 2. AUTO-SYNC & VERIFICAÇÃO DE SEGURANÇA A CADA 5 MINUTOS (300.000 ms)
+    // Conforme determinação: "a cada 5 minutos o aplicativo atualizar e salvar as alterações"
+    const securityTimer = setInterval(() => {
+      const check = performSecuritySyncCheck();
+      if (check.status === "session_revoked") {
+        setSession(null);
+        toast.error("Segurança do Aplicativo", {
+          description: check.message || "Acesso desativado pelo administrador Sandro RR."
+        });
+      } else if (check.status === "trial_expired") {
+        refreshSession();
+        toast.warning("Demonstração Finalizada", {
+          description: "Seu teste de 48h terminou. Adquira sua licença vitalícia."
+        });
+      } else if (check.status === "device_mismatch") {
+        setSession(null);
+        toast.error("Aparelho não Autorizado", {
+          description: "O uso simultâneo em outro aparelho foi bloqueado."
+        });
+      } else if (check.account) {
+        setSession({ ...check.account });
+      }
+    }, 300000); // 5 minutos
+
+    return () => {
+      clearInterval(clockTimer);
+      clearInterval(securityTimer);
+    };
   }, []);
 
   const refreshSession = () => {
@@ -546,6 +591,8 @@ function Dashboard() {
   const handleLogout = () => {
     setActiveSession(null);
     setSession(null);
+    setIsFirstAccess(false);
+    setFirstAccessAccount(null);
     toast.info("Sessão finalizada com sucesso.");
   };
 
@@ -553,8 +600,30 @@ function Dashboard() {
   const handleUnifiedLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
+
+    // Se o cliente não digitou senha, checa se é primeiro acesso para criar senha
+    if (!passwordInput.trim()) {
+      const check = findClientForFirstAccess(loginInput);
+      if (check.found && check.needsPasswordCreation && check.account) {
+        setIsFirstAccess(true);
+        setFirstAccessAccount(check.account);
+        toast.info("Primeiro Acesso Detectado", {
+          description: `Olá ${check.account.name}! Crie sua senha pessoal de acesso.`
+        });
+        return;
+      }
+    }
+
     const res = loginUnified(loginInput, passwordInput);
     if (!res.success) {
+      if (res.needsPasswordCreation && res.account) {
+        setIsFirstAccess(true);
+        setFirstAccessAccount(res.account);
+        toast.info("Primeiro Acesso", {
+          description: `Olá ${res.account.name}! Crie sua senha pessoal de acesso.`
+        });
+        return;
+      }
       setLoginError(res.message);
       toast.error("Atenção", { description: res.message });
       return;
@@ -565,32 +634,156 @@ function Dashboard() {
       if (res.account.isAdmin) {
         toast.success("Bem-vindo, Sandro RR!", { description: "Sessão Master de Engenharia autenticada." });
       } else if (res.isWaitingApproval) {
-        toast.info("Aguardando Liberação", { description: res.message });
+        toast.info("Aguardando Ativação do Admin", { description: res.message });
       } else {
         toast.success("Acesso Liberado!", { description: res.message });
       }
     }
   };
 
-  // Verificação de aprovação na fila de espera
+  // Submissão da criação de senha pelo cliente no primeiro acesso
+  const handleCreateClientPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    if (!firstAccessAccount) return;
+
+    if (newPassword.trim().length < 3) {
+      setLoginError("A senha deve conter no mínimo 3 caracteres.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setLoginError("As senhas digitadas não coincidem. Digite novamente.");
+      return;
+    }
+
+    const res = clientCreatePassword(firstAccessAccount.phone, newPassword);
+    if (res.success && res.account) {
+      setIsFirstAccess(false);
+      setSession({ ...res.account });
+      toast.success("Senha Cadastrada com Sucesso!", {
+        description: "Sua conta agora aguarda ativação pelo Administrador Sandro RR na aba Master Admin."
+      });
+    } else {
+      setLoginError(res.message);
+      toast.error("Erro ao cadastrar senha", { description: res.message });
+    }
+  };
+
+  // Verificação de ativação pelo admin
   const handleCheckApproval = () => {
     const updated = getActiveSession();
     if (updated?.isApproved) {
       setSession({ ...updated });
-      toast.success("Acesso Liberado com Sucesso!", { 
-        description: `Bem-vindo, ${updated.name}! Seu acesso foi aprovado pelo Admin.` 
+      toast.success("Conta Ativada com Sucesso!", { 
+        description: `Bem-vindo, ${updated.name}! Seu acesso foi ativado pelo Admin Sandro RR.` 
       });
     } else {
-      toast.info("Ainda na Fila de Espera", { 
-        description: "O Admin Sandro RR ainda não liberou seu cadastro. Clique no botão de WhatsApp abaixo para falar com ele." 
+      toast.info("Aguardando Ativação", { 
+        description: "O Admin Sandro RR ainda não ativou sua conta no Master Admin. Clique no botão de WhatsApp abaixo para falar com ele." 
       });
     }
   };
 
   // ==========================================
-  // CENÁRIO A: NÃO AUTENTICADO (TELA DE LOGIN E SENHA APENAS)
+  // CENÁRIO A: NÃO AUTENTICADO (TELA DE LOGIN OU CRIAÇÃO DE SENHA)
   // ==========================================
   if (!session) {
+    // MODO PRIMEIRO ACESSO: CLIENTE CRIANDO SENHA
+    if (isFirstAccess && firstAccessAccount) {
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center p-3 sm:p-4 relative overflow-hidden selection:bg-primary selection:text-black">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-950/20 via-black to-black z-0"></div>
+          <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(234, 179, 8, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(234, 179, 8, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+          
+          <Card className="w-full max-w-md glass-panel border-amber-500/60 relative z-10 shadow-[0_0_50px_rgba(234,179,8,0.2)] animate-in zoom-in-95 duration-500">
+            <CardHeader className="text-center pb-3 pt-6 sm:pt-8">
+              <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/50 shadow-[0_0_20px_rgba(234,179,8,0.4)] flex items-center justify-center mb-4">
+                <Key className="w-8 h-8 text-yellow-400 animate-pulse" />
+              </div>
+              
+              <div className="flex flex-col items-center">
+                <CardTitle className="text-xl sm:text-2xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-amber-400">
+                  PRIMEIRO ACESSO
+                </CardTitle>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/40 text-yellow-300 font-mono text-[10px] uppercase tracking-wider mt-2">
+                  <Sparkles className="w-3 h-3 text-yellow-400" />
+                  <span>Crie sua Senha Pessoal de Acesso</span>
+                </div>
+              </div>
+              
+              <div className="mt-3 bg-black/60 border border-white/10 rounded-xl p-3 text-left space-y-1 text-xs font-mono">
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span>TÉCNICO / EMPRESA:</span>
+                  <span className="text-white font-bold uppercase">{firstAccessAccount.name}</span>
+                </div>
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span>CELULAR:</span>
+                  <span className="text-cyan-400 font-bold">{firstAccessAccount.formattedPhone || firstAccessAccount.phone}</span>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent className="pt-2 pb-6 space-y-4">
+              <form onSubmit={handleCreateClientPassword} className="space-y-4">
+                <div className="space-y-2 relative">
+                  <div className="absolute left-3.5 top-3.5 text-amber-400/60"><Lock className="w-4 h-4" /></div>
+                  <Input 
+                    type="password"
+                    placeholder="DIGITE SUA NOVA SENHA" 
+                    className="bg-black/60 border-amber-500/30 text-white font-mono pl-10 h-11 text-xs sm:text-sm tracking-wider" 
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div className="space-y-2 relative">
+                  <div className="absolute left-3.5 top-3.5 text-amber-400/60"><Lock className="w-4 h-4" /></div>
+                  <Input 
+                    type="password"
+                    placeholder="CONFIRME SUA NOVA SENHA" 
+                    className="bg-black/60 border-amber-500/30 text-white font-mono pl-10 h-11 text-xs sm:text-sm tracking-wider" 
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+
+                {loginError && (
+                  <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono text-center leading-relaxed">
+                    {loginError}
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black transition-all h-12 font-tactical tracking-widest uppercase text-xs sm:text-sm shadow-[0_0_20px_rgba(234,179,8,0.4)]"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  CADASTRAR SENHA E SOLICITAR ATIVAÇÃO
+                </Button>
+
+                <div className="flex justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFirstAccess(false);
+                      setLoginError("");
+                    }}
+                    className="text-xs font-mono text-zinc-400 hover:text-white uppercase tracking-wider transition-colors"
+                  >
+                    Voltar para o Login
+                  </button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    // FORMULÁRIO PADRÃO DE LOGIN
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-3 sm:p-4 relative overflow-hidden selection:bg-primary selection:text-black">
         {/* Efeitos de Fundo Futurista */}
@@ -646,7 +839,6 @@ function Dashboard() {
                   className="bg-black/60 border-white/10 text-white font-mono pl-10 h-11 text-xs sm:text-sm tracking-wider" 
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  required
                 />
               </div>
 
@@ -695,32 +887,32 @@ function Dashboard() {
   }
 
   // ==========================================
-  // CENÁRIO 1: CLIENTE NA FILA DE ESPERA (AGUARDANDO LIBERAÇÃO DO ADMIN SANDRO RR)
+  // CENÁRIO 1: CONTA AGUARDANDO ATIVAÇÃO DO ADMIN NA ABA MASTER ADMIN
   // ==========================================
-  if (session && !session.isApproved && !session.isAdmin && !session.isPro) {
+  if (session && !session.isAdmin && !session.isApproved) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-3 sm:p-4 relative overflow-hidden selection:bg-primary selection:text-black">
         {/* Background Effects */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-950/30 via-black to-black z-0"></div>
-        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-amber-950/30 via-black to-black z-0"></div>
+        <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(234, 179, 8, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(234, 179, 8, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
 
-        <Card className="w-full max-w-md glass-panel border-cyan-500/60 relative z-10 shadow-[0_0_60px_rgba(0,240,255,0.25)] animate-in zoom-in-95 duration-500">
+        <Card className="w-full max-w-md glass-panel border-amber-500/60 relative z-10 shadow-[0_0_60px_rgba(234,179,8,0.25)] animate-in zoom-in-95 duration-500">
           <CardHeader className="text-center pb-3 pt-6 sm:pt-8">
-            <div className="mx-auto w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/60 shadow-[0_0_25px_rgba(0,240,255,0.4)] flex items-center justify-center mb-3">
-              <Hourglass className="w-8 h-8 text-cyan-400 animate-spin" style={{ animationDuration: "6s" }} />
+            <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/60 shadow-[0_0_25px_rgba(234,179,8,0.4)] flex items-center justify-center mb-3">
+              <Hourglass className="w-8 h-8 text-yellow-400 animate-spin" style={{ animationDuration: "6s" }} />
             </div>
 
             <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[11px] uppercase tracking-wider mx-auto mb-2">
               <Clock className="w-3.5 h-3.5" />
-              <span>Fila de Espera • Aguardando Aprovação</span>
+              <span>Aguardando Ativação do Administrador</span>
             </div>
 
-            <CardTitle className="text-xl sm:text-2xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-cyan-400">
-              SOLICITAÇÃO EM ANÁLISE
+            <CardTitle className="text-xl sm:text-2xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-amber-400">
+              CONTA EM ANÁLISE
             </CardTitle>
 
             <CardDescription className="font-mono text-zinc-300 text-xs sm:text-sm mt-1 leading-relaxed">
-              Olá, <span className="text-white font-bold">{session.name}</span>! Sua conta está aguardando liberação de <strong className="text-cyan-400">Sandro RR</strong> pelo aplicativo.
+              Olá, <span className="text-white font-bold">{session.name}</span>! Sua senha está configurada. O administrador <strong className="text-yellow-400">Sandro RR</strong> precisa ativar seu acesso na aba Master Admin.
             </CardDescription>
           </CardHeader>
 

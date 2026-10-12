@@ -133,13 +133,13 @@ export default function DigitalTwin() {
     }
   }
 
-  // Coordenadas Termodinâmicas Dinâmicas para o Mini Diagrama P-h
-  const phX1 = Math.min(270, Math.max(200, Math.round(215 + ((realSH - 6) / 14) * 45)));
-  const phX3 = Math.max(50, Math.min(120, Math.round(85 - ((realSC - 4) / 16) * 35)));
+  // Coordenadas Termodinâmicas Dinâmicas para o Mini Diagrama P-h (Proporções Cirúrgicas Sem Cortes)
+  const phX1 = Math.min(255, Math.max(195, Math.round(215 + ((realSH - 6) / 14) * 35)));
+  const phX3 = Math.max(60, Math.min(115, Math.round(85 - ((realSC - 4) / 16) * 28)));
   const phX4 = phX3;
-  const phX2 = Math.min(295, Math.max(250, Math.round(phX1 + 65)));
-  const phYHigh = Math.max(38, Math.min(70, Math.round(55 - ((pLiqBar - 20) / 20) * 12)));
-  const phYLow = Math.min(130, Math.max(98, Math.round(115 - ((pSucBar - 6) / 10) * 12)));
+  const phX2 = Math.min(285, Math.max(245, Math.round(phX1 + 45)));
+  const phYHigh = Math.max(42, Math.min(68, Math.round(55 - ((pLiqBar - 20) / 20) * 10)));
+  const phYLow = Math.min(128, Math.max(104, Math.round(116 - ((pSucBar - 6) / 10) * 10)));
 
   // Estimate COP (Carnot Efficiency * 0.55 Isentropic approx)
   const T_evap_K = tEvapC + 273.15;
@@ -161,9 +161,9 @@ export default function DigitalTwin() {
   const ratioBaixa = Math.max(0, Math.min(1, (tBaixa - scaleMin) / span));
   const ratioAlta = Math.max(0, Math.min(1, (tAlta - scaleMin) / span));
 
-  // Coordenadas visuais da curva no espaço vertical dinâmico (x: -130 a +130, y: -25 a +25)
-  const yPosBaixa = 16 - (ratioBaixa * 45);
-  const yPosAlta = 16 - (ratioAlta * 45);
+  // Coordenadas visuais da curva no espaço vertical dinâmico ampliado
+  const yPosBaixa = 18 - (ratioBaixa * 50);
+  const yPosAlta = 18 - (ratioAlta * 50);
 
   // Estimativas térmicas para análise diagnóstica de campo
   const deltaTArEvap = Math.max(6, Math.min(16, Number(((tSuc - tEvap) * 0.55 + 9.2).toFixed(1))));
@@ -635,132 +635,124 @@ export default function DigitalTwin() {
                 <text x="0" y="-44" fill="#3b82f6" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="2" style={{ textShadow: "0 0 10px #3b82f6" }}>EVAPORADOR</text>
               </g>
 
-              {/* ===== MINI GRÁFICO TÉRMICO DO CICLO (CENTRALIZADO & ULTRA-LIMPO) ===== */}
+              {/* ===== MINI GRÁFICO TÉRMICO DO CICLO (AMPLIADO, SEM BORDAS, CENTRALIZADO & ALTA DEFINIÇÃO) ===== */}
               <g transform="translate(400, 300)">
-                {/* Painel Compacto de Fundo com Vidro Escuro e Borda Neon */}
+                {/* Fundo de Vidro Escuro Suave Sem Bordas (Design Flutuante Cyber) */}
                 <rect 
-                  x="-140" y="-75" width="280" height="150" 
-                  rx="14" 
-                  fill="#04070c" 
-                  fillOpacity="0.95" 
-                  stroke="rgba(0, 240, 255, 0.45)" 
-                  strokeWidth="1.6" 
-                  filter="drop-shadow(0 0 25px rgba(0,0,0,0.95))" 
+                  x="-180" y="-95" width="360" height="195" 
+                  rx="22" 
+                  fill="#03070d" 
+                  fillOpacity="0.88" 
+                  filter="drop-shadow(0 0 35px rgba(0,0,0,0.95))" 
                 />
 
-                {/* Brackets Técnicos Cyber nos Cantos */}
-                <path d="M -140 -58 L -140 -75 L -120 -75" fill="none" stroke="#00f0ff" strokeWidth="2" opacity="0.9" />
-                <path d="M 140 -58 L 140 -75 L 120 -75" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.9" />
-                <path d="M -140 58 L -140 75 L -120 75" fill="none" stroke="#00f0ff" strokeWidth="2" opacity="0.9" />
-                <path d="M 140 58 L 140 75 L 120 75" fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.9" />
-
-                {/* Título do Mini Gráfico */}
+                {/* Título Ampliado do Mini Gráfico */}
                 <text 
-                  x="0" y="-56" 
+                  x="0" y="-70" 
                   fill="#38bdf8" 
-                  fontSize="9.5" 
+                  fontSize="12.5" 
                   textAnchor="middle" 
                   fontFamily="monospace" 
                   fontWeight="900" 
-                  letterSpacing="2"
-                  style={{ textShadow: "0 0 10px rgba(0,240,255,0.7)" }}
+                  letterSpacing="3"
+                  style={{ textShadow: "0 0 14px rgba(0,240,255,0.75)" }}
                 >
                   MINI GRÁFICO TÉRMICO DO CICLO
                 </text>
 
-                {/* Badge Central de Salto Térmico (ΔT) */}
-                <g transform="translate(0, -39)">
-                  <rect x="-42" y="-9" width="84" height="18" rx="9" fill="#181404" stroke="#fbbf24" strokeWidth="1.3" opacity="0.95" />
-                  <text x="0" y="3.5" fill="#fbbf24" fontSize="9.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                {/* Badge Central Ampliado de Salto Térmico (ΔT) */}
+                <g transform="translate(0, -45)">
+                  <rect x="-58" y="-12" width="116" height="24" rx="12" fill="#181204" stroke="#fbbf24" strokeWidth="1.6" filter="drop-shadow(0 0 12px rgba(251,191,36,0.35))" />
+                  <text x="0" y="4.5" fill="#fbbf24" fontSize="13.5" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
                     ΔT {deltaT} K
                   </text>
                 </g>
 
-                {/* Curva S Térmica Dinâmica do Ciclo */}
-                <g transform="translate(0, 5)">
-                  {/* Linhas de Grade de Fundo */}
-                  <line x1="-110" y1="0" x2="110" y2="0" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
-                  <line x1="-110" y1="18" x2="110" y2="18" stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="3 3" />
+                {/* Curva S Térmica Dinâmica Ampliada do Ciclo */}
+                <g transform="translate(0, 3)">
+                  {/* Linhas de Grade de Fundo Suaves */}
+                  <line x1="-145" y1="0" x2="145" y2="0" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="3 3" />
+                  <line x1="-145" y1="20" x2="145" y2="20" stroke="rgba(255,255,255,0.06)" strokeWidth="1" strokeDasharray="3 3" />
 
                   {/* Área Preenchida com Gradiente Translúcido */}
                   <path 
-                    d={`M -105 ${yPosBaixa} C -40 ${yPosBaixa}, 40 ${yPosAlta}, 105 ${yPosAlta} L 105 18 L -105 18 Z`} 
+                    d={`M -140 ${yPosBaixa} C -55 ${yPosBaixa}, 55 ${yPosAlta}, 140 ${yPosAlta} L 140 20 L -140 20 Z`} 
                     fill="url(#thermalAreaGrad)" 
                   />
 
-                  {/* Curva Térmica Dinâmica */}
+                  {/* Curva Térmica Dinâmica Robusta */}
                   <path 
-                    d={`M -105 ${yPosBaixa} C -40 ${yPosBaixa}, 40 ${yPosAlta}, 105 ${yPosAlta}`} 
+                    d={`M -140 ${yPosBaixa} C -55 ${yPosBaixa}, 55 ${yPosAlta}, 140 ${yPosAlta}`} 
                     fill="none" 
                     stroke="url(#thermalCurveGrad)" 
-                    strokeWidth="3.5" 
-                    filter="drop-shadow(0 0 8px rgba(0,240,255,0.7))" 
+                    strokeWidth="4.5" 
+                    filter="drop-shadow(0 0 10px rgba(0,240,255,0.8))" 
                   />
                   
                   {/* Linha de Fluxo Animada */}
                   <path 
-                    d={`M -105 ${yPosBaixa} C -40 ${yPosBaixa}, 40 ${yPosAlta}, 105 ${yPosAlta}`} 
+                    d={`M -140 ${yPosBaixa} C -55 ${yPosBaixa}, 55 ${yPosAlta}, 140 ${yPosAlta}`} 
                     fill="none" 
                     stroke="#ffffff" 
-                    strokeWidth="1.5" 
-                    strokeDasharray="6 6" 
+                    strokeWidth="2" 
+                    strokeDasharray="8 8" 
                     className="animate-flow" 
-                    opacity="0.9" 
+                    opacity="0.95" 
                   />
 
-                  {/* Nó de Baixa com Pulso & Label */}
-                  <circle cx="-105" cy={yPosBaixa} r="6" fill="#00f0ff" opacity="0.3" className="animate-ping" />
-                  <circle cx="-105" cy={yPosBaixa} r="4.5" fill="#00f0ff" stroke="#ffffff" strokeWidth="1.8" filter="drop-shadow(0 0 6px #00f0ff)" />
-                  <rect x="-135" y={yPosBaixa - 18} width="46" height="13" rx="3.5" fill="#040c18" stroke="#00f0ff" strokeWidth="1" />
-                  <text x="-112" y={yPosBaixa - 9} fill="#00f0ff" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
-                    {tBaixa.toFixed(1)}°
+                  {/* Nó de Baixa com Pulso & Label de Alta Visibilidade */}
+                  <circle cx="-140" cy={yPosBaixa} r="7" fill="#00f0ff" opacity="0.35" className="animate-ping" />
+                  <circle cx="-140" cy={yPosBaixa} r="5.5" fill="#00f0ff" stroke="#ffffff" strokeWidth="2" filter="drop-shadow(0 0 8px #00f0ff)" />
+                  <rect x="-176" y={yPosBaixa - 24} width="72" height="20" rx="5" fill="#040c18" stroke="#00f0ff" strokeWidth="1.3" filter="drop-shadow(0 0 8px rgba(0,240,255,0.5))" />
+                  <text x="-140" y={yPosBaixa - 10} fill="#00f0ff" fontSize="12" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                    {tBaixa.toFixed(1)}°{tempUnit}
                   </text>
 
-                  {/* Nó de Alta com Pulso & Label */}
-                  <circle cx="105" cy={yPosAlta} r="6" fill="#ef4444" opacity="0.3" className="animate-ping" />
-                  <circle cx="105" cy={yPosAlta} r="4.5" fill="#ef4444" stroke="#ffffff" strokeWidth="1.8" filter="drop-shadow(0 0 6px #ef4444)" />
-                  <rect x="89" y={yPosAlta - 18} width="46" height="13" rx="3.5" fill="#180407" stroke="#ef4444" strokeWidth="1" />
-                  <text x="112" y={yPosAlta - 9} fill="#ef4444" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
-                    {tAlta.toFixed(1)}°
+                  {/* Nó de Alta com Pulso & Label de Alta Visibilidade */}
+                  <circle cx="140" cy={yPosAlta} r="7" fill="#ef4444" opacity="0.35" className="animate-ping" />
+                  <circle cx="140" cy={yPosAlta} r="5.5" fill="#ef4444" stroke="#ffffff" strokeWidth="2" filter="drop-shadow(0 0 8px #ef4444)" />
+                  <rect x="104" y={yPosAlta - 24} width="72" height="20" rx="5" fill="#180407" stroke="#ef4444" strokeWidth="1.3" filter="drop-shadow(0 0 8px rgba(239,68,68,0.5))" />
+                  <text x="140" y={yPosAlta - 10} fill="#ef4444" fontSize="12" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                    {tAlta.toFixed(1)}°{tempUnit}
                   </text>
                 </g>
 
-                {/* Réguas Compactas de Alvo SH & SC */}
-                <g transform="translate(0, 35)">
+                {/* Réguas Expandidas de Alvo SH & SC com Fontes Maiores */}
+                <g transform="translate(0, 42)">
                   {/* Mini Régua SH */}
-                  <rect x="-105" y="0" width="95" height="5" rx="2.5" fill="#031a24" stroke="rgba(0,240,255,0.4)" strokeWidth="0.8" />
-                  <rect x="-75.5" y="0.5" width="12" height="4" rx="1" fill="#22c55e" opacity="0.6" />
-                  <circle cx={Math.max(-103, Math.min(-12, -105 + (realSH / 16) * 95))} cy="2.5" r="3.2" fill="#00f0ff" stroke="#fff" strokeWidth="1.2" />
-                  <text x="-105" y="10" fill="#64748b" fontSize="6.5" fontFamily="monospace" fontWeight="900">SH</text>
-                  <text x="-10" y="10" fill={isSHNormal ? "#4ade80" : "#f97316"} fontSize="6.5" textAnchor="end" fontFamily="monospace" fontWeight="900">{realSH.toFixed(1)}K</text>
+                  <rect x="-145" y="0" width="135" height="7" rx="3.5" fill="#031a24" stroke="rgba(0,240,255,0.4)" strokeWidth="1" />
+                  <rect x="-103" y="0.5" width="18" height="6" rx="2" fill="#22c55e" opacity="0.75" />
+                  <circle cx={Math.max(-142, Math.min(-13, -145 + (realSH / 16) * 135))} cy="3.5" r="4.5" fill="#00f0ff" stroke="#fff" strokeWidth="1.5" />
+                  <text x="-145" y="17" fill="#64748b" fontSize="9" fontFamily="monospace" fontWeight="900">SH</text>
+                  <text x="-10" y="17" fill={isSHNormal ? "#4ade80" : "#f97316"} fontSize="9.5" textAnchor="end" fontFamily="monospace" fontWeight="900">{realSH.toFixed(1)} K</text>
 
                   {/* Mini Régua SC */}
-                  <rect x="10" y="0" width="95" height="5" rx="2.5" fill="#200408" stroke="rgba(239,68,68,0.4)" strokeWidth="0.8" />
-                  <rect x="33.8" y="0.5" width="16" height="4" rx="1" fill="#22c55e" opacity="0.6" />
-                  <circle cx={Math.max(12, Math.min(103, 10 + (realSC / 12) * 95))} cy="2.5" r="3.2" fill="#ef4444" stroke="#fff" strokeWidth="1.2" />
-                  <text x="10" y="10" fill="#64748b" fontSize="6.5" fontFamily="monospace" fontWeight="900">SC</text>
-                  <text x="105" y="10" fill={isSCNormal ? "#4ade80" : "#f97316"} fontSize="6.5" textAnchor="end" fontFamily="monospace" fontWeight="900">{realSC.toFixed(1)}K</text>
+                  <rect x="10" y="0" width="135" height="7" rx="3.5" fill="#200408" stroke="rgba(239,68,68,0.4)" strokeWidth="1" />
+                  <rect x="44" y="0.5" width="22" height="6" rx="2" fill="#22c55e" opacity="0.75" />
+                  <circle cx={Math.max(13, Math.min(142, 10 + (realSC / 12) * 135))} cy="3.5" r="4.5" fill="#ef4444" stroke="#fff" strokeWidth="1.5" />
+                  <text x="10" y="17" fill="#64748b" fontSize="9" fontFamily="monospace" fontWeight="900">SC</text>
+                  <text x="145" y="17" fill={isSCNormal ? "#4ade80" : "#f97316"} fontSize="9.5" textAnchor="end" fontFamily="monospace" fontWeight="900">{realSC.toFixed(1)} K</text>
                 </g>
 
-                {/* Status Operacional Compacto */}
-                <g transform="translate(0, 58)">
+                {/* Status Operacional Centralizado & Ampliado */}
+                <g transform="translate(0, 75)">
                   <rect 
-                    x="-105" y="-8.5" width="210" height="17" 
+                    x="-140" y="-12" width="280" height="24" 
                     fill="#050505" 
-                    rx="8.5" 
+                    rx="12" 
                     stroke={statusColor} 
-                    strokeWidth="1.5" 
+                    strokeWidth="1.8" 
                     opacity="0.95" 
-                    filter={`drop-shadow(0 0 8px ${statusColor})`} 
+                    filter={`drop-shadow(0 0 12px ${statusColor})`} 
                   />
                   <text 
-                    x="0" y="3.5" 
+                    x="0" y="4.5" 
                     fill={statusColor} 
-                    fontSize="8.5" 
+                    fontSize="11" 
                     textAnchor="middle" 
                     fontFamily="monospace" 
                     fontWeight="900" 
-                    letterSpacing="1.5"
+                    letterSpacing="2"
                     className="drop-shadow-md"
                   >
                     {shortStatus}
@@ -1164,7 +1156,7 @@ export default function DigitalTwin() {
 
             {/* Canvas Vetorial do Diagrama Mollier P-h Dinâmico */}
             <div className="w-full bg-[#03070d] rounded-xl p-2 border border-cyan-500/20 relative aspect-[340/165]">
-              <svg className="w-full h-full" viewBox="0 0 340 165">
+              <svg className="w-full h-full" viewBox="0 0 350 170">
                 <defs>
                   <linearGradient id="mollierGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                     <stop offset="0%" stopColor="#22c55e" />
@@ -1175,23 +1167,23 @@ export default function DigitalTwin() {
                 </defs>
 
                 {/* Eixos */}
-                <line x1="25" y1="145" x2="325" y2="145" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-                <line x1="25" y1="15" x2="25" y2="145" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
-                <text x="325" y="157" fill="#64748b" fontSize="8" textAnchor="end" fontFamily="monospace">Entalpia h (kJ/kg) →</text>
-                <text x="28" y="18" fill="#64748b" fontSize="8" fontFamily="monospace">↑ Pressão P (log)</text>
+                <line x1="28" y1="148" x2="335" y2="148" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                <line x1="28" y1="15" x2="28" y2="148" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                <text x="335" y="160" fill="#64748b" fontSize="8" textAnchor="end" fontFamily="monospace">Entalpia h (kJ/kg) →</text>
+                <text x="32" y="18" fill="#64748b" fontSize="8" fontFamily="monospace">↑ Pressão P (log)</text>
 
                 {/* Domo de Saturação (Curva de Sino do Fluido) */}
                 <path 
-                  d="M 40 145 Q 140 30 170 30 Q 200 30 295 145" 
+                  d="M 45 148 Q 135 32 165 32 Q 195 32 290 148" 
                   fill="rgba(0, 240, 255, 0.05)" 
                   stroke="rgba(0, 240, 255, 0.4)" 
                   strokeWidth="1.5" 
                   strokeDasharray="3 3" 
                 />
-                <text x="55" y="138" fill="#38bdf8" fontSize="7.5" fontFamily="monospace">Líq. Saturado</text>
-                <text x="240" y="138" fill="#f87171" fontSize="7.5" fontFamily="monospace">Vap. Saturado</text>
-                <circle cx="170" cy="30" r="3" fill="#fbbf24" />
-                <text x="170" y="24" fill="#fbbf24" fontSize="7.5" textAnchor="middle" fontFamily="monospace">Ponto Crítico</text>
+                <text x="58" y="142" fill="#38bdf8" fontSize="7.5" fontFamily="monospace">Líq. Saturado</text>
+                <text x="240" y="142" fill="#f87171" fontSize="7.5" fontFamily="monospace">Vap. Saturado</text>
+                <circle cx="165" cy="32" r="3.5" fill="#fbbf24" />
+                <text x="165" y="26" fill="#fbbf24" fontSize="7.5" textAnchor="middle" fontFamily="monospace">Ponto Crítico</text>
 
                 {/* O Ciclo de Refrigeração Real Plotado Dinamicamente */}
                 <path 
@@ -1202,22 +1194,66 @@ export default function DigitalTwin() {
                   filter="drop-shadow(0 0 6px rgba(0,240,255,0.6))"
                 />
 
-                {/* Setas de Fluxo Dinâmicas */}
-                <path d={`M ${(phX4 + phX1)/2} ${phYLow} L ${(phX4 + phX1)/2 + 8} ${phYLow - 3} L ${(phX4 + phX1)/2 + 8} ${phYLow + 3} Z`} fill="#00f0ff" />
-                <path d={`M ${(phX3 + phX2)/2} ${phYHigh} L ${(phX3 + phX2)/2 - 8} ${phYHigh - 3} L ${(phX3 + phX2)/2 - 8} ${phYHigh + 3} Z`} fill="#f97316" />
+                {/* Setas de Fluxo Dinâmicas Termodinâmicas (Sentido Real do Ciclo: 1 -> 2 -> 3 -> 4 -> 1) */}
+                {/* 1 -> 2 (Compressão: Subindo em direção ao Ponto 2) */}
+                {(() => {
+                  const midX12 = (phX1 + phX2) / 2;
+                  const midY12 = (phYLow + phYHigh) / 2;
+                  const angle = Math.atan2(phYHigh - phYLow, phX2 - phX1) * (180 / Math.PI);
+                  return (
+                    <polygon 
+                      points="6,0 -4,-3.5 -4,3.5" 
+                      fill="#ef4444" 
+                      transform={`translate(${midX12}, ${midY12}) rotate(${angle})`} 
+                    />
+                  );
+                })()}
 
-                {/* 4 Nós com Marcações Termodinâmicas Dinâmicas */}
+                {/* 2 -> 3 (Condensação: Fluxo para a ESQUERDA da Descarga para o Líquido) */}
+                {(() => {
+                  const midX23 = (phX3 + phX2) / 2;
+                  return (
+                    <polygon 
+                      points={`${midX23 - 6},${phYHigh} ${midX23 + 4},${phYHigh - 3.5} ${midX23 + 4},${phYHigh + 3.5}`} 
+                      fill="#f97316" 
+                    />
+                  );
+                })()}
+
+                {/* 3 -> 4 (Expansão na TXV: Fluxo DESCENDO do Líquido para a Mistura) */}
+                {(() => {
+                  const midY34 = (phYHigh + phYLow) / 2;
+                  return (
+                    <polygon 
+                      points={`${phX4},${midY34 + 6} ${phX4 - 3.5},${midY34 - 4} ${phX4 + 3.5},${midY34 - 4}`} 
+                      fill="#22c55e" 
+                    />
+                  );
+                })()}
+
+                {/* 4 -> 1 (Evaporação Útil: Fluxo para a DIREITA da TXV para a Sucção) */}
+                {(() => {
+                  const midX41 = (phX4 + phX1) / 2;
+                  return (
+                    <polygon 
+                      points={`${midX41 + 6},${phYLow} ${midX41 - 4},${phYLow - 3.5} ${midX41 - 4},${phYLow + 3.5}`} 
+                      fill="#00f0ff" 
+                    />
+                  );
+                })()}
+
+                {/* 4 Nós com Marcações Termodinâmicas Sem Cortes */}
                 <circle cx={phX1} cy={phYLow} r="4.5" fill="#00f0ff" stroke="#fff" strokeWidth="1.2" />
-                <text x={phX1 + 7} y={phYLow + 8} fill="#00f0ff" fontSize="7.5" fontFamily="monospace" fontWeight="bold">1. Sucção (h1)</text>
+                <text x={phX1} y={phYLow + 14} fill="#00f0ff" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">1. Sucção (h1)</text>
 
                 <circle cx={phX2} cy={phYHigh} r="4.5" fill="#ef4444" stroke="#fff" strokeWidth="1.2" />
-                <text x={Math.min(315, phX2 + 5)} y={phYHigh - 5} fill="#ef4444" fontSize="7.5" fontFamily="monospace" fontWeight="bold">2. Descarga (h2)</text>
+                <text x={phX2 > 260 ? phX2 + 2 : phX2} y={phYHigh - 8} fill="#ef4444" fontSize="7.5" textAnchor={phX2 > 260 ? "end" : "middle"} fontFamily="monospace" fontWeight="bold">2. Descarga (h2)</text>
 
                 <circle cx={phX3} cy={phYHigh} r="4.5" fill="#f97316" stroke="#fff" strokeWidth="1.2" />
-                <text x={phX3 - 7} y={phYHigh - 6} fill="#f97316" fontSize="7.5" textAnchor="end" fontFamily="monospace" fontWeight="bold">3. Líquido (h3)</text>
+                <text x={phX3} y={phYHigh - 8} fill="#f97316" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">3. Líquido (h3)</text>
 
                 <circle cx={phX4} cy={phYLow} r="4.5" fill="#22c55e" stroke="#fff" strokeWidth="1.2" />
-                <text x={phX4 - 7} y={phYLow + 8} fill="#22c55e" fontSize="7.5" textAnchor="end" fontFamily="monospace" fontWeight="bold">4. TXV (h4=h3)</text>
+                <text x={phX4} y={phYLow + 14} fill="#22c55e" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">4. TXV (h4=h3)</text>
               </svg>
             </div>
 

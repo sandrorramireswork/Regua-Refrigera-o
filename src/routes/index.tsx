@@ -15,6 +15,7 @@ import Piping from "@/components/modules/Piping";
 import Reports from "@/components/modules/Reports";
 import Maintenance from "@/components/modules/Maintenance";
 import { ElectricalSizing } from "@/components/modules/ElectricalSizing";
+import MasterAdminPanel from "@/components/modules/MasterAdminPanel";
 import { 
   Lock, Unlock, User, AlertTriangle, AlertCircle, CheckCircle2, MessageCircle, 
   UserPlus, Key, Wrench, Zap, Cylinder, Phone, ShieldCheck, Sparkles, Clock, 
@@ -255,12 +256,20 @@ function DashboardContent({
             {/* Status da Licença / Teste Grátis */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               {session.isPro ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/40 text-yellow-400 font-mono text-xs shadow-[0_0_12px_rgba(234,179,8,0.25)]">
-                  <Zap className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                <div 
+                  onClick={() => {
+                    if (session.isAdmin) setActiveTab("master-admin");
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 rounded-lg bg-yellow-500/10 border border-yellow-500/40 text-yellow-400 font-mono text-xs shadow-[0_0_12px_rgba(234,179,8,0.25)] ${
+                    session.isAdmin ? "cursor-pointer hover:bg-yellow-500/20 hover:border-yellow-400 hover:shadow-[0_0_15px_rgba(234,179,8,0.5)] transition-all" : ""
+                  }`}
+                  title={session.isAdmin ? "Clique para gerenciar clientes no painel Master Admin" : "Licença PRO Vitalícia"}
+                >
+                  <Zap className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400 animate-pulse" />
                   <span className="font-bold tracking-wider uppercase hidden sm:inline">
-                    {session.isAdmin ? "MASTER ADMIN" : "PRO VITALÍCIO"}
+                    {session.isAdmin ? "⚡ MASTER ADMIN" : "PRO VITALÍCIO"}
                   </span>
-                  <span className="font-bold sm:hidden">PRO</span>
+                  <span className="font-bold sm:hidden">{session.isAdmin ? "ADMIN" : "PRO"}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1.5 sm:gap-2">
@@ -315,7 +324,7 @@ function DashboardContent({
           </p>
         </div>
 
-        <Tabs defaultValue="pt-engine" className="w-full space-y-4 sm:space-y-6" onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4 sm:space-y-6">
           <TabsList className="flex flex-wrap justify-center h-auto p-1 bg-black/40 backdrop-blur-sm border border-border/50 rounded-xl w-full gap-1">
             <TabsTrigger value="pt-engine" className="shrink-0 flex-1 min-w-[65px] sm:min-w-[90px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-cyan-500/20 text-cyan-500/70 hover:text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-500/50 hover:shadow-[0_0_10px_rgba(34,211,238,0.3)] data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400 data-[state=active]:border-cyan-400 data-[state=active]:shadow-[0_0_20px_rgba(34,211,238,0.8)] transition-all duration-300">
               <Activity className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
@@ -351,6 +360,19 @@ function DashboardContent({
               <Wrench className="h-4 w-4 md:h-5 md:w-5 drop-shadow-[0_0_5px_currentColor]" />
               <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight drop-shadow-[0_0_5px_currentColor]">FERRAMENTAS</span>
             </TabsTrigger>
+
+            {/* ABA RESTRITA: MASTER ADMIN (CADASTRO E GESTÃO DE CLIENTES) */}
+            {session.isAdmin && (
+              <TabsTrigger 
+                value="master-admin" 
+                className="shrink-0 flex-1 min-w-[70px] sm:min-w-[115px] flex flex-col gap-1 py-1.5 sm:py-2.5 rounded-lg border border-yellow-500/60 bg-amber-500/10 text-yellow-400 hover:text-yellow-300 hover:bg-amber-500/25 hover:border-yellow-400 hover:shadow-[0_0_20px_rgba(234,179,8,0.6)] data-[state=active]:bg-amber-500/30 data-[state=active]:text-yellow-300 data-[state=active]:border-yellow-400 data-[state=active]:shadow-[0_0_25px_rgba(234,179,8,0.9)] transition-all duration-300 animate-pulse"
+              >
+                <Zap className="h-4 w-4 md:h-5 md:w-5 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.9)]" />
+                <span className="text-[9.5px] sm:text-[11px] font-black tracking-wider font-tactical uppercase text-center leading-tight text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.9)]">
+                  ⚡ MASTER ADMIN
+                </span>
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="pt-engine" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
@@ -380,6 +402,13 @@ function DashboardContent({
           <TabsContent value="maintenance" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
             <Maintenance />
           </TabsContent>
+
+          {/* CONTEÚDO RESTRITO: MASTER ADMIN */}
+          {session.isAdmin && (
+            <TabsContent value="master-admin" className="animate-in fade-in-50 duration-500 slide-in-from-bottom-4">
+              <MasterAdminPanel />
+            </TabsContent>
+          )}
 
         </Tabs>
       </main>

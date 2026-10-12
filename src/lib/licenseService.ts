@@ -445,3 +445,172 @@ export function loginAsAdmin(): UserAccount {
   setActiveSession(adminAccount);
   return adminAccount;
 }
+
+/**
+ * Cadastra ou atualiza um cliente diretamente pelo Master Admin
+ */
+export function adminRegisterClient(params: {
+  name: string;
+  phone: string;
+  accessKey?: string;
+  isPro?: boolean;
+  deviceId?: string;
+}): { success: boolean; message: string; account?: UserAccount } {
+  const digits = cleanPhone(params.phone);
+  if (digits.length < 10) {
+    return { success: false, message: "Informe um número de celular válido com DDD (mínimo 10 dígitos)." };
+  }
+
+  const accounts = getStoredAccounts();
+  const existing = accounts.find(a => a.phone === digits);
+
+  const formatted = formatPhone(digits);
+  const clientName = params.name.trim() || `Técnico ${digits.slice(-4)}`;
+  const key = params.accessKey?.trim() ? params.accessKey.trim() : generate9DigitKey();
+  const isPro = params.isPro !== undefined ? params.isPro : true;
+
+  if (existing) {
+    existing.name = clientName;
+    existing.formattedPhone = formatted;
+    existing.generatedAccessKey = key;
+    existing.isPro = isPro;
+    if (params.deviceId !== undefined) {
+      existing.deviceId = params.deviceId.trim();
+    }
+    saveAccount(existing);
+    return { 
+      success: true, 
+      message: `Cliente ${clientName} atualizado com sucesso! Chave: ${key}`, 
+      account: existing 
+    };
+  } else {
+    const newAccount: UserAccount = {
+      name: clientName,
+      phone: digits,
+      formattedPhone: formatted,
+      registeredAt: Date.now(),
+      trialExpiresAt: Date.now() + TRIAL_DURATION_MS,
+      isPro: isPro,
+      deviceId: params.deviceId ? params.deviceId.trim() : "",
+      generatedAccessKey: key,
+      licenseKey: isPro ? key : undefined,
+      isAdmin: false
+    };
+    saveAccount(newAccount);
+    return { 
+      success: true, 
+      message: `Cliente ${clientName} cadastrado com sucesso! Chave: ${key}`, 
+      account: newAccount 
+    };
+  }
+}
+
+/**
+ * Remove um cliente cadastrado
+ */
+export function adminDeleteClient(phone: string): { success: boolean; message: string } {
+  const digits = cleanPhone(phone);
+  const accounts = getStoredAccounts().filter(a => a.phone !== digits);
+  if (typeof window !== "undefined") {
+    localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(accounts));
+  }
+  return { success: true, message: "Cliente excluído da base com sucesso." };
+}
+
+/**
+ * Alterna status de licença do cliente (PRO Vitalício x Teste)
+ */
+export function adminToggleClientPro(phone: string): { success: boolean; isPro: boolean; message: string } {
+  const digits = cleanPhone(phone);
+  const accounts = getStoredAccounts();
+  const target = accounts.find(a => a.phone === digits);
+  if (!target) {
+    return { success: false, isPro: false, message: "Cliente não localizado." };
+  }
+  target.isPro = !target.isPro;
+  saveAccount(target);
+  return { 
+    success: true, 
+    isPro: target.isPro, 
+    message: `Status de ${target.name} alterado para ${target.isPro ? "PRO Vitalício" : "Teste"}.` 
+  };
+}
+
+/**
+ * Gera mensagem formatada pronta para enviar no WhatsApp do cliente com a chave de 9 dígitos
+ */
+export function formatClientWhatsAppMessage(client: UserAccount): string {
+  const greeting = `Olá ${client.name}!`;
+  const message = `${greeting} Confirmamos o recebimento do seu PIX de R$ ${APP_PRICE_REAIS} no aplicativo TermoMaster Pro!
+
+🔑 *SUA CHAVE DE ACESSO OFICIAL (9 DÍGITOS):*
+👉 *${client.generatedAccessKey}*
+
+📱 *COMO ATIVAR SEU APLICATIVO:*
+1. Abra o TermoMaster Pro no seu celular.
+2. Na aba "Ativar Chave PRO" (ou no aviso de ativação), digite ou cole a sua chave: *${client.generatedAccessKey}*
+3. Clique em "Desbloquear Acesso Vitalício" para liberar o uso permanente!
+
+Seu acesso é protegido e válido para este aparelho. Qualquer dúvida estou à disposição!
+_Eng. Sandro RR • TermoMaster Pro_`;
+
+  return `https://wa.me/55${client.phone}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * Exporta todas as contas em formato JSON
+ */
+export function adminExportAccounts(): string {
+  const accounts = getStoredAccounts().filter(a => !a.isAdmin);
+  return JSON.stringify(accounts, null, 2);
+}
+
+/**
+ * Importa e mescla contas de um JSON
+ */
+export function adminImportAccounts(jsonStr: string): { success: boolean; count: number; message: string } {
+  try {
+    const parsed = JSON.parse(jsonStr);
+    if (!Array.isArray(parsed)) {
+      return { success: false, count: 0, message: "Formato inválido. Esperado um array de contas." };
+    }
+    const current = getStoredAccounts();
+    const map = new Map<string, UserAccount>();
+    current.forEach(acc => map.set(acc.phone, acc));
+
+    let importedCount = 0;
+    parsed.forEach((item: Partial<UserAccount>) => {
+      if (item.phone) {
+        const digits = cleanPhone(item.phone);
+        if (digits.length >= 10) {
+          const merged: UserAccount = {
+            name: item.name || `Técnico ${digits.slice(-4)}`,
+            phone: digits,
+            formattedPhone: item.formattedPhone || formatPhone(digits),
+            registeredAt: item.registeredAt || Date.now(),
+            trialExpiresAt: item.trialExpiresAt || Date.now() + TRIAL_DURATION_MS,
+            isPro: item.isPro !== undefined ? item.isPro : true,
+            deviceId: item.deviceId || "",
+            generatedAccessKey: item.generatedAccessKey || generate9DigitKey(),
+            isAdmin: false
+          };
+          map.set(digits, merged);
+          importedCount++;
+        }
+      }
+    });
+
+    const finalAccounts = Array.from(map.values());
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEY_ACCOUNTS, JSON.stringify(finalAccounts));
+    }
+    return { 
+      success: true, 
+      count: importedCount, 
+      message: `${importedCount} contas processadas e sincronizadas com sucesso!` 
+    };
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Erro desconhecido";
+    return { success: false, count: 0, message: `Erro ao importar: ${errorMsg}` };
+  }
+}

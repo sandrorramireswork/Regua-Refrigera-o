@@ -18,6 +18,8 @@ export interface UserAccount {
   licenseKey?: string;        // chave de liberação utilizada
   isAdmin?: boolean;          // conta de engenharia/administrador master
   lastSyncAt?: number;        // timestamp da última sincronização
+  isTrialRequested?: boolean; // solicitou teste de 48 horas grátis
+  trialRequestedAt?: number;  // timestamp da solicitação de 48h
 }
 
 export const TRIAL_DURATION_DAYS = 2;
@@ -205,90 +207,151 @@ export function setActiveSession(account: UserAccount | null): void {
 }
 
 /**
- * Registra novo técnico para início de teste gratuito de 2 dias com bloqueio de aparelho único
+ * Solicitação oficial ao clicar em "Grátis por 48Hs":
+ * 1. Envia/salva mensagem para o aplicativo na aba Master Admin;
+ * 2. Prepara e retorna mensagem para o WhatsApp +5551995394808;
+ * 3. Mantém o cliente na tela de espera (mostrando apenas o celular em uso)
+ *    até a confirmação expressa do administrador Sandro RR para liberar a Conta PRO.
  */
-export function registerFreeTrial(name: string, phoneInput: string): { success: boolean; account?: UserAccount; message?: string; isWaitingApproval?: boolean } {
+export function requestFreeTrial48h(phoneInput: string, nameInput?: string): { 
+  success: boolean; 
+  account?: UserAccount; 
+  whatsAppUrl: string; 
+  message: string;
+} {
   const digits = cleanPhone(phoneInput);
   const currentDeviceId = getDeviceId();
   const now = Date.now();
 
-  if (!name.trim() || name.trim().length < 2) {
-    return { success: false, message: "Informe seu nome completo ou razão social para o cadastro." };
-  }
-  if (digits.length < 10 || digits.length > 11) {
-    return { success: false, message: "Digite um número de celular válido com DDD (ex: 51 99999-9999)." };
-  }
-
-  const accounts = getStoredAccounts();
-  const existing = accounts.find(a => a.phone === digits);
-
-  if (existing) {
-    // Verificação de Segurança de Aparelho Único
-    if (existing.deviceId && existing.deviceId !== currentDeviceId && !existing.isAdmin) {
-      return {
-        success: false,
-        account: existing,
-        message: `Acesso Bloqueado: Este número de celular já está vinculado a outro aparelho (${existing.deviceId}). O aplicativo é restrito a 1 único aparelho. Contate Sandro RR (+5551995394808) para transferência.`
-      };
-    }
-
-    if (!existing.deviceId) {
-      existing.deviceId = currentDeviceId;
-    }
-    if (!existing.generatedAccessKey) {
-      existing.generatedAccessKey = generate9DigitKey();
-    }
-    saveAccount(existing);
-    setActiveSession(existing);
-
-    if (existing.isPro) {
-      return { success: true, account: existing, message: `Bem-vindo de volta, ${existing.name}! Sua Licença Vitalícia está ativa neste aparelho.` };
-    }
-    if (existing.isApproved && now < existing.trialExpiresAt) {
-      const remaining = getRemainingTrialTime(existing.trialExpiresAt);
-      return { success: true, account: existing, message: `Bem-vindo de volta! Você possui ainda ${remaining.text} do seu teste grátis.` };
-    }
-    if (!existing.isApproved && !existing.isAdmin) {
-      return { 
-        success: true, 
-        isWaitingApproval: true, 
-        account: existing, 
-        message: `Sua solicitação está na fila de espera. Aguardando liberação do administrador Sandro RR.` 
-      };
-    }
-
-    // Teste expirado
+  if (digits.length < 10) {
     return { 
       success: false, 
-      account: existing, 
-      message: `Este número já utilizou o período de teste de 2 dias. Adquira sua licença vitalícia por R$ ${APP_PRICE_REAIS}.` 
+      whatsAppUrl: "",
+      message: "Digite seu número de celular com DDD para solicitar o teste de 48 horas grátis." 
     };
   }
 
-  // Novo cadastro: entra como PENDENTE na Fila de Espera do Admin!
+  const accounts = getStoredAccounts();
+  const existing = accounts.find(a => isPhoneMatching(a.phone, digits));
+  const formatted = formatPhone(digits);
+  const clientName = (nameInput && nameInput.trim()) || existing?.name || `Técnico ${digits.slice(-4)}`;
+
+  if (existing) {
+    // Se o Admin já aprovou/liberou:
+    if (existing.isApproved) {
+      existing.deviceId = existing.deviceId || currentDeviceId;
+      saveAccount(existing);
+      setActiveSession(existing);
+      return { 
+        success: true, 
+        account: existing, 
+        whatsAppUrl: "",
+        message: `Sua conta já foi confirmada e liberada pelo Administrador Sandro RR! Bem-vindo de volta.` 
+      };
+    }
+
+    // Se já está pendente, renova a solicitação com o aparelho atual
+    existing.isTrialRequested = true;
+    existing.trialRequestedAt = now;
+    existing.deviceId = currentDeviceId;
+    existing.formattedPhone = formatted;
+    if (nameInput?.trim()) existing.name = nameInput.trim();
+    saveAccount(existing);
+    setActiveSession(existing);
+    adminSaveAndSyncAll();
+
+    const waMsg = `Olá Sandro RR! Acabei de clicar em GRÁTIS POR 48 HORAS no aplicativo TermoMaster Pro.\n\n📱 CELULAR EM USO: *${formatted}*\n🆔 APARELHO (ID): *${currentDeviceId}*\n👤 TÉCNICO: *${existing.name}*\n\nPor favor, confirme e libere meu acesso à conta pelo aplicativo!`;
+    const waUrl = `https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent(waMsg)}`;
+
+    return {
+      success: true,
+      account: existing,
+      whatsAppUrl: waUrl,
+      message: `Solicitação enviada ao Admin! Seu celular ${formatted} está aguardando confirmação na aba Master Admin.`
+    };
+  }
+
+  // Novo cliente solicitando 48h grátis:
   const key9 = generate9DigitKey();
   const newAccount: UserAccount = {
-    name: name.trim(),
+    name: clientName,
     phone: digits,
-    formattedPhone: formatPhone(digits),
+    formattedPhone: formatted,
     registeredAt: now,
-    trialExpiresAt: 0, // só começa a contar a partir do momento em que o admin aprovar!
+    trialExpiresAt: 0, // só começa a contar se for liberado pelo admin
     isPro: false,
-    isApproved: false, // NA FILA DE ESPERA!
+    isApproved: false, // BLOQUEADO ATÉ CONFIRMAÇÃO DO ADMIN SANDRO RR!
     isAdmin: false,
     deviceId: currentDeviceId,
-    generatedAccessKey: key9
+    generatedAccessKey: key9,
+    isTrialRequested: true,
+    trialRequestedAt: now
   };
 
   saveAccount(newAccount);
   setActiveSession(newAccount);
+  adminSaveAndSyncAll();
+
+  const waMsg = `Olá Sandro RR! Acabei de clicar em GRÁTIS POR 48 HORAS no aplicativo TermoMaster Pro.\n\n📱 CELULAR EM USO: *${formatted}*\n🆔 APARELHO (ID): *${currentDeviceId}*\n👤 TÉCNICO: *${clientName}*\n\nPor favor, confirme e libere meu acesso à conta pelo aplicativo!`;
+  const waUrl = `https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent(waMsg)}`;
 
   return {
     success: true,
-    isWaitingApproval: true,
     account: newAccount,
-    message: `Cadastro recebido! Você está na fila de espera aguardando liberação pelo administrador Sandro RR.`
+    whatsAppUrl: waUrl,
+    message: `Solicitação de 48h grátis registrada! Seu celular ${formatted} aguarda confirmação do administrador.`
   };
+}
+
+/**
+ * Confirma a solicitação de 48h do cliente e libera o acesso à CONTA PRO no Master Admin:
+ * "e apenas depois da confirmação do admin será liberado acesso a conta pro"
+ */
+export function adminConfirmAndApprovePro(phone: string): {
+  success: boolean;
+  account?: UserAccount;
+  message: string;
+} {
+  const digits = cleanPhone(phone);
+  const accounts = getStoredAccounts();
+  const target = accounts.find(a => isPhoneMatching(a.phone, digits));
+
+  if (!target) {
+    return { success: false, message: "Cliente não localizado na base de dados." };
+  }
+
+  target.isApproved = true;
+  target.isPro = true; // Libera acesso à Conta PRO após confirmação do admin!
+  target.approvedAt = Date.now();
+  if (!target.licenseKey) {
+    target.licenseKey = target.generatedAccessKey;
+  }
+  saveAccount(target);
+  adminSaveAndSyncAll();
+
+  return {
+    success: true,
+    account: target,
+    message: `Acesso à Conta PRO confirmado e liberado com sucesso para ${target.name} (${target.formattedPhone || target.phone})!`
+  };
+}
+
+/**
+ * Link formatado para WhatsApp do cliente falar com o Admin enquanto aguarda confirmação
+ */
+export function generateTrialWaitingWhatsAppLink(account: UserAccount): string {
+  const phone = account.formattedPhone || formatPhone(account.phone) || account.phone;
+  const devId = account.deviceId || getDeviceId();
+  const msg = `Olá Sandro RR! Estou com o aplicativo TermoMaster Pro aberto aguardando sua confirmação.\n\n📱 MEU CELULAR EM USO: *${phone}*\n🆔 APARELHO (ID): *${devId}*\n👤 NOME: *${account.name}*\n\nPoderia confirmar e liberar meu acesso à Conta PRO, por favor?`;
+
+  return `https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+}
+
+/**
+ * Registra novo técnico para início de teste gratuito de 2 dias com bloqueio de aparelho único
+ */
+export function registerFreeTrial(name: string, phoneInput: string): { success: boolean; account?: UserAccount; message?: string; isWaitingApproval?: boolean } {
+  return requestFreeTrial48h(phoneInput, name);
 }
 
 /**

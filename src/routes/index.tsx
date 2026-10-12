@@ -31,6 +31,8 @@ import {
   getActiveSession, 
   setActiveSession, 
   registerFreeTrial, 
+  requestFreeTrial48h,
+  generateTrialWaitingWhatsAppLink,
   loginWithPhone, 
   loginUnified,
   clientCreatePassword,
@@ -546,6 +548,11 @@ function Dashboard() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // Modo de Solicitação de 48 Horas Grátis
+  const [showTrialModal, setShowTrialModal] = useState(false);
+  const [trialPhoneInput, setTrialPhoneInput] = useState("");
+  const [trialNameInput, setTrialNameInput] = useState("");
+
   // Auto-Sync e Monitoramento de Segurança Anti-Pirataria
   useEffect(() => {
     // 1. Relógio a cada 30 segundos
@@ -669,17 +676,44 @@ function Dashboard() {
     }
   };
 
-  // Verificação de ativação pelo admin
+  // Ação ao clicar em Grátis por 48Hs:
+  // Envia para o aplicativo na aba Master Admin e para o WhatsApp +5551995394808
+  const handleRequest48h = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setLoginError("");
+    const phoneToUse = trialPhoneInput.trim() || loginInput.trim();
+    if (!phoneToUse) {
+      setShowTrialModal(true);
+      return;
+    }
+
+    const res = requestFreeTrial48h(phoneToUse, trialNameInput);
+    if (res.success && res.account) {
+      setSession({ ...res.account });
+      setShowTrialModal(false);
+      toast.success("Solicitação enviada com sucesso!", {
+        description: "Seu celular foi registrado no aplicativo aguardando confirmação do administrador."
+      });
+      if (res.whatsAppUrl) {
+        window.open(res.whatsAppUrl, "_blank");
+      }
+    } else {
+      setLoginError(res.message);
+      toast.error("Atenção", { description: res.message });
+    }
+  };
+
+  // Verificação de ativação e confirmação da Conta PRO pelo admin
   const handleCheckApproval = () => {
     const updated = getActiveSession();
     if (updated?.isApproved) {
       setSession({ ...updated });
-      toast.success("Conta Ativada com Sucesso!", { 
-        description: `Bem-vindo, ${updated.name}! Seu acesso foi ativado pelo Admin Sandro RR.` 
+      toast.success("Conta PRO Confirmada!", { 
+        description: `Parabéns, ${updated.name}! Seu acesso à Conta PRO foi confirmado e liberado pelo Admin Sandro RR.` 
       });
     } else {
-      toast.info("Aguardando Ativação", { 
-        description: "O Admin Sandro RR ainda não ativou sua conta no Master Admin. Clique no botão de WhatsApp abaixo para falar com ele." 
+      toast.info("Aguardando Confirmação", { 
+        description: "O Admin Sandro RR ainda não confirmou sua solicitação na aba Master Admin. Clique no botão de WhatsApp abaixo para falar com ele." 
       });
     }
   };
@@ -783,6 +817,91 @@ function Dashboard() {
       );
     }
 
+    // MODO MODAL: SOLICITAÇÃO DE 48H GRÁTIS
+    if (showTrialModal) {
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center p-3 sm:p-4 relative overflow-hidden selection:bg-primary selection:text-black">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-cyan-950/30 via-black to-black z-0"></div>
+          <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'linear-gradient(rgba(0, 240, 255, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 240, 255, 0.1) 1px, transparent 1px)', backgroundSize: '40px 40px' }}></div>
+
+          <Card className="w-full max-w-md glass-panel border-primary/60 relative z-10 shadow-[0_0_50px_rgba(0,240,255,0.25)] animate-in zoom-in-95 duration-500">
+            <CardHeader className="text-center pb-3 pt-6 sm:pt-8">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 border border-primary/50 shadow-[0_0_20px_rgba(0,240,255,0.4)] flex items-center justify-center mb-3">
+                <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/40 text-primary font-mono text-[11px] uppercase tracking-wider mx-auto mb-2 font-bold">
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Solicitação Oficial • 48 Horas Grátis</span>
+              </div>
+
+              <CardTitle className="text-xl sm:text-2xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white via-cyan-200 to-primary">
+                GRÁTIS POR 48 HORAS
+              </CardTitle>
+
+              <CardDescription className="font-mono text-zinc-300 text-xs sm:text-sm mt-1 leading-relaxed">
+                Informe seu número de celular. A solicitação será enviada para a aba <strong className="text-primary">Master Admin</strong> e para o WhatsApp do administrador <strong className="text-yellow-400">Sandro RR (+55 51 99539-4808)</strong>.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="pt-2 pb-6 space-y-4">
+              <form onSubmit={handleRequest48h} className="space-y-4">
+                <div className="space-y-2 relative">
+                  <div className="absolute left-3.5 top-3.5 text-primary/70"><Phone className="w-4 h-4" /></div>
+                  <Input 
+                    type="tel"
+                    placeholder="SEU CELULAR COM DDD (EX: 51 99999-9999)" 
+                    className="bg-black/60 border-primary/40 text-white font-mono pl-10 h-12 text-xs sm:text-sm tracking-wider" 
+                    value={trialPhoneInput}
+                    onChange={(e) => setTrialPhoneInput(formatPhone(e.target.value))}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div className="space-y-2 relative">
+                  <div className="absolute left-3.5 top-3.5 text-primary/70"><User className="w-4 h-4" /></div>
+                  <Input 
+                    placeholder="SEU NOME OU EMPRESA (OPCIONAL)" 
+                    className="bg-black/60 border-white/10 text-white font-mono pl-10 h-11 text-xs sm:text-sm uppercase tracking-wider" 
+                    value={trialNameInput}
+                    onChange={(e) => setTrialNameInput(e.target.value)}
+                  />
+                </div>
+
+                {loginError && (
+                  <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-mono text-center leading-relaxed">
+                    {loginError}
+                  </div>
+                )}
+
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-black transition-all h-12 font-tactical tracking-widest uppercase text-xs sm:text-sm shadow-[0_0_20px_rgba(34,197,94,0.4)]"
+                >
+                  <MessageCircle className="w-4 h-4 mr-2 fill-white" />
+                  ENVIAR AO MASTER ADMIN & WHATSAPP
+                </Button>
+
+                <div className="flex justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowTrialModal(false);
+                      setLoginError("");
+                    }}
+                    className="text-xs font-mono text-zinc-400 hover:text-white uppercase tracking-wider transition-colors"
+                  >
+                    Voltar para o Login
+                  </button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     // FORMULÁRIO PADRÃO DE LOGIN
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-3 sm:p-4 relative overflow-hidden selection:bg-primary selection:text-black">
@@ -809,10 +928,26 @@ function Dashboard() {
               Plataforma Técnica de Engenharia Térmica & Diagnóstico
             </CardDescription>
 
-            {/* Destaque oficial de Acesso Grátis de 48 Horas */}
-            <div className="mt-4 inline-flex items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/40 shadow-[0_0_15px_rgba(0,240,255,0.25)] text-primary font-mono text-xs font-bold uppercase tracking-wider mx-auto">
-              <Sparkles className="w-3.5 h-3.5 text-primary shrink-0" />
-              <span>ACESSO GRÁTIS POR 48 HORAS</span>
+            {/* Botão Oficial: Clique em Grátis por 48Hs */}
+            <div className="mt-3 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  if (loginInput.trim()) setTrialPhoneInput(loginInput.trim());
+                  setShowTrialModal(true);
+                }}
+                className="w-full group relative overflow-hidden rounded-xl border-2 border-primary bg-gradient-to-r from-cyan-950/60 via-primary/20 to-blue-950/60 p-3 text-center transition-all duration-300 hover:border-cyan-300 hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] hover:scale-[1.01]"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Sparkles className="w-4 h-4 text-primary animate-pulse" />
+                  <span className="font-tactical text-xs sm:text-sm font-black tracking-widest text-primary uppercase drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]">
+                    🎁 CLIQUE AQUI: GRÁTIS POR 48 HORAS
+                  </span>
+                </div>
+                <p className="mt-1 text-[10.5px] font-mono text-zinc-300">
+                  Envia solicitação para o Master Admin e para o WhatsApp (+55 51 99539-4808)
+                </p>
+              </button>
             </div>
           </CardHeader>
 
@@ -887,9 +1022,13 @@ function Dashboard() {
   }
 
   // ==========================================
-  // CENÁRIO 1: CONTA AGUARDANDO ATIVAÇÃO DO ADMIN NA ABA MASTER ADMIN
+  // CENÁRIO 1: CONTA AGUARDANDO CONFIRMAÇÃO DO ADMIN NA ABA MASTER ADMIN
+  // Conforme determinação: "antes disso apenas aparecera numero de celular do cliente que está usando o aplicativo"
   // ==========================================
   if (session && !session.isAdmin && !session.isApproved) {
+    const clientPhone = session.formattedPhone || formatPhone(session.phone) || session.phone;
+    const clientDeviceId = session.deviceId || getDeviceId();
+
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-3 sm:p-4 relative overflow-hidden selection:bg-primary selection:text-black">
         {/* Background Effects */}
@@ -899,48 +1038,55 @@ function Dashboard() {
         <Card className="w-full max-w-md glass-panel border-amber-500/60 relative z-10 shadow-[0_0_60px_rgba(234,179,8,0.25)] animate-in zoom-in-95 duration-500">
           <CardHeader className="text-center pb-3 pt-6 sm:pt-8">
             <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/60 shadow-[0_0_25px_rgba(234,179,8,0.4)] flex items-center justify-center mb-3">
-              <Hourglass className="w-8 h-8 text-yellow-400 animate-spin" style={{ animationDuration: "6s" }} />
+              <Smartphone className="w-8 h-8 text-yellow-400 animate-pulse" />
             </div>
 
-            <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-mono text-[11px] uppercase tracking-wider mx-auto mb-2">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Aguardando Ativação do Administrador</span>
+            <div className="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/40 text-yellow-300 font-mono text-[11px] uppercase tracking-wider mx-auto mb-2 font-bold">
+              <Clock className="w-3.5 h-3.5 text-yellow-400" />
+              <span>Aguardando Confirmação do Administrador</span>
             </div>
 
             <CardTitle className="text-xl sm:text-2xl font-bold tracking-widest font-tactical text-transparent bg-clip-text bg-gradient-to-r from-white via-yellow-200 to-amber-400">
-              CONTA EM ANÁLISE
+              SOLICITAÇÃO DE 48H GRÁTIS
             </CardTitle>
 
             <CardDescription className="font-mono text-zinc-300 text-xs sm:text-sm mt-1 leading-relaxed">
-              Olá, <span className="text-white font-bold">{session.name}</span>! Sua senha está configurada. O administrador <strong className="text-yellow-400">Sandro RR</strong> precisa ativar seu acesso na aba Master Admin.
+              Sua solicitação foi enviada para o aplicativo na aba Master Admin e para o WhatsApp do administrador <strong className="text-yellow-400">Sandro RR</strong> (+55 51 99539-4808).
             </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-4 pt-1 pb-6">
-            {/* Dados do Requerente */}
-            <div className="bg-black/70 border border-white/10 rounded-xl p-3.5 space-y-2 text-xs font-mono">
-              <div className="flex justify-between items-center text-zinc-400">
-                <span>TÉCNICO / CLIENTE:</span>
-                <span className="text-white font-bold uppercase">{session.name}</span>
+            {/* DESTAQUE PRINCIPAL: APENAS NÚMERO DE CELULAR DO CLIENTE QUE ESTÁ USANDO O APLICATIVO */}
+            <div className="bg-gradient-to-b from-black/90 to-zinc-950/90 border-2 border-yellow-500/50 rounded-2xl p-4 sm:p-5 text-center space-y-2.5 shadow-[0_0_30px_rgba(234,179,8,0.2)]">
+              <span className="text-[11px] font-mono uppercase tracking-widest text-zinc-400 block font-bold">
+                📱 NÚMERO DE CELULAR QUE ESTÁ USANDO O APLICATIVO:
+              </span>
+              
+              <div className="py-2.5 px-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30">
+                <span className="text-2xl sm:text-3xl font-black font-mono tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-200 to-yellow-400 drop-shadow-[0_0_12px_rgba(234,179,8,0.6)]">
+                  {clientPhone}
+                </span>
               </div>
-              <div className="flex justify-between items-center text-zinc-400">
-                <span>CELULAR CADASTRADO:</span>
-                <span className="text-cyan-400 font-bold">{session.formattedPhone || session.phone}</span>
-              </div>
-              <div className="flex justify-between items-center text-zinc-400">
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400 pt-2 border-t border-white/10">
                 <span>APARELHO VINCULADO (ID):</span>
-                <span className="text-zinc-300 font-bold">{session.deviceId || getDeviceId()}</span>
+                <span className="text-zinc-200 font-bold">{clientDeviceId}</span>
               </div>
-              <div className="flex justify-between items-center text-zinc-400 pt-1.5 border-t border-white/5">
-                <span>STATUS:</span>
-                <span className="text-amber-400 font-bold animate-pulse">⏳ AGUARDANDO LIBERAÇÃO NO APP</span>
+
+              <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                <span>STATUS ATUAL:</span>
+                <span className="text-yellow-400 font-bold animate-pulse">⏳ AGUARDANDO CONFIRMAÇÃO DO ADMIN</span>
               </div>
             </div>
+
+            <p className="text-[11px] font-mono text-zinc-400 text-center leading-relaxed">
+              O acesso à sua <strong className="text-white">Conta PRO</strong> será liberado neste aparelho assim que o administrador Sandro RR confirmar no aplicativo.
+            </p>
 
             {/* Ações Diretas */}
             <div className="space-y-2 pt-1">
               <a 
-                href={generateWaitingApprovalWhatsAppLink(session)} 
+                href={generateTrialWaitingWhatsAppLink(session)} 
                 target="_blank"
                 rel="noreferrer"
                 className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-xs sm:text-sm py-3.5 px-3 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-[1.01] tracking-wider uppercase text-center"
@@ -955,7 +1101,7 @@ function Dashboard() {
                 className="w-full bg-cyan-500/10 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/20 hover:text-white font-tactical text-xs tracking-wider h-11 uppercase"
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
-                VERIFICAR SE JÁ FUI LIBERADO
+                VERIFICAR SE O ADMIN JÁ CONFIRMOU
               </Button>
             </div>
 
@@ -967,7 +1113,7 @@ function Dashboard() {
                 className="text-xs font-mono text-zinc-500 hover:text-zinc-300 uppercase tracking-widest transition-colors flex items-center gap-1.5"
               >
                 <LogOut className="w-3.5 h-3.5" />
-                Trocar de Conta / Sair
+                Trocar de Celular / Sair
               </button>
             </div>
           </CardContent>

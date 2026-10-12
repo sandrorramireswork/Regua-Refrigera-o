@@ -38,6 +38,7 @@ import {
   adminExportAccounts,
   adminImportAccounts,
   adminToggleAccountActivation,
+  adminConfirmAndApprovePro,
   adminSaveAndSyncAll,
   UserAccount,
   APP_PRICE_REAIS
@@ -164,6 +165,19 @@ export default function MasterAdminPanel() {
       refreshAccounts();
     } else {
       toast.error("Falha", { description: res.message });
+    }
+  };
+
+  // Confirmar Solicitação de 48h e Liberar Conta PRO (conforme solicitação expressa do usuário)
+  const handleConfirmAndApprovePro = (phone: string, name: string) => {
+    const res = adminConfirmAndApprovePro(phone);
+    if (res.success) {
+      toast.success(`Conta PRO Liberada com Sucesso!`, {
+        description: `O acesso à Conta PRO de ${name} foi confirmado e liberado no aplicativo.`
+      });
+      refreshAccounts();
+    } else {
+      toast.error("Falha ao liberar", { description: res.message });
     }
   };
 
@@ -662,7 +676,26 @@ export default function MasterAdminPanel() {
               </div>
             </CardHeader>
 
-            <CardContent className="pt-4 p-3 sm:p-6">
+            <CardContent className="pt-4 p-3 sm:p-6 space-y-3">
+              {/* Banner de Alerta para Solicitações Pendentes de 48h */}
+              {accounts.some(a => !a.isApproved) && (
+                <div className="bg-gradient-to-r from-yellow-950/50 via-amber-900/30 to-black border border-yellow-500/50 rounded-xl p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-[0_0_20px_rgba(234,179,8,0.2)] animate-pulse">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400 shrink-0">
+                      <Clock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-mono font-bold text-yellow-300 uppercase">
+                        {accounts.filter(a => !a.isApproved).length} Solicitação(ões) de Acesso Aguardando Sua Confirmação
+                      </p>
+                      <p className="text-[10.5px] font-mono text-zinc-400">
+                        Clique no botão verde "Confirmar & Liberar Conta PRO" abaixo para liberar o acesso no aplicativo do cliente.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {filteredAccounts.length === 0 ? (
                 <div className="text-center py-12 space-y-2">
                   <AlertCircle className="w-8 h-8 text-zinc-600 mx-auto" />
@@ -699,18 +732,22 @@ export default function MasterAdminPanel() {
                             {acc.isPro ? "PRO Vitalício" : "Teste 48h"}
                           </span>
 
-                          {/* Status de Senha e Ativação do Admin */}
-                          {!acc.hasPassword && !acc.password ? (
+                          {/* Status de Solicitação 48h, Senha e Ativação do Admin */}
+                          {acc.isTrialRequested && !acc.isApproved ? (
+                            <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-yellow-400 bg-yellow-500/25 text-yellow-300 font-bold uppercase animate-pulse">
+                              🟠 Solicitação 48h • Aguardando Confirmação
+                            </span>
+                          ) : !acc.hasPassword && !acc.password ? (
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-yellow-500/40 bg-yellow-500/10 text-yellow-300">
                               🟡 Aguardando Senha
                             </span>
                           ) : !acc.isApproved ? (
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-amber-500 bg-amber-500/25 text-amber-300 font-bold uppercase animate-pulse">
-                              🟠 Senha Criada • Aguardando Ativação
+                              🟠 Aguardando Confirmação do Admin
                             </span>
                           ) : (
                             <span className="text-[10px] font-mono px-2 py-0.5 rounded-full border border-emerald-500/60 bg-emerald-500/20 text-emerald-300 font-bold uppercase">
-                              🟢 Conta Ativada
+                              🟢 Conta Ativada (PRO)
                             </span>
                           )}
                         </div>
@@ -757,11 +794,11 @@ export default function MasterAdminPanel() {
                           {!acc.isApproved ? (
                             <Button
                               size="sm"
-                              onClick={() => handleToggleActivation(acc.phone)}
-                              className="bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black text-[11px] font-tactical h-7 px-2.5 shadow-[0_0_12px_rgba(234,179,8,0.4)] tracking-wider uppercase"
-                              title="Ativar conta e liberar acesso deste cliente no aplicativo"
+                              onClick={() => handleConfirmAndApprovePro(acc.phone, acc.name)}
+                              className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-400 hover:to-green-400 text-black font-black text-[11px] font-tactical h-7 px-3 shadow-[0_0_15px_rgba(34,197,94,0.4)] tracking-wider uppercase"
+                              title="Confirmar solicitação e liberar acesso total à Conta PRO no aplicativo"
                             >
-                              <Zap className="w-3.5 h-3.5 mr-1 fill-black" /> Ativar Conta
+                              <Zap className="w-3.5 h-3.5 mr-1 fill-black" /> Confirmar & Liberar Conta PRO
                             </Button>
                           ) : (
                             <Button

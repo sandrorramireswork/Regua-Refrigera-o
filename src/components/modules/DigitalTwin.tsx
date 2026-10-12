@@ -1,15 +1,16 @@
 import { useState } from "react";
 import { useAppContext } from "@/context/AppContext";
-import { getSaturationTemp } from "@/lib/thermodynamics";
+import { getSaturationTemp, refrigerantsList } from "@/lib/thermodynamics";
 import { 
   Power, Zap, Fan, ZoomIn, ZoomOut, BookOpen, Activity, 
   Sparkles, Award, Wrench, ShieldAlert, CheckCircle2, AlertTriangle, 
-  TrendingUp, Layers, Lightbulb, Thermometer, Gauge, Compass, ShieldCheck, BarChart3
+  TrendingUp, Layers, Lightbulb, Thermometer, Gauge, Compass, ShieldCheck, BarChart3,
+  Sliders, RotateCcw, DollarSign, HeartPulse, Flame, ArrowUpRight, Share2, Shield, Droplets
 } from "lucide-react";
 
 export default function DigitalTwin() {
   const { 
-    selectedRef: ref,
+    selectedRef: ref, setSelectedRef,
     pSuc, tSuc, pLiq, tLiq,
     setTSuc, setTLiq, setPSuc, setPLiq,
     pressureUnit, tempUnit, viewMode, expansion
@@ -62,7 +63,7 @@ export default function DigitalTwin() {
   const T_cond_K = tCondC + 273.15;
   const carnotCOP = T_cond_K > T_evap_K ? T_evap_K / (T_cond_K - T_evap_K) : 0;
   const estimatedCOP = Math.max(0.1, carnotCOP * 0.55);
-  const compRatio = pLiqBar / (pSucBar || 0.1);
+  const compRatio = Number((pLiqBar / (pSucBar || 0.1)).toFixed(2));
   const efeitoFrig = Math.max(10, 180 - (T_cond_K - T_evap_K));
 
   // ===== TEMPERATURAS DO GRÁFICO TÉRMICO (ALTA E BAIXA) =====
@@ -88,12 +89,266 @@ export default function DigitalTwin() {
   const wComp = Number((efeitoFrig / Math.max(1.2, estimatedCOP)).toFixed(0));
   const qCond = qEvap + wComp;
 
+  // ===== MÉTRICAS AVANÇADAS: APLICATIVO DE MILHÕES =====
+  // 1. Score de Vitalidade HVAC Vitals™ (0 a 100%)
+  const devSH = Math.abs(realSH - 6);
+  const scoreSH = Math.max(0, 30 - devSH * 4.5);
+  const devSC = Math.abs(realSC - 4);
+  const scoreSC = Math.max(0, 30 - devSC * 6);
+  const compRatioScore = Math.max(0, 20 - Math.max(0, compRatio - 3.2) * 8);
+  const dischargeScore = tAlta <= 85 ? 20 : (tAlta <= 105 ? 12 : 0);
+  const hvacVitalsScore = Math.round(Math.max(5, Math.min(100, scoreSH + scoreSC + compRatioScore + dischargeScore)));
+
+  // 2. Eficiência Volumétrica Teórica do Compressor (%)
+  const volEff = Math.round(Math.max(30, Math.min(94, 100 * (1 - 0.045 * (Math.pow(Math.max(1, compRatio), 1 / 1.18) - 1)))));
+
+  // 3. Desperdício Financeiro / ROI de Manutenção (R$/mês e R$/ano)
+  const lossFactor = Math.max(0, (100 - hvacVitalsScore) / 100);
+  const monthlyExtraKwh = Math.round(2.2 * lossFactor * 0.65 * 240); // 240 horas de uso/mês
+  const monthlyExtraReais = Math.round(monthlyExtraKwh * 0.92); // R$ 0,92 por kWh médio
+  const annualExtraReais = monthlyExtraReais * 12;
+
+  // 4. Densidade de Sucção e Proteção Térmica do Óleo POE/PVE
+  const densidadeSuc = Number((pSucBar * 3.45).toFixed(1));
+  const isOilAtRisk = tAlta > 105;
+
+  // Função para aplicar Presets Operacionais Instantâneos de Campo
+  const applyPreset = (type: "perfect" | "undercharge" | "overcharge" | "restriction") => {
+    if (type === "perfect") {
+      setPSuc(pressureUnit === "psig" ? 118 : 8.1);
+      setTSuc(tempUnit === "F" ? 42.4 : 5.8);
+      setPLiq(pressureUnit === "psig" ? 372 : 25.6);
+      setTLiq(tempUnit === "F" ? 104 : 40.0);
+    } else if (type === "undercharge") {
+      setPSuc(pressureUnit === "psig" ? 88 : 6.1);
+      setTSuc(tempUnit === "F" ? 57.2 : 14.0);
+      setPLiq(pressureUnit === "psig" ? 285 : 19.7);
+      setTLiq(tempUnit === "F" ? 95 : 35.0);
+    } else if (type === "overcharge") {
+      setPSuc(pressureUnit === "psig" ? 138 : 9.5);
+      setTSuc(tempUnit === "F" ? 37.4 : 3.0);
+      setPLiq(pressureUnit === "psig" ? 470 : 32.4);
+      setTLiq(tempUnit === "F" ? 107.6 : 42.0);
+    } else if (type === "restriction") {
+      setPSuc(pressureUnit === "psig" ? 82 : 5.7);
+      setTSuc(tempUnit === "F" ? 55.4 : 13.0);
+      setPLiq(pressureUnit === "psig" ? 395 : 27.2);
+      setTLiq(tempUnit === "F" ? 89.6 : 32.0);
+    }
+  };
+
   return (
     <div className="mx-auto space-y-6 sm:space-y-8 w-full max-w-7xl">
       
+      {/* ===== CONSOLE DE TELEMETRIA & CALIBRAÇÃO RÁPIDA (SINCRONIZAÇÃO EM TEMPO REAL) ===== */}
+      <div className="bg-gradient-to-r from-zinc-950 via-black to-zinc-950 border border-cyan-500/30 rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_rgba(0,240,255,0.08)] space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3.5">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+              <Sliders className="w-5 h-5 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-display font-black tracking-wider uppercase text-white flex items-center gap-2">
+                Console de Calibração & Sincronização em Tempo Real
+              </h3>
+              <p className="text-[11px] font-mono text-zinc-400">
+                Altere os valores ou selecione um preset para sincronizar todo o ciclo e laudos instantaneamente
+              </p>
+            </div>
+          </div>
+          
+          {/* Seletor de Fluido Refrigerante Integrado */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-xs font-mono text-zinc-400 font-bold shrink-0">REFRIGERANTE:</span>
+            <select 
+              value={ref} 
+              onChange={e => setSelectedRef(e.target.value)}
+              className="bg-black border border-cyan-500/40 text-cyan-300 font-mono text-xs font-bold rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-400 shadow-[0_0_10px_rgba(0,240,255,0.2)] cursor-pointer"
+            >
+              {refrigerantsList.map(r => (
+                <option key={r.id} value={r.id} className="bg-zinc-900 text-white font-mono">
+                  {r.id} ({r.name})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* 4 Presets Táticos de Campo de 1 Clique */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <button 
+            onClick={() => applyPreset("perfect")}
+            className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-950/30 hover:bg-emerald-950/60 border border-emerald-500/40 hover:border-emerald-400 transition-all text-left group"
+          >
+            <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 group-hover:scale-110 transition-transform">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] font-mono font-bold text-emerald-300">Equilíbrio Perfeito</div>
+              <div className="text-[9.5px] font-mono text-emerald-500/80">SH 6K • SC 4K • COP Alto</div>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => applyPreset("undercharge")}
+            className="flex items-center gap-2 p-2.5 rounded-xl bg-orange-950/30 hover:bg-orange-950/60 border border-orange-500/40 hover:border-orange-400 transition-all text-left group"
+          >
+            <div className="p-1.5 rounded-lg bg-orange-500/20 text-orange-400 group-hover:scale-110 transition-transform">
+              <AlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] font-mono font-bold text-orange-300">Subcarga (Falta de Gás)</div>
+              <div className="text-[9.5px] font-mono text-orange-500/80">SH Alto (&gt;12K) • SC Baixo</div>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => applyPreset("overcharge")}
+            className="flex items-center gap-2 p-2.5 rounded-xl bg-rose-950/30 hover:bg-rose-950/60 border border-rose-500/40 hover:border-rose-400 transition-all text-left group"
+          >
+            <div className="p-1.5 rounded-lg bg-rose-500/20 text-rose-400 group-hover:scale-110 transition-transform">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] font-mono font-bold text-rose-300">Sobrecarga (Excesso)</div>
+              <div className="text-[9.5px] font-mono text-rose-500/80">SC Elevado (&gt;8K) • Golpe</div>
+            </div>
+          </button>
+
+          <button 
+            onClick={() => applyPreset("restriction")}
+            className="flex items-center gap-2 p-2.5 rounded-xl bg-amber-950/30 hover:bg-amber-950/60 border border-amber-500/40 hover:border-amber-400 transition-all text-left group"
+          >
+            <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 group-hover:scale-110 transition-transform">
+              <Flame className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-[11px] font-mono font-bold text-amber-300">Restrição Linha/VET</div>
+              <div className="text-[9.5px] font-mono text-amber-500/80">Queda no filtro • SH/SC altos</div>
+            </div>
+          </button>
+        </div>
+
+        {/* Sliders Rápidos de Baixa e Alta */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+          <div className="bg-black/60 border border-blue-500/30 rounded-xl p-2.5 space-y-1.5">
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-blue-400 font-bold">P. Sucção (Baixa)</span>
+              <span className="text-white font-bold">{pSuc.toFixed(1)} {pressureUnit}</span>
+            </div>
+            <input 
+              type="range" 
+              min={pressureUnit === "psig" ? 20 : 1.5} 
+              max={pressureUnit === "psig" ? 200 : 14} 
+              step={pressureUnit === "psig" ? 1 : 0.1}
+              value={pSuc} 
+              onChange={e => setPSuc(Number(e.target.value))}
+              className="w-full accent-blue-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+            />
+          </div>
+
+          <div className="bg-black/60 border border-cyan-500/30 rounded-xl p-2.5 space-y-1.5">
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-cyan-400 font-bold">T. Tubo Sucção</span>
+              <span className="text-white font-bold">{tSuc.toFixed(1)}°{tempUnit}</span>
+            </div>
+            <input 
+              type="range" 
+              min={tempUnit === "F" ? 14 : -10} 
+              max={tempUnit === "F" ? 86 : 30} 
+              step={0.5}
+              value={tSuc} 
+              onChange={e => setTSuc(Number(e.target.value))}
+              className="w-full accent-cyan-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+            />
+          </div>
+
+          <div className="bg-black/60 border border-rose-500/30 rounded-xl p-2.5 space-y-1.5">
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-rose-400 font-bold">P. Descarga (Alta)</span>
+              <span className="text-white font-bold">{pLiq.toFixed(1)} {pressureUnit}</span>
+            </div>
+            <input 
+              type="range" 
+              min={pressureUnit === "psig" ? 100 : 7} 
+              max={pressureUnit === "psig" ? 550 : 38} 
+              step={pressureUnit === "psig" ? 2 : 0.2}
+              value={pLiq} 
+              onChange={e => setPLiq(Number(e.target.value))}
+              className="w-full accent-rose-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+            />
+          </div>
+
+          <div className="bg-black/60 border border-orange-500/30 rounded-xl p-2.5 space-y-1.5">
+            <div className="flex justify-between text-xs font-mono">
+              <span className="text-orange-400 font-bold">T. Tubo Líquido</span>
+              <span className="text-white font-bold">{tLiq.toFixed(1)}°{tempUnit}</span>
+            </div>
+            <input 
+              type="range" 
+              min={tempUnit === "F" ? 50 : 10} 
+              max={tempUnit === "F" ? 140 : 60} 
+              step={0.5}
+              value={tLiq} 
+              onChange={e => setTLiq(Number(e.target.value))}
+              className="w-full accent-orange-400 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* THE WIDESCREEN DIGITAL TWIN CANVAS WITH EXPANDED GRID */}
-      <div className="relative glass-panel border border-white/10 rounded-2xl overflow-hidden bg-[#050505] shadow-[0_0_50px_rgba(0,0,0,0.9)]">
+      <div className="glass-panel border border-white/10 rounded-2xl overflow-hidden bg-[#050505] shadow-[0_0_50px_rgba(0,0,0,0.9)] flex flex-col">
         
+        {/* BARRA SUPERIOR DEDICADA DE STATUS E CONTROLE DO MOTOR (SEM INTERFERÊNCIA NA TELA) */}
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-gradient-to-r from-cyan-950/50 via-zinc-950 to-black border-b border-white/10 z-20">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 rounded-lg bg-yellow-400/10 border border-yellow-400/30 flex items-center justify-center shadow-[0_0_10px_rgba(250,204,21,0.25)]">
+              <Zap className="text-yellow-400 w-4 h-4 animate-pulse" />
+            </div>
+            <div className="flex items-center gap-2.5">
+              <span className="font-display tracking-widest text-xs sm:text-sm text-primary neon-text-cyan font-black">
+                MOTOR DE SIMULAÇÃO TÉRMICA (ATIVO)
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-green-500/10 border border-green-500/30 text-green-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping"></span>
+                {ref}
+              </span>
+            </div>
+          </div>
+
+          {/* Status do Ciclo e Zoom Integrados */}
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-black/70 border border-white/10">
+              <span className="text-[10px] font-mono text-zinc-400 uppercase">ESTADO:</span>
+              <span className="text-[11px] font-mono font-black tracking-wider" style={{ color: statusColor }}>
+                {shortStatus}
+              </span>
+            </div>
+
+            {/* Controles de Zoom */}
+            <div className="flex items-center gap-1 bg-black/80 border border-white/15 rounded-xl p-0.5 shadow-md">
+              <button 
+                onClick={handleZoomOut} 
+                className="p-1.5 rounded-lg hover:bg-white/10 text-cyan-400 transition-all active:scale-95"
+                title="Reduzir Zoom"
+              >
+                <ZoomOut className="w-4 h-4" />
+              </button>
+              <div className="px-2 font-mono text-xs text-cyan-300 font-bold min-w-[42px] text-center">
+                {(zoom * 100).toFixed(0)}%
+              </div>
+              <button 
+                onClick={handleZoomIn} 
+                className="p-1.5 rounded-lg hover:bg-white/10 text-cyan-400 transition-all active:scale-95"
+                title="Aumentar Zoom"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Scrollable Canvas Viewport */}
         <div className="w-full aspect-[800/600] md:aspect-auto md:h-[620px] overflow-auto custom-scrollbar bg-[#050505]">
           <div className="flex min-w-full min-h-full w-max items-center justify-center p-3 md:p-6">
@@ -459,27 +714,6 @@ export default function DigitalTwin() {
             </div>
           </div>
         </div>
-        
-        {/* Status Badge (Top Left) */}
-        <div className="absolute top-4 left-4 bg-black/85 px-3 py-2 rounded-xl border border-primary/40 flex items-center gap-2 shadow-[0_0_20px_rgba(0,240,255,0.25)] z-20">
-          <Zap className="text-yellow-400 w-4 h-4 md:w-5 md:h-5 animate-pulse" />
-          <span className="font-display tracking-widest text-[10px] md:text-xs text-primary neon-text-cyan font-black">MOTOR DE SIMULAÇÃO TÉRMICA (ATIVO)</span>
-        </div>
-
-
-
-        {/* Zoom Controls (Bottom Right) */}
-        <div className="absolute bottom-4 right-4 flex gap-2 z-20">
-          <button onClick={handleZoomOut} className="p-2 md:p-3 bg-black/85 border border-white/20 rounded-xl hover:bg-white/10 hover:border-cyan-500/50 text-white shadow-[0_0_15px_rgba(0,0,0,0.6)] transition-all">
-            <ZoomOut className="w-4 h-4 md:w-5 md:h-5 text-cyan-400" />
-          </button>
-          <div className="flex items-center justify-center px-3 font-mono text-xs md:text-sm text-cyan-400 font-black bg-black/85 border border-white/10 rounded-xl">
-            {(zoom * 100).toFixed(0)}%
-          </div>
-          <button onClick={handleZoomIn} className="p-2 md:p-3 bg-black/85 border border-white/20 rounded-xl hover:bg-white/10 hover:border-cyan-500/50 text-white shadow-[0_0_15px_rgba(0,0,0,0.6)] transition-all">
-            <ZoomIn className="w-4 h-4 md:w-5 md:h-5 text-cyan-400" />
-          </button>
-        </div>
       </div>
 
       {/* ===== NOVO COCKPIT DE GRÁFICOS TÉCNICOS & DIAGNÓSTICO MULTIVARIADO DE CAMPO ===== */}
@@ -829,6 +1063,153 @@ export default function DigitalTwin() {
             <div className="flex items-center justify-between text-xs font-mono bg-zinc-900/60 p-2.5 rounded-xl border border-zinc-800">
               <span className="text-zinc-400">Rendimento COP Calculado:</span>
               <span className="text-cyan-300 font-bold">{estimatedCOP.toFixed(2)} W térmica / W elétrica</span>
+            </div>
+          </div>
+
+          {/* ===== GRÁFICO 5: HVAC VITALS™ - ÍNDICE DE SAÚDE OPERACIONAL (0 A 100%) ===== */}
+          <div className="bg-zinc-950/80 border border-emerald-500/30 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(16,185,129,0.08)] relative overflow-hidden">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <HeartPulse className="w-5 h-5 text-emerald-400" />
+                <h4 className="font-tactical font-black text-sm uppercase text-emerald-300 tracking-wider">
+                  HVAC Vitals™ Score (Saúde Global)
+                </h4>
+              </div>
+              <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-black border ${
+                hvacVitalsScore >= 85 ? "bg-emerald-950 text-emerald-300 border-emerald-500/40" :
+                hvacVitalsScore >= 70 ? "bg-yellow-950 text-yellow-300 border-yellow-500/40" :
+                "bg-rose-950 text-rose-300 border-rose-500/40 animate-pulse"
+              }`}>
+                {hvacVitalsScore >= 85 ? "EXCELENTE" : hvacVitalsScore >= 70 ? "MODERADO" : "CRÍTICO"}
+              </span>
+            </div>
+
+            <div className="space-y-3.5 pt-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-3xl sm:text-4xl font-mono font-black text-emerald-400 drop-shadow-[0_0_12px_rgba(16,185,129,0.7)]">
+                    {hvacVitalsScore}<span className="text-lg text-emerald-500/70 font-bold">/100</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-400 mt-0.5">
+                    Índice Multivariado de Confiabilidade
+                  </div>
+                </div>
+
+                <div className="text-right space-y-1">
+                  <div className="text-xs font-mono text-cyan-300 font-bold">
+                    ηv: {volEff}%
+                  </div>
+                  <div className="text-[9.5px] font-mono text-zinc-400">
+                    Efic. Volumétrica Real
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-300 font-bold">
+                    ρ: {densidadeSuc} kg/m³
+                  </div>
+                </div>
+              </div>
+
+              {/* Barra de Progresso HVAC Vitals */}
+              <div className="w-full bg-zinc-900 h-2.5 rounded-full overflow-hidden border border-zinc-800">
+                <div 
+                  className={`h-full transition-all duration-500 ${
+                    hvacVitalsScore >= 85 ? "bg-gradient-to-r from-emerald-500 to-green-400" :
+                    hvacVitalsScore >= 70 ? "bg-gradient-to-r from-yellow-500 to-amber-400" :
+                    "bg-gradient-to-r from-rose-600 to-red-500"
+                  }`}
+                  style={{ width: `${hvacVitalsScore}%` }}
+                ></div>
+              </div>
+
+              {/* 4 Pilares de Avaliação de Campo */}
+              <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                <div className="bg-black/50 p-2 rounded-lg border border-white/5 flex justify-between">
+                  <span className="text-zinc-400">Superaquecimento:</span>
+                  <span className={`font-bold ${isSHNormal ? "text-emerald-400" : "text-amber-400"}`}>{scoreSH.toFixed(0)}/30 pts</span>
+                </div>
+                <div className="bg-black/50 p-2 rounded-lg border border-white/5 flex justify-between">
+                  <span className="text-zinc-400">Sub-resfriamento:</span>
+                  <span className={`font-bold ${isSCNormal ? "text-emerald-400" : "text-amber-400"}`}>{scoreSC.toFixed(0)}/30 pts</span>
+                </div>
+                <div className="bg-black/50 p-2 rounded-lg border border-white/5 flex justify-between">
+                  <span className="text-zinc-400">Razão Compressão:</span>
+                  <span className={`font-bold ${compRatio <= 3.8 ? "text-emerald-400" : "text-rose-400"}`}>{compRatioScore.toFixed(0)}/20 pts</span>
+                </div>
+                <div className="bg-black/50 p-2 rounded-lg border border-white/5 flex justify-between">
+                  <span className="text-zinc-400">Proteção Térmica:</span>
+                  <span className={`font-bold ${!isOilAtRisk ? "text-emerald-400" : "text-rose-400"}`}>{dischargeScore.toFixed(0)}/20 pts</span>
+                </div>
+              </div>
+
+              {/* Alerta de Degradação de Óleo */}
+              <div className={`p-2 rounded-xl border text-[10px] font-mono flex items-center gap-2 ${
+                isOilAtRisk 
+                  ? "bg-rose-950/60 border-rose-500/50 text-rose-300 animate-pulse" 
+                  : "bg-emerald-950/30 border-emerald-500/30 text-emerald-400"
+              }`}>
+                <Shield className="w-4 h-4 shrink-0" />
+                <span>
+                  {isOilAtRisk 
+                    ? `ALERTA CRÍTICO: T.Desc (${tAlta}°C > 105°C) degrada óleo POE/PVE!` 
+                    : `Lubrificação Segura: T.Desc (${tAlta}°C) preserva viscosidade e pureza do óleo.`}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ===== GRÁFICO 6: CALCULADORA FINANCEIRA DE ROI & DESPERDÍCIO (R$/MÊS) ===== */}
+          <div className="bg-zinc-950/80 border border-amber-500/30 rounded-2xl p-5 space-y-4 shadow-[0_0_25px_rgba(245,158,11,0.08)] relative overflow-hidden">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2.5">
+                <DollarSign className="w-5 h-5 text-amber-400" />
+                <h4 className="font-tactical font-black text-sm uppercase text-amber-300 tracking-wider">
+                  Impacto Financeiro & Desperdício de Energia
+                </h4>
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-500/40 font-bold">
+                ROI DO SERVIÇO
+              </span>
+            </div>
+
+            <div className="space-y-3.5 pt-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl sm:text-3xl font-mono font-black text-amber-400 drop-shadow-[0_0_12px_rgba(245,158,11,0.7)]">
+                    +R$ {monthlyExtraReais}<span className="text-xs text-amber-500/70 font-bold">/mês</span>
+                  </div>
+                  <div className="text-[10px] font-mono text-zinc-400 mt-0.5">
+                    Prejuízo financeiro direto na conta de luz
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="text-lg font-mono font-bold text-rose-400">
+                    R$ {annualExtraReais}/ano
+                  </div>
+                  <div className="text-[9.5px] font-mono text-zinc-400">
+                    Desperdício Anual Acumulado
+                  </div>
+                </div>
+              </div>
+
+              {/* Comparador de Potência Consumida */}
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-zinc-400">Consumo em Regime Ideal:</span>
+                  <span className="text-emerald-400 font-bold">2.20 kW</span>
+                </div>
+                <div className="flex justify-between text-xs font-mono">
+                  <span className="text-zinc-400">Consumo em Regime Atual (com Perdas):</span>
+                  <span className="text-rose-400 font-bold">{(2.20 + (monthlyExtraKwh / 240)).toFixed(2)} kW (+{((monthlyExtraKwh / (2.2 * 240)) * 100).toFixed(0)}%)</span>
+                </div>
+              </div>
+
+              {/* Dica de Ouro de Fechamento de Vendas */}
+              <div className="bg-amber-950/30 border border-amber-500/30 p-2.5 rounded-xl text-[10.5px] font-mono text-amber-200/90 leading-relaxed flex items-start gap-2">
+                <Sparkles className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Argumento de Milhões para o Cliente:</strong> "Ao calibrar a carga e limpar os trocadores, você economiza <strong>R$ {annualExtraReais},00 por ano</strong> em eletricidade. O valor do serviço se paga sozinho em poucos meses!"
+                </span>
+              </div>
             </div>
           </div>
 

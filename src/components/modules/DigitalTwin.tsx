@@ -5,7 +5,8 @@ import {
   Power, Zap, Fan, ZoomIn, ZoomOut, BookOpen, Activity, 
   Sparkles, Award, Wrench, ShieldAlert, CheckCircle2, AlertTriangle, 
   TrendingUp, Layers, Lightbulb, Thermometer, Gauge, Compass, ShieldCheck, BarChart3,
-  Sliders, RotateCcw, DollarSign, HeartPulse, Flame, ArrowUpRight, Share2, Shield, Droplets
+  Sliders, RotateCcw, DollarSign, HeartPulse, Flame, ArrowUpRight, Share2, Shield, Droplets,
+  MapPin
 } from "lucide-react";
 
 export default function DigitalTwin() {
@@ -17,6 +18,7 @@ export default function DigitalTwin() {
   } = useAppContext();
 
   const [zoom, setZoom] = useState(1);
+  const [showSensorPoints, setShowSensorPoints] = useState(true);
   const handleZoomIn = () => setZoom(z => Math.min(z + 0.2, 2.4));
   const handleZoomOut = () => setZoom(z => Math.max(z - 0.2, 0.6));
 
@@ -398,9 +400,27 @@ export default function DigitalTwin() {
             </div>
           </div>
 
-          {/* Status do Ciclo e Zoom Integrados */}
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-black/70 border border-white/10">
+          {/* Status do Ciclo, Pontos de Medição e Zoom Integrados */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            {/* Botão de Destaque dos Pontos Ideais de Medição SH & SC */}
+            <button
+              onClick={() => setShowSensorPoints(!showSensorPoints)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono font-bold transition-all border shadow-sm ${
+                showSensorPoints 
+                  ? "bg-cyan-950/80 text-cyan-300 border-cyan-400/80 shadow-[0_0_15px_rgba(0,240,255,0.35)]" 
+                  : "bg-black/60 text-zinc-400 border-white/10 hover:border-white/20"
+              }`}
+              title="Exibir ou ocultar locais ideais para fixar o alicate de temperatura e tomada do manômetro"
+            >
+              <MapPin className={`w-3.5 h-3.5 ${showSensorPoints ? "text-cyan-400 animate-bounce" : "text-zinc-500"}`} />
+              <span className="hidden sm:inline">PONTOS DE MEDIÇÃO SH & SC</span>
+              <span className="sm:hidden">PONTOS SH/SC</span>
+              <span className={`text-[9px] px-1.5 py-0.5 rounded font-black ${showSensorPoints ? "bg-cyan-500/20 text-cyan-300 border border-cyan-500/40" : "bg-zinc-800 text-zinc-500"}`}>
+                {showSensorPoints ? "ATIVOS" : "OFF"}
+              </span>
+            </button>
+
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-lg bg-black/70 border border-white/10">
               <span className="text-[10px] font-mono text-zinc-400 uppercase">ESTADO:</span>
               <span className="text-[11px] font-mono font-black tracking-wider" style={{ color: statusColor }}>
                 {shortStatus}
@@ -748,24 +768,60 @@ export default function DigitalTwin() {
                 </g>
               </g>
 
-              {/* ===== BADGES HUD DE ALTA DEFINIÇÃO NAS TUBULAÇÕES ===== */}
+              {/* ===== BADGES HUD DE ALTA DEFINIÇÃO NAS TUBULAÇÕES & SINALIZAÇÃO DOS PONTOS DE MEDIÇÃO ===== */}
 
-              {/* 1. Medições de Sucção / Baixa (com indicador de SH direto na linha) */}
-              <g transform="translate(155, 475)">
-                <rect x="-58" y="-28" width="116" height="56" rx="8" fill="#030c18" fillOpacity="0.92" stroke="#3b82f6" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(59,130,246,0.45))" />
-                <text x="0" y="-10" fill="#38bdf8" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #38bdf8" }}>
+              {/* 1. MEDIÇÃO DE SUCÇÃO / SUPERAQUECIMENTO (SH) */}
+              <g transform="translate(155, 465)">
+                {/* Tag de Posicionamento Oficial SH */}
+                <rect x="-64" y="-39" width="128" height="15" rx="4" fill="#0284c7" fillOpacity="0.95" stroke="#38bdf8" strokeWidth="1" filter="drop-shadow(0 0 8px rgba(56,189,248,0.5))" />
+                <text x="0" y="-28.5" fill="#ffffff" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
+                  📍 PONTO MEDIÇÃO SH
+                </text>
+
+                <rect x="-64" y="-22" width="128" height="64" rx="9" fill="#030c18" fillOpacity="0.94" stroke="#3b82f6" strokeWidth="1.8" filter="drop-shadow(0 0 12px rgba(59,130,246,0.5))" />
+                <text x="0" y="-3" fill="#38bdf8" fontSize="16" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #38bdf8" }}>
                   {tSuc.toFixed(1)}°{tempUnit}
                 </text>
-                <text x="0" y="6" fill="#60a5fa" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #60a5fa" }}>
+                <text x="0" y="14" fill="#60a5fa" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #60a5fa" }}>
                   {pSuc.toFixed(1)} {pressureUnit}
                 </text>
-                <rect x="-48" y="12" width="96" height="12" rx="3" fill="#000000" fillOpacity="0.75" stroke={isSHNormal ? "rgba(74,222,128,0.5)" : "rgba(249,115,22,0.5)"} strokeWidth="0.8" />
-                <text x="0" y="20.5" fill={isSHNormal ? "#4ade80" : "#f97316"} fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                <rect x="-54" y="21" width="108" height="14" rx="3.5" fill="#000000" fillOpacity="0.8" stroke={isSHNormal ? "rgba(74,222,128,0.6)" : "rgba(249,115,22,0.6)"} strokeWidth="0.8" />
+                <text x="0" y="30.5" fill={isSHNormal ? "#4ade80" : "#f97316"} fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="900">
                   SH: {realSH.toFixed(1)} K
                 </text>
+
+                {/* Cabo de Conexão do Sensor Alicate até o Tubo de Sucção */}
+                <line x1="0" y1="42" x2="0" y2="67" stroke="#38bdf8" strokeWidth="1.8" strokeDasharray="3 3" />
+                <circle cx="0" cy="67" r="3" fill="#38bdf8" />
               </g>
 
-              {/* 2. Medições de Descarga / Alta (com indicação da Sat. Condensação) */}
+              {/* CLAMP SENSOR TÉRMICO DE SUPERAQUECIMENTO NO TUBO DE SUCÇÃO (x=225, y=532 - Saída Evaporador) */}
+              {showSensorPoints && (
+                <g transform="translate(225, 532)">
+                  {/* Radar Pulsante no Ponto Exato de Medição */}
+                  <circle cx="0" cy="0" r="15" fill="none" stroke="#00f0ff" strokeWidth="1.8" opacity="0.5" className="animate-ping" />
+                  
+                  {/* Garra / Alicate Sensor Termopar abraçando o tubo */}
+                  <path d="M -10 -14 C -14 -6 -14 6 -10 14 L -5 10 C -8 4 -8 -4 -5 -10 Z" fill="#0284c7" stroke="#38bdf8" strokeWidth="1.2" />
+                  <path d="M 10 -14 C 14 -6 14 6 10 14 L 5 10 C 8 4 8 -4 5 -10 Z" fill="#0284c7" stroke="#38bdf8" strokeWidth="1.2" />
+                  <rect x="-8" y="-14" width="16" height="28" rx="4" fill="#0369a1" fillOpacity="0.8" stroke="#38bdf8" strokeWidth="1.2" />
+                  <circle cx="0" cy="0" r="3.5" fill="#22d3ee" className="animate-pulse" />
+                  
+                  {/* Linha de Chamada e Placa Indicativa */}
+                  <line x1="0" y1="14" x2="0" y2="30" stroke="#00f0ff" strokeWidth="1.5" />
+                  <g transform="translate(0, 44)">
+                    <rect x="-88" y="-12" width="176" height="24" rx="5" fill="#030c18" fillOpacity="0.96" stroke="#00f0ff" strokeWidth="1.2" filter="drop-shadow(0 0 10px rgba(0,240,255,0.7))" />
+                    <text x="0" y="-1" fill="#00f0ff" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
+                      📍 SENSOR ALICATE SH
+                    </text>
+                    <text x="0" y="8" fill="#94a3b8" fontSize="6.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">
+                      Saída Evap. (10-15cm) • Pos. 10h/14h
+                    </text>
+                  </g>
+                </g>
+              )}
+
+              {/* 2. MEDIÇÕES DE DESCARGA / ALTA */}
               <g transform="translate(185, 26)">
                 <rect x="-58" y="-22" width="116" height="50" rx="8" fill="#180407" fillOpacity="0.92" stroke="#ef4444" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(239,68,68,0.45))" />
                 <text x="0" y="-7" fill="#f87171" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #ef4444" }}>
@@ -780,22 +836,189 @@ export default function DigitalTwin() {
                 </text>
               </g>
 
-              {/* 3. Medições de Linha de Líquido (com indicador de SC direto na linha) */}
+              {/* 3. MEDIÇÃO DE LINHA DE LÍQUIDO / SUB-RESFRIAMENTO (SC) */}
               <g transform="translate(615, 26)">
-                <rect x="-58" y="-22" width="116" height="50" rx="8" fill="#180a03" fillOpacity="0.92" stroke="#f97316" strokeWidth="1.6" filter="drop-shadow(0 0 10px rgba(249,115,22,0.45))" />
-                <text x="0" y="-7" fill="#fb923c" fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #f97316" }}>
+                {/* Tag de Posicionamento Oficial SC */}
+                <rect x="-64" y="-36" width="128" height="15" rx="4" fill="#ea580c" fillOpacity="0.95" stroke="#fb923c" strokeWidth="1" filter="drop-shadow(0 0 8px rgba(251,146,60,0.5))" />
+                <text x="0" y="-25.5" fill="#ffffff" fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
+                  📍 PONTO MEDIÇÃO SC
+                </text>
+
+                <rect x="-64" y="-19" width="128" height="60" rx="9" fill="#180a03" fillOpacity="0.94" stroke="#f97316" strokeWidth="1.8" filter="drop-shadow(0 0 12px rgba(249,115,22,0.5))" />
+                <text x="0" y="-2" fill="#fb923c" fontSize="16" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #f97316" }}>
                   {tLiq.toFixed(1)}°{tempUnit}
                 </text>
-                <text x="0" y="8" fill="#f97316" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #f97316" }}>
+                <text x="0" y="13" fill="#f97316" fontSize="13" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 10px #f97316" }}>
                   {pLiq.toFixed(1)} {pressureUnit}
                 </text>
-                <rect x="-48" y="13" width="96" height="12" rx="3" fill="#000000" fillOpacity="0.75" stroke={isSCNormal ? "rgba(74,222,128,0.5)" : "rgba(249,115,22,0.5)"} strokeWidth="0.8" />
-                <text x="0" y="21.5" fill={isSCNormal ? "#4ade80" : "#f97316"} fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900">
+                <rect x="-54" y="20" width="108" height="14" rx="3.5" fill="#000000" fillOpacity="0.8" stroke={isSCNormal ? "rgba(74,222,128,0.6)" : "rgba(249,115,22,0.6)"} strokeWidth="0.8" />
+                <text x="0" y="29.5" fill={isSCNormal ? "#4ade80" : "#f97316"} fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="900">
                   SC: {realSC.toFixed(1)} K
                 </text>
+
+                {/* Cabo de Conexão do Sensor Alicate até o Tubo de Líquido */}
+                <line x1="0" y1="41" x2="0" y2="42" stroke="#fb923c" strokeWidth="1.8" strokeDasharray="3 3" />
+                <circle cx="0" cy="42" r="3" fill="#fb923c" />
               </g>
 
+              {/* CLAMP SENSOR TÉRMICO DE SUB-RESFRIAMENTO NO TUBO DE LÍQUIDO (x=615, y=68 - Antes do Filtro) */}
+              {showSensorPoints && (
+                <g transform="translate(615, 68)">
+                  {/* Radar Pulsante no Ponto Exato de Medição */}
+                  <circle cx="0" cy="0" r="15" fill="none" stroke="#f97316" strokeWidth="1.8" opacity="0.5" className="animate-ping" />
+                  
+                  {/* Garra / Alicate Sensor Termopar abraçando o tubo */}
+                  <path d="M -10 -14 C -14 -6 -14 6 -10 14 L -5 10 C -8 4 -8 -4 -5 -10 Z" fill="#ea580c" stroke="#fb923c" strokeWidth="1.2" />
+                  <path d="M 10 -14 C 14 -6 14 6 10 14 L 5 10 C 8 4 8 -4 5 -10 Z" fill="#ea580c" stroke="#fb923c" strokeWidth="1.2" />
+                  <rect x="-8" y="-14" width="16" height="28" rx="4" fill="#c2410c" fillOpacity="0.8" stroke="#fb923c" strokeWidth="1.2" />
+                  <circle cx="0" cy="0" r="3.5" fill="#fed7aa" className="animate-pulse" />
+
+                  {/* Linha de Chamada e Placa Indicativa */}
+                  <line x1="0" y1="14" x2="0" y2="28" stroke="#f97316" strokeWidth="1.5" />
+                  <g transform="translate(0, 42)">
+                    <rect x="-88" y="-12" width="176" height="24" rx="5" fill="#180a03" fillOpacity="0.96" stroke="#f97316" strokeWidth="1.2" filter="drop-shadow(0 0 10px rgba(249,115,22,0.7))" />
+                    <text x="0" y="-1" fill="#fb923c" fontSize="8" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5">
+                      📍 SENSOR ALICATE SC
+                    </text>
+                    <text x="0" y="8" fill="#fdba74" fontSize="6.5" textAnchor="middle" fontFamily="monospace" fontWeight="bold">
+                      Saída Condensador • ANTES do Filtro
+                    </text>
+                  </g>
+                </g>
+              )}
+
             </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ===== GUIA OFICIAL DE CAMPO: ONDE E COMO MEDIR SUPERAQUECIMENTO & SUB-RESFRIAMENTO ===== */}
+      <div className="bg-gradient-to-r from-zinc-950 via-zinc-900 to-zinc-950 border border-cyan-500/30 rounded-2xl p-4 sm:p-6 shadow-[0_0_35px_rgba(0,240,255,0.08)] space-y-4 sm:space-y-5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3 sm:pb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 sm:p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 shadow-[0_0_15px_rgba(0,240,255,0.2)]">
+              <MapPin className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-lg font-display font-black tracking-wider uppercase text-white flex items-center gap-2">
+                Guia Oficial de Campo: Onde Medir Superaquecimento & Sub-resfriamento
+              </h3>
+              <p className="text-[11px] sm:text-xs font-mono text-zinc-400 mt-0.5">
+                Posicionamento padrão ASHRAE/Danfoss para sensores de temperatura (alicate) e tomadas de pressão (manômetro)
+              </p>
+            </div>
+          </div>
+          <span className="text-[11px] font-mono px-3 py-1 rounded-lg bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 font-bold shrink-0">
+            PADRÃO TÉCNICO OFICIAL
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* CARD 1: SUPERAQUECIMENTO (SH) */}
+          <div className="bg-black/70 border border-blue-500/30 rounded-xl p-4 space-y-3 relative overflow-hidden shadow-lg">
+            <div className="flex items-center justify-between border-b border-blue-500/20 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                <span className="font-mono font-black text-xs sm:text-sm text-cyan-300">1. POSIÇÃO SUPERAQUECIMENTO (SH)</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-500/30">
+                LINHA DE SUCÇÃO
+              </span>
+            </div>
+
+            <div className="space-y-2.5 text-xs font-mono">
+              <div className="flex items-start gap-2.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800">
+                <span className="text-cyan-400 font-bold shrink-0">📍 Sensor Alicate:</span>
+                <span className="text-zinc-300">
+                  Fixar no tubo de sucção a <strong>10 a 15 cm da saída do evaporador</strong> (logo após a serpentina, antes do compressor).
+                </span>
+              </div>
+
+              <div className="flex items-start gap-2.5 bg-amber-950/20 p-2.5 rounded-lg border border-amber-500/30">
+                <span className="text-amber-400 font-bold shrink-0">⏱️ Regra do Relógio:</span>
+                <span className="text-amber-200">
+                  Posicione o sensor às <strong>10 horas ou 14 horas</strong>. <u>NUNCA às 6 horas</u> (no fundo corre o óleo lubrificante POE/mineral que isola o tubo e gera falsa leitura de SH elevado).
+                </span>
+              </div>
+
+              <div className="flex items-start gap-2.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800">
+                <span className="text-cyan-400 font-bold shrink-0">🧲 Tomada Manômetro:</span>
+                <span className="text-zinc-300">
+                  Conectar a mangueira azul na <strong>válvula de serviço de sucção</strong> (baixa pressão).
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between bg-blue-950/40 p-2.5 rounded-lg border border-blue-500/30 text-cyan-300 font-bold text-xs">
+                <span>Fórmula de Campo:</span>
+                <span>SH = T.Tubo Sucção − T.Sat.Evap</span>
+              </div>
+            </div>
+          </div>
+
+          {/* CARD 2: SUB-RESFRIAMENTO (SC) */}
+          <div className="bg-black/70 border border-orange-500/30 rounded-xl p-4 space-y-3 relative overflow-hidden shadow-lg">
+            <div className="flex items-center justify-between border-b border-orange-500/20 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-ping"></span>
+                <span className="font-mono font-black text-xs sm:text-sm text-orange-300">2. POSIÇÃO SUB-RESFRIAMENTO (SC)</span>
+              </div>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-orange-950 text-orange-300 border border-orange-500/30">
+                LINHA DE LÍQUIDO
+              </span>
+            </div>
+
+            <div className="space-y-2.5 text-xs font-mono">
+              <div className="flex items-start gap-2.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800">
+                <span className="text-orange-400 font-bold shrink-0">📍 Sensor Alicate:</span>
+                <span className="text-zinc-300">
+                  Fixar no tubo da linha de líquido na <strong>saída do condensador</strong>, obrigatoriamente <strong>ANTES do filtro secador</strong>.
+                </span>
+              </div>
+
+              <div className="flex items-start gap-2.5 bg-rose-950/20 p-2.5 rounded-lg border border-rose-500/30">
+                <span className="text-rose-400 font-bold shrink-0">⚠️ Por que antes do filtro?</span>
+                <span className="text-rose-200">
+                  Se colocado após o filtro secador, qualquer retenção ou sujeira causa queda de pressão que derruba a temperatura local, gerando <u>leitura falsa de alto sub-resfriamento</u>.
+                </span>
+              </div>
+
+              <div className="flex items-start gap-2.5 bg-zinc-900/60 p-2.5 rounded-lg border border-zinc-800">
+                <span className="text-orange-400 font-bold shrink-0">🧲 Tomada Manômetro:</span>
+                <span className="text-zinc-300">
+                  Conectar a mangueira vermelha na <strong>válvula de serviço da linha de líquido / alta</strong>.
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between bg-orange-950/40 p-2.5 rounded-lg border border-orange-500/30 text-orange-300 font-bold text-xs">
+                <span>Fórmula de Campo:</span>
+                <span>SC = T.Sat.Cond − T.Tubo Líquido</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 3 Dicas de Ouro Inestimáveis */}
+        <div className="bg-zinc-950 border border-emerald-500/30 rounded-xl p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
+          <div className="flex items-start gap-2 text-zinc-300">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white block">1. Aguarde Estabilização:</strong>
+              Mínimo de 15 minutos em regime contínuo antes de anotar leituras.
+            </div>
+          </div>
+          <div className="flex items-start gap-2 text-zinc-300">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white block">2. Isole o Alicate:</strong>
+              Envolva o sensor com esponja elastomérica para anular o vento das hélices.
+            </div>
+          </div>
+          <div className="flex items-start gap-2 text-zinc-300">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white block">3. Limpeza do Tubo:</strong>
+              Lixe levemente o cobre para garantir contato metálico puro e condutivo.
             </div>
           </div>
         </div>

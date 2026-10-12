@@ -55,8 +55,89 @@ export default function DigitalTwin() {
   else if (isSHLow && isSCLow) { shortStatus = "BAIXA EVAPORAÇÃO / AR OBSTRUÍDO"; statusColor = "#eab308"; }
   else if (!isSHNormal && !isSCNormal) { shortStatus = "FALHA NO CICLO TÉRMICO"; statusColor = "#f97316"; }
 
-  // Estimate TXV opening based on Superheat (Assume ~6K is 50% open)
-  const openingPercent = Math.max(10, Math.min(100, 50 + (realSH - 6) * 8));
+  // Determinação Física e Visual da Válvula de Expansão (TXV / VET)
+  let txvStatusText = "ABERTURA";
+  let txvPercent = 55;
+  let txvColor = "#22c55e"; // verde normal
+
+  if (isSHHigh && isSCHigh) {
+    // RESTRIÇÃO NA LINHA / VÁLVULA PRESA FECHADA OU FILTRO ENTUPIDO:
+    // O bulbo quer abrir, mas a passagem física está ESTRANGULADA / TRAVADA!
+    txvPercent = 12; // Fluxo restrito
+    txvStatusText = "RESTRITA / TRAVADA";
+    txvColor = "#ef4444"; // Vermelho de bloqueio
+  } else if (isSHHigh && isSCLow) {
+    // SUBCARGA (Falta de fluido): Válvula tenta abrir no máximo para alimentar
+    txvPercent = 98;
+    txvStatusText = "ABERTA (SUBALIMENTANDO)";
+    txvColor = "#f97316"; // Laranja
+  } else if (isSHLow && isSCHigh) {
+    // SOBRECARGA / GOLPE: Válvula estrangula para conter líquido
+    txvPercent = 20;
+    txvStatusText = "FECHANDO (SOBRECARGA)";
+    txvColor = "#f43f5e";
+  } else if (isSHLow && isSCLow) {
+    // BAIXA TROCA TÉRMICA / VÁLVULA ABERTA DEMAIS
+    txvPercent = 85;
+    txvStatusText = "SUPER-ALIMENTANDO";
+    txvColor = "#eab308";
+  } else {
+    // REGIME NOMINAL EQUILIBRADO
+    txvPercent = Math.max(35, Math.min(75, Math.round(50 + (realSH - 6) * 5)));
+    txvStatusText = "MODULAÇÃO IDEAL";
+    txvColor = "#22c55e"; // Verde
+  }
+
+  // Diagnósticos Contextuais Rigorosos para o Radar dos Deltas Térmicos
+  let shDiagLabel = "Faixa Ideal (5 a 7K)";
+  let shDiagColor = "text-emerald-400";
+  let shBarColor = "bg-emerald-500";
+  if (isSHLow) {
+    shDiagLabel = "Risco de Golpe de Líquido (< 4K)";
+    shDiagColor = "text-rose-400";
+    shBarColor = "bg-rose-500";
+  } else if (isSHHigh) {
+    if (isSCHigh) {
+      shDiagLabel = "Restrição de Linha / VET (> 9K)";
+      shDiagColor = "text-rose-400";
+      shBarColor = "bg-rose-500";
+    } else if (isSCLow) {
+      shDiagLabel = "Subcarga / Falta de Gás (> 9K)";
+      shDiagColor = "text-amber-400";
+      shBarColor = "bg-amber-500";
+    } else {
+      shDiagLabel = "Perda de Rendimento (> 9K)";
+      shDiagColor = "text-amber-400";
+      shBarColor = "bg-amber-500";
+    }
+  }
+
+  let scDiagLabel = "Faixa Ideal (3 a 5K)";
+  let scDiagColor = "text-emerald-400";
+  let scBarColor = "bg-emerald-500";
+  if (isSCLow) {
+    scDiagLabel = "Falta de Fluido (< 2K)";
+    scDiagColor = "text-amber-400";
+    scBarColor = "bg-amber-500";
+  } else if (isSCHigh) {
+    if (isSHHigh) {
+      scDiagLabel = "Restrição na Linha / Acúmulo no Condensador (> 6K)";
+      scDiagColor = "text-rose-400";
+      scBarColor = "bg-rose-500";
+    } else {
+      scDiagLabel = "Sobrecarga de Fluido (> 6K)";
+      scDiagColor = "text-rose-400";
+      scBarColor = "bg-rose-500";
+    }
+  }
+
+  // Coordenadas Termodinâmicas Dinâmicas para o Mini Diagrama P-h
+  const phX1 = Math.min(270, Math.max(200, Math.round(215 + ((realSH - 6) / 14) * 45)));
+  const phX3 = Math.max(50, Math.min(120, Math.round(85 - ((realSC - 4) / 16) * 35)));
+  const phX4 = phX3;
+  const phX2 = Math.min(295, Math.max(250, Math.round(phX1 + 65)));
+  const phYHigh = Math.max(38, Math.min(70, Math.round(55 - ((pLiqBar - 20) / 20) * 12)));
+  const phYLow = Math.min(130, Math.max(98, Math.round(115 - ((pSucBar - 6) / 10) * 12)));
 
   // Estimate COP (Carnot Efficiency * 0.55 Isentropic approx)
   const T_evap_K = tEvapC + 273.15;
@@ -514,9 +595,13 @@ export default function DigitalTwin() {
                 <rect x="-12" y="-28" width="24" height="60" fill="url(#brassGrad)" rx="5" />
                 <rect x="-24" y="-12" width="48" height="18" fill="url(#brassGrad)" rx="3" />
                 <ellipse cx="0" cy="-28" rx="18" ry="10" fill="url(#steelGrad)" stroke="#111" strokeWidth="1.5" />
-                <text x="-48" y="-12" fill="#22c55e" fontSize="16" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #22c55e" }}>TXV</text>
-                <text x="-48" y="14" fill="#fbbf24" fontSize="22" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 15px #fbbf24" }}>{openingPercent.toFixed(0)}%</text>
-                <text x="-48" y="32" fill="#fbbf24" fontSize="11" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: "0 0 12px #fbbf24" }}>ABERTURA</text>
+                <text x="-48" y="-14" fill={isSHHigh && isSCHigh ? "#ef4444" : "#22c55e"} fontSize="15" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: `0 0 12px ${isSHHigh && isSCHigh ? "#ef4444" : "#22c55e"}` }}>TXV</text>
+                <text x="-48" y="10" fill={txvColor} fontSize="20" textAnchor="middle" fontFamily="monospace" fontWeight="900" style={{ textShadow: `0 0 15px ${txvColor}` }}>
+                  {txvPercent.toFixed(0)}%
+                </text>
+                <text x="-48" y="27" fill={txvColor} fontSize="7.5" textAnchor="middle" fontFamily="monospace" fontWeight="900" letterSpacing="0.5" style={{ textShadow: `0 0 10px ${txvColor}` }}>
+                  {txvStatusText}
+                </text>
               </g>
 
               {/* EVAPORADOR (Base Centro) */}
@@ -781,15 +866,15 @@ export default function DigitalTwin() {
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-mono">
                   <span className="text-zinc-300 font-bold">● ΔT Superaquecimento (SH)</span>
-                  <span className={isSHNormal ? "text-emerald-400 font-black" : "text-amber-400 font-black"}>
-                    {realSH.toFixed(1)} K ({isSHNormal ? "Nominal 5-7K" : isSHLow ? "Risco Golpe Líquido" : "Subcarga"})
+                  <span className={`${shDiagColor} font-black`}>
+                    {realSH.toFixed(1)} K ({shDiagLabel})
                   </span>
                 </div>
                 <div className="w-full h-3 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden relative">
                   {/* Faixa Alvo Verde */}
-                  <div className="absolute top-0 bottom-0 left-[31%] width-[13%] w-[13%] bg-emerald-500/25 border-x border-emerald-500/50 z-0"></div>
+                  <div className="absolute top-0 bottom-0 left-[31%] w-[13%] bg-emerald-500/25 border-x border-emerald-500/50 z-0"></div>
                   <div 
-                    className={`h-full rounded-full transition-all duration-500 ${isSHNormal ? "bg-emerald-500" : isSHLow ? "bg-rose-500" : "bg-amber-500"}`}
+                    className={`h-full rounded-full transition-all duration-500 ${shBarColor}`}
                     style={{ width: `${Math.min(100, Math.max(8, (realSH / 16) * 100))}%` }}
                   ></div>
                 </div>
@@ -804,15 +889,15 @@ export default function DigitalTwin() {
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-mono">
                   <span className="text-zinc-300 font-bold">● ΔT Sub-resfriamento (SC)</span>
-                  <span className={isSCNormal ? "text-emerald-400 font-black" : "text-rose-400 font-black"}>
-                    {realSC.toFixed(1)} K ({isSCNormal ? "Nominal 3-5K" : isSCLow ? "Falta Fluido" : "Sobrecarga"})
+                  <span className={`${scDiagColor} font-black`}>
+                    {realSC.toFixed(1)} K ({scDiagLabel})
                   </span>
                 </div>
                 <div className="w-full h-3 rounded-full bg-zinc-900 border border-zinc-800 overflow-hidden relative">
                   {/* Faixa Alvo Verde */}
-                  <div className="absolute top-0 bottom-0 left-[25%] width-[17%] w-[17%] bg-emerald-500/25 border-x border-emerald-500/50 z-0"></div>
+                  <div className="absolute top-0 bottom-0 left-[25%] w-[17%] bg-emerald-500/25 border-x border-emerald-500/50 z-0"></div>
                   <div 
-                    className={`h-full rounded-full transition-all duration-500 ${isSCNormal ? "bg-emerald-500" : isSCLow ? "bg-amber-500" : "bg-rose-500"}`}
+                    className={`h-full rounded-full transition-all duration-500 ${scBarColor}`}
                     style={{ width: `${Math.min(100, Math.max(8, (realSC / 12) * 100))}%` }}
                   ></div>
                 </div>
@@ -854,7 +939,7 @@ export default function DigitalTwin() {
               </span>
             </div>
 
-            {/* Canvas Vetorial do Diagrama Mollier P-h */}
+            {/* Canvas Vetorial do Diagrama Mollier P-h Dinâmico */}
             <div className="w-full bg-[#03070d] rounded-xl p-2 border border-cyan-500/20 relative aspect-[340/165]">
               <svg className="w-full h-full" viewBox="0 0 340 165">
                 <defs>
@@ -885,39 +970,31 @@ export default function DigitalTwin() {
                 <circle cx="170" cy="30" r="3" fill="#fbbf24" />
                 <text x="170" y="24" fill="#fbbf24" fontSize="7.5" textAnchor="middle" fontFamily="monospace">Ponto Crítico</text>
 
-                {/* O Ciclo de Refrigeração Real Plotado (Pontos 1, 2, 3, 4) */}
-                {/* Ponto 1: Saída Evap (x=215, y=115) */}
-                {/* Ponto 2: Saída Comp (x=280, y=55) */}
-                {/* Ponto 3: Saída Cond (x=85, y=55) */}
-                {/* Ponto 4: Pós-Expansão (x=85, y=115) */}
-                
-                {/* Linhas do Ciclo */}
+                {/* O Ciclo de Refrigeração Real Plotado Dinamicamente */}
                 <path 
-                  d="M 85 115 L 215 115 L 280 55 L 85 55 Z" 
+                  d={`M ${phX4} ${phYLow} L ${phX1} ${phYLow} L ${phX2} ${phYHigh} L ${phX3} ${phYHigh} Z`} 
                   fill="rgba(0, 240, 255, 0.08)" 
                   stroke="url(#mollierGrad)" 
                   strokeWidth="2.5" 
                   filter="drop-shadow(0 0 6px rgba(0,240,255,0.6))"
                 />
 
-                {/* Setas de Fluxo */}
-                <path d="M 150 115 L 158 112 L 158 118 Z" fill="#00f0ff" />
-                <path d="M 245 83 L 252 79 L 248 87 Z" fill="#ef4444" />
-                <path d="M 180 55 L 172 52 L 172 58 Z" fill="#f97316" />
-                <path d="M 85 85 L 82 89 L 88 89 Z" fill="#22c55e" />
+                {/* Setas de Fluxo Dinâmicas */}
+                <path d={`M ${(phX4 + phX1)/2} ${phYLow} L ${(phX4 + phX1)/2 + 8} ${phYLow - 3} L ${(phX4 + phX1)/2 + 8} ${phYLow + 3} Z`} fill="#00f0ff" />
+                <path d={`M ${(phX3 + phX2)/2} ${phYHigh} L ${(phX3 + phX2)/2 - 8} ${phYHigh - 3} L ${(phX3 + phX2)/2 - 8} ${phYHigh + 3} Z`} fill="#f97316" />
 
-                {/* 4 Nós com Marcações */}
-                <circle cx="215" cy="115" r="4.5" fill="#00f0ff" stroke="#fff" strokeWidth="1.2" />
-                <text x="222" y="123" fill="#00f0ff" fontSize="7.5" fontFamily="monospace" fontWeight="bold">1. Sucção (h1)</text>
+                {/* 4 Nós com Marcações Termodinâmicas Dinâmicas */}
+                <circle cx={phX1} cy={phYLow} r="4.5" fill="#00f0ff" stroke="#fff" strokeWidth="1.2" />
+                <text x={phX1 + 7} y={phYLow + 8} fill="#00f0ff" fontSize="7.5" fontFamily="monospace" fontWeight="bold">1. Sucção (h1)</text>
 
-                <circle cx="280" cy="55" r="4.5" fill="#ef4444" stroke="#fff" strokeWidth="1.2" />
-                <text x="282" y="50" fill="#ef4444" fontSize="7.5" fontFamily="monospace" fontWeight="bold">2. Descarga (h2)</text>
+                <circle cx={phX2} cy={phYHigh} r="4.5" fill="#ef4444" stroke="#fff" strokeWidth="1.2" />
+                <text x={Math.min(315, phX2 + 5)} y={phYHigh - 5} fill="#ef4444" fontSize="7.5" fontFamily="monospace" fontWeight="bold">2. Descarga (h2)</text>
 
-                <circle cx="85" cy="55" r="4.5" fill="#f97316" stroke="#fff" strokeWidth="1.2" />
-                <text x="75" y="48" fill="#f97316" fontSize="7.5" textAnchor="end" fontFamily="monospace" fontWeight="bold">3. Líquido (h3)</text>
+                <circle cx={phX3} cy={phYHigh} r="4.5" fill="#f97316" stroke="#fff" strokeWidth="1.2" />
+                <text x={phX3 - 7} y={phYHigh - 6} fill="#f97316" fontSize="7.5" textAnchor="end" fontFamily="monospace" fontWeight="bold">3. Líquido (h3)</text>
 
-                <circle cx="85" cy="115" r="4.5" fill="#22c55e" stroke="#fff" strokeWidth="1.2" />
-                <text x="75" y="123" fill="#22c55e" fontSize="7.5" textAnchor="end" fontFamily="monospace" fontWeight="bold">4. TXV (h4=h3)</text>
+                <circle cx={phX4} cy={phYLow} r="4.5" fill="#22c55e" stroke="#fff" strokeWidth="1.2" />
+                <text x={phX4 - 7} y={phYLow + 8} fill="#22c55e" fontSize="7.5" textAnchor="end" fontFamily="monospace" fontWeight="bold">4. TXV (h4=h3)</text>
               </svg>
             </div>
 

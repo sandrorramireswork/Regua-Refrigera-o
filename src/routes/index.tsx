@@ -425,29 +425,30 @@ function DashboardContent({
                 </div>
               </div>
 
-              {/* Chave de 9 Dígitos Gerada */}
-              <div className="bg-cyan-950/30 border border-cyan-500/40 rounded-xl p-3 space-y-1.5">
+              {/* Protocolo de Segurança: Chave enviada exclusivamente ao Admin */}
+              <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3.5 space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-mono uppercase text-cyan-400 font-bold flex items-center gap-1.5">
-                    <Key className="w-3.5 h-3.5" /> Chave Aleatória Gerada (9 Dígitos):
+                  <span className="text-[11px] font-mono uppercase text-emerald-400 font-bold flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" /> Liberação Segura via Admin
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(session.generatedAccessKey);
-                      toast.success("Chave de 9 dígitos copiada!");
-                    }}
-                    className="text-[10px] text-cyan-400 hover:text-cyan-200 flex items-center gap-1 font-mono uppercase hover:underline"
-                  >
-                    <Copy className="w-3 h-3" /> Copiar
-                  </button>
+                  <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
+                    Aguardando PIX
+                  </span>
                 </div>
-                <div className="text-xl sm:text-2xl font-mono font-black text-cyan-300 tracking-widest text-center py-1.5 bg-black/60 rounded-lg border border-cyan-500/30 shadow-[0_0_15px_rgba(0,240,255,0.25)]">
-                  {session.generatedAccessKey}
+                <div className="text-[10.5px] text-zinc-300 font-mono bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1.5 leading-relaxed">
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-emerald-400 font-bold">1.</span>
+                    <span>A chave de 9 dígitos deste aparelho é enviada <strong>diretamente para o WhatsApp do Admin Sandro RR</strong> (+55 51 99539-4808).</span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-emerald-400 font-bold">2.</span>
+                    <span>Após efetuar o PIX de R$ {APP_PRICE_REAIS}, envie o comprovante no WhatsApp do Admin.</span>
+                  </div>
+                  <div className="flex items-start gap-1.5">
+                    <span className="text-emerald-400 font-bold">3.</span>
+                    <span>O próprio Admin enviará a chave de acesso de volta para você inserir no campo abaixo e desbloquear permanentemente.</span>
+                  </div>
                 </div>
-                <p className="text-[10px] text-zinc-400 font-mono text-center">
-                  Válida para 1 único aparelho. Será enviada primeiramente ao WhatsApp do Admin para conferência do PIX.
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -458,7 +459,7 @@ function DashboardContent({
                   className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-xs sm:text-sm py-3.5 px-3 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-[1.01] uppercase tracking-wider text-center"
                 >
                   <MessageCircle className="w-5 h-5 fill-white shrink-0" />
-                  ENVIAR CHAVE AO ADMIN (+55 51 99539-4808)
+                  ENVIAR DADOS & CHAVE AO ADMIN (+55 51 99539-4808)
                 </a>
                 <p className="text-[10.5px] text-center text-zinc-400 font-mono leading-tight">
                   Após confirmação do PIX de R$ {APP_PRICE_REAIS}, o admin Sandro RR enviará a chave de acesso de volta para você.
@@ -1098,44 +1099,45 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Chave Aleatória de 9 Dígitos Gerada pelo App */}
-            <div className="bg-cyan-950/30 border border-cyan-500/40 rounded-xl p-3 space-y-1.5">
+            {/* Protocolo de Segurança: Chave enviada exclusivamente ao Admin */}
+            <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-xl p-3.5 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-[10px] font-mono uppercase text-cyan-400 font-bold flex items-center gap-1.5">
-                  <Key className="w-3.5 h-3.5" /> Chave Aleatória do Aparelho (9 Dígitos):
+                <span className="text-[11px] font-mono uppercase text-emerald-400 font-bold flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-emerald-400" /> Liberação Segura via WhatsApp
                 </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(session.generatedAccessKey);
-                    toast.success("Chave de 9 dígitos copiada!");
-                  }}
-                  className="text-[10px] text-cyan-400 hover:text-cyan-200 flex items-center gap-1 font-mono uppercase hover:underline"
-                >
-                  <Copy className="w-3 h-3" /> Copiar
-                </button>
+                <span className="text-[9px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold uppercase">
+                  Aguardando PIX
+                </span>
               </div>
-              <div className="text-xl sm:text-2xl font-mono font-black text-cyan-300 tracking-widest text-center py-1.5 bg-black/60 rounded-lg border border-cyan-500/30 shadow-[0_0_15px_rgba(0,240,255,0.25)]">
-                {session.generatedAccessKey}
+              <div className="text-[10.5px] text-zinc-300 font-mono bg-black/60 p-2.5 rounded-lg border border-white/5 space-y-1.5 leading-relaxed">
+                <div className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 font-bold">1.</span>
+                  <span>A chave de 9 dígitos deste aparelho é enviada <strong>diretamente para o WhatsApp do Admin Sandro RR</strong> (+55 51 99539-4808).</span>
+                </div>
+                <div className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 font-bold">2.</span>
+                  <span>Após efetuar o PIX de R$ {APP_PRICE_REAIS}, envie o comprovante no WhatsApp do Admin.</span>
+                </div>
+                <div className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 font-bold">3.</span>
+                  <span>O próprio Admin enviará a chave de acesso de 9 dígitos para você digitar e liberar o sistema permanentemente.</span>
+                </div>
               </div>
-              <p className="text-[10px] text-zinc-400 font-mono text-center">
-                Esta chave foi gerada para este aparelho e deve ser enviada primeiramente ao WhatsApp do admin Sandro RR.
-              </p>
             </div>
 
-            {/* Botão de WhatsApp Oficial com dados do cliente e chave de 9 dígitos */}
+            {/* Botão de WhatsApp Oficial com dados do cliente e chave de 9 dígitos enviada ao Admin */}
             <div className="space-y-2">
               <a 
                 href={generateWhatsAppBuyLink(session.name, session.phone, session.generatedAccessKey)} 
-                target="_blank" 
+                target="_blank"
                 rel="noreferrer"
                 className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-xs sm:text-sm py-4 px-3 rounded-xl shadow-[0_0_25px_rgba(34,197,94,0.5)] transition-all hover:scale-[1.02] tracking-wider uppercase text-center"
               >
                 <MessageCircle className="w-6 h-6 fill-white shrink-0" />
-                <span>ENVIAR CHAVE AO ADMIN (+55 51 99539-4808)</span>
+                <span>ENVIAR DADOS & CHAVE AO ADMIN (+55 51 99539-4808)</span>
               </a>
               <p className="text-[10.5px] text-zinc-400 text-center font-mono">
-                Após notificação do PIX de R$ {APP_PRICE_REAIS}, o admin Sandro RR enviará esta chave de volta para você desbloquear abaixo.
+                Após notificação do PIX de R$ {APP_PRICE_REAIS}, o admin Sandro RR enviará a chave de acesso para você desbloquear abaixo.
               </p>
             </div>
 

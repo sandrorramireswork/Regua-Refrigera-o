@@ -391,17 +391,17 @@ export function generateWhatsAppBuyLink(name: string, phone: string, customKey?:
     saveAccount(target);
   }
 
-  const message = `Olá Sandro! Concluí meu período de teste no aplicativo TermoMaster Pro e gostaria de adquirir a licença vitalícia no valor de R$ ${APP_PRICE_REAIS} via PIX!
+  const message = `Olá Sandro! Gostaria de adquirir o acesso vitalício do aplicativo TermoMaster Pro no valor de R$ ${APP_PRICE_REAIS} via PIX!
 
 📋 *DADOS DO CLIENTE CADASTRADO:*
 • Nome: *${clientName}*
 • Celular: *${formatted || phone}*
 • Aparelho (ID): *${deviceId}*
 
-🔑 *CHAVE ALEATÓRIA GERADA PELO MEU APLICATIVO (9 DÍGITOS):*
+🔒 *CHAVE DE ACESSO GERADA (ENVIADA EXCLUSIVAMENTE AO ADMIN):*
 👉 *${key9}*
 
-Por favor, confirme o recebimento do meu PIX e me envie a chave de acesso acima para liberação do meu aparelho!`;
+Sandro, estou enviando o comprovante do PIX. Assim que confirmar, por favor me envie esta chave de 9 dígitos de volta para eu liberar meu aplicativo neste aparelho!`;
 
   return `https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent(message)}`;
 }

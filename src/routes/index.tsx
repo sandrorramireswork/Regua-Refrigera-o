@@ -18,7 +18,7 @@ import { ElectricalSizing } from "@/components/modules/ElectricalSizing";
 import { 
   Lock, Unlock, User, AlertTriangle, AlertCircle, CheckCircle2, MessageCircle, 
   UserPlus, Key, Wrench, Zap, Cylinder, Phone, ShieldCheck, Sparkles, Clock, 
-  LogOut, Check, ArrowRight, X, ShieldAlert, Sparkle
+  LogOut, Check, ArrowRight, X, ShieldAlert, Sparkle, Smartphone, Copy, RefreshCw
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getSaturationTemp } from "@/lib/thermodynamics";
@@ -35,7 +35,11 @@ import {
   generateWhatsAppBuyLink, 
   loginAsAdmin, 
   formatPhone, 
-  cleanPhone 
+  cleanPhone,
+  getDeviceId,
+  generate9DigitKey,
+  getStoredAccounts,
+  resetAccountDevice
 } from "@/lib/licenseService";
 
 export const Route = createFileRoute("/")({
@@ -401,43 +405,72 @@ function DashboardContent({
                 Acesso permanente sem mensalidades para {session.name}
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="bg-black/60 rounded-xl p-4 border border-white/10 space-y-2">
-                <div className="flex justify-between items-center text-xs font-mono text-zinc-400">
+            <CardContent className="space-y-4">
+              <div className="bg-black/60 rounded-xl p-3.5 border border-white/10 space-y-1.5 text-xs font-mono">
+                <div className="flex justify-between items-center text-zinc-400">
                   <span>CLIENTE CADASTRADO:</span>
                   <span className="text-white font-bold">{session.name}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs font-mono text-zinc-400">
+                <div className="flex justify-between items-center text-zinc-400">
                   <span>CELULAR:</span>
                   <span className="text-cyan-400 font-bold">{session.formattedPhone || session.phone}</span>
                 </div>
-                <div className="flex justify-between items-center text-xs font-mono text-zinc-400">
-                  <span>INVESTIMENTO:</span>
-                  <span className="text-amber-400 font-black text-lg">R$ {APP_PRICE_REAIS} (PAGAMENTO ÚNICO)</span>
+                <div className="flex justify-between items-center text-zinc-400">
+                  <span>APARELHO AUTORIZADO (ID):</span>
+                  <span className="text-zinc-300 font-bold">{session.deviceId || getDeviceId()}</span>
                 </div>
+                <div className="flex justify-between items-center text-zinc-400 pt-1 border-t border-white/5">
+                  <span>INVESTIMENTO ÚNICO:</span>
+                  <span className="text-amber-400 font-black text-base">R$ {APP_PRICE_REAIS} (VITALÍCIO)</span>
+                </div>
+              </div>
+
+              {/* Chave de 9 Dígitos Gerada */}
+              <div className="bg-cyan-950/30 border border-cyan-500/40 rounded-xl p-3 space-y-1.5">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-mono uppercase text-cyan-400 font-bold flex items-center gap-1.5">
+                    <Key className="w-3.5 h-3.5" /> Chave Aleatória Gerada (9 Dígitos):
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(session.generatedAccessKey);
+                      toast.success("Chave de 9 dígitos copiada!");
+                    }}
+                    className="text-[10px] text-cyan-400 hover:text-cyan-200 flex items-center gap-1 font-mono uppercase hover:underline"
+                  >
+                    <Copy className="w-3 h-3" /> Copiar
+                  </button>
+                </div>
+                <div className="text-xl sm:text-2xl font-mono font-black text-cyan-300 tracking-widest text-center py-1.5 bg-black/60 rounded-lg border border-cyan-500/30 shadow-[0_0_15px_rgba(0,240,255,0.25)]">
+                  {session.generatedAccessKey}
+                </div>
+                <p className="text-[10px] text-zinc-400 font-mono text-center">
+                  Válida para 1 único aparelho. Será enviada primeiramente ao WhatsApp do Admin para conferência do PIX.
+                </p>
               </div>
 
               <div className="space-y-2">
                 <a
-                  href={generateWhatsAppBuyLink(session.name, session.phone)}
+                  href={generateWhatsAppBuyLink(session.name, session.phone, session.generatedAccessKey)}
                   target="_blank"
                   rel="noreferrer"
-                  className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-sm py-3.5 px-4 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-[1.01] uppercase tracking-wider text-center"
+                  className="w-full flex items-center justify-center gap-2.5 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-xs sm:text-sm py-3.5 px-3 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.4)] transition-all hover:scale-[1.01] uppercase tracking-wider text-center"
                 >
-                  <MessageCircle className="w-5 h-5 fill-white" />
-                  SOLICITAR CHAVE NO WHATSAPP (R$ {APP_PRICE_REAIS})
+                  <MessageCircle className="w-5 h-5 fill-white shrink-0" />
+                  ENVIAR CHAVE AO ADMIN (+55 51 99539-4808)
                 </a>
-                <p className="text-[11px] text-center text-zinc-400 font-mono">
-                  Enviaremos sua mensagem com seu nome e celular direto para Sandro RR para envio da chave via PIX.
+                <p className="text-[10.5px] text-center text-zinc-400 font-mono leading-tight">
+                  Após confirmação do PIX de R$ {APP_PRICE_REAIS}, o admin Sandro RR enviará a chave de acesso de volta para você.
                 </p>
               </div>
 
-              <div className="relative py-2">
+              <div className="relative py-1">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-white/10"></div>
                 </div>
                 <div className="relative flex justify-center text-[10px] uppercase font-mono">
-                  <span className="bg-black px-2 text-zinc-400">Já recebeu sua chave?</span>
+                  <span className="bg-black px-2 text-zinc-400">Ativar Chave de 9 Dígitos</span>
                 </div>
               </div>
 
@@ -445,10 +478,10 @@ function DashboardContent({
                 <div className="space-y-1 relative">
                   <div className="absolute left-3 top-3 text-amber-500/60"><Key className="w-4 h-4" /></div>
                   <Input
-                    placeholder="DIGITE A CHAVE (EX: PRO-3990)"
+                    placeholder="DIGITE A CHAVE DE 9 DÍGITOS (EX: 849-201-736)"
                     value={upgradeKeyInput}
                     onChange={(e) => setUpgradeKeyInput(e.target.value)}
-                    className="bg-black/70 border-amber-500/30 text-amber-300 font-mono pl-10 h-10 uppercase"
+                    className="bg-black/70 border-amber-500/30 text-amber-300 font-mono pl-10 h-10 text-xs sm:text-sm uppercase"
                   />
                 </div>
                 {upgradeError && (
@@ -754,6 +787,11 @@ function Dashboard() {
                     <span>Relatórios Técnicos PDF</span>
                   </div>
                 </div>
+
+                <div className="pt-2 flex items-center justify-center gap-1.5 text-[10px] text-zinc-400 font-mono border-t border-white/5">
+                  <Smartphone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Segurança: Válido para 1 único aparelho (ID: {getDeviceId()})</span>
+                </div>
               </form>
             )}
 
@@ -791,6 +829,11 @@ function Dashboard() {
                   <Unlock className="w-4 h-4 mr-2" />
                   ENTRAR NA MINHA CONTA
                 </Button>
+
+                <div className="pt-2 flex items-center justify-center gap-1.5 text-[10px] text-zinc-400 font-mono border-t border-white/5">
+                  <Smartphone className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span>Acesso protegido vinculado a 1 único aparelho por número</span>
+                </div>
               </form>
             )}
 
@@ -802,14 +845,14 @@ function Dashboard() {
                     Liberação Vitalícia por R$ {APP_PRICE_REAIS}
                   </span>
                   <p className="text-[11px] text-zinc-300 font-mono">
-                    Insira a chave recebida após efetuar seu PIX com Sandro RR.
+                    Insira a chave de 9 dígitos recebida de Sandro RR no WhatsApp após confirmação do PIX.
                   </p>
                 </div>
 
                 <div className="space-y-2 relative">
                   <div className="absolute left-3 top-3 text-amber-500/60"><Key className="w-4 h-4" /></div>
                   <Input 
-                    placeholder="CHAVE DE LIBERAÇÃO (EX: PRO-3990)" 
+                    placeholder="CHAVE DE 9 DÍGITOS (EX: 849-201-736)" 
                     className="bg-black/60 border-amber-500/40 text-amber-300 font-mono pl-10 h-11 text-xs sm:text-sm uppercase" 
                     value={activateKey}
                     onChange={(e) => setActivateKey(e.target.value)}
@@ -904,6 +947,67 @@ function Dashboard() {
                 >
                   AUTENTICAR MASTER
                 </Button>
+
+                {/* Consulta de Clientes, Chaves de 9 Dígitos e Aparelhos (Admin Sandro RR) */}
+                <div className="pt-3 border-t border-white/10 space-y-2">
+                  <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest block font-bold text-center">
+                    CONSULTA DE CHAVES GERADAS (PIX)
+                  </span>
+                  
+                  {getStoredAccounts().filter(a => !a.isAdmin).length === 0 ? (
+                    <p className="text-[10px] text-zinc-500 font-mono text-center py-2">
+                      Nenhum cliente cadastrado ainda neste navegador.
+                    </p>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                      {getStoredAccounts().filter(a => !a.isAdmin).map((acc) => (
+                        <div key={acc.phone} className="bg-black/80 border border-white/10 rounded-lg p-2.5 space-y-1 text-[11px] font-mono">
+                          <div className="flex justify-between items-center">
+                            <span className="text-white font-bold truncate max-w-[160px]">{acc.name}</span>
+                            <span className={acc.isPro ? "text-amber-400 font-bold" : "text-cyan-400"}>
+                              {acc.isPro ? "PRO VITALÍCIO" : "TESTE 2 DIAS"}
+                            </span>
+                          </div>
+                          <div className="flex justify-between items-center text-zinc-400 text-[10px]">
+                            <span>Cel: {acc.formattedPhone || acc.phone}</span>
+                            <span className="truncate max-w-[120px]" title={acc.deviceId}>Dev: {acc.deviceId || "Livre"}</span>
+                          </div>
+                          <div className="flex justify-between items-center pt-1 border-t border-white/5">
+                            <span className="text-cyan-300 font-bold tracking-wider">
+                              🔑 {acc.generatedAccessKey}
+                            </span>
+                            <div className="flex gap-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const text = `Olá ${acc.name}! Confirmamos o recebimento do seu PIX de R$ 39,90 no TermoMaster Pro. Sua chave de liberação oficial para este aparelho é: *${acc.generatedAccessKey}*. Insira no seu aplicativo para liberar o acesso vitalício!`;
+                                  navigator.clipboard.writeText(text);
+                                  toast.success("Mensagem com chave de 9 dígitos copiada!");
+                                }}
+                                className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-400 hover:bg-cyan-500/30 text-[9.5px] uppercase"
+                                title="Copiar resposta com chave para enviar no WhatsApp"
+                              >
+                                Copiar Msg
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  resetAccountDevice(acc.phone);
+                                  toast.success("Aparelho desvinculado com sucesso!");
+                                  setCurrentTime(Date.now());
+                                }}
+                                className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 text-[9.5px] uppercase"
+                                title="Permitir que o cliente troque de aparelho celular"
+                              >
+                                Reset Dev
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </form>
             )}
 
@@ -974,8 +1078,8 @@ function Dashboard() {
               </span>
             </div>
 
-            {/* Dados do cliente cadastrado */}
-            <div className="bg-black/70 border border-white/10 rounded-xl p-3.5 space-y-2 text-xs font-mono">
+            {/* Dados do cliente cadastrado e aparelho único */}
+            <div className="bg-black/70 border border-white/10 rounded-xl p-3.5 space-y-1.5 text-xs font-mono">
               <div className="flex justify-between items-center text-zinc-400">
                 <span>TÉCNICO / CLIENTE:</span>
                 <span className="text-white font-bold uppercase">{session.name}</span>
@@ -985,24 +1089,53 @@ function Dashboard() {
                 <span className="text-cyan-400 font-bold">{session.formattedPhone || session.phone}</span>
               </div>
               <div className="flex justify-between items-center text-zinc-400">
-                <span>BENEFÍCIOS:</span>
-                <span className="text-emerald-400 font-bold">ACESSO TOTAL ILIMITADO</span>
+                <span>APARELHO AUTORIZADO (ID):</span>
+                <span className="text-zinc-300 font-bold">{session.deviceId || getDeviceId()}</span>
+              </div>
+              <div className="flex justify-between items-center text-zinc-400 pt-1 border-t border-white/5">
+                <span>SEGURANÇA:</span>
+                <span className="text-emerald-400 font-bold">1 APARELHO POR LICENÇA</span>
               </div>
             </div>
 
-            {/* Botão de WhatsApp Oficial com dados do cliente */}
+            {/* Chave Aleatória de 9 Dígitos Gerada pelo App */}
+            <div className="bg-cyan-950/30 border border-cyan-500/40 rounded-xl p-3 space-y-1.5">
+              <div className="flex justify-between items-center">
+                <span className="text-[10px] font-mono uppercase text-cyan-400 font-bold flex items-center gap-1.5">
+                  <Key className="w-3.5 h-3.5" /> Chave Aleatória do Aparelho (9 Dígitos):
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(session.generatedAccessKey);
+                    toast.success("Chave de 9 dígitos copiada!");
+                  }}
+                  className="text-[10px] text-cyan-400 hover:text-cyan-200 flex items-center gap-1 font-mono uppercase hover:underline"
+                >
+                  <Copy className="w-3 h-3" /> Copiar
+                </button>
+              </div>
+              <div className="text-xl sm:text-2xl font-mono font-black text-cyan-300 tracking-widest text-center py-1.5 bg-black/60 rounded-lg border border-cyan-500/30 shadow-[0_0_15px_rgba(0,240,255,0.25)]">
+                {session.generatedAccessKey}
+              </div>
+              <p className="text-[10px] text-zinc-400 font-mono text-center">
+                Esta chave foi gerada para este aparelho e deve ser enviada primeiramente ao WhatsApp do admin Sandro RR.
+              </p>
+            </div>
+
+            {/* Botão de WhatsApp Oficial com dados do cliente e chave de 9 dígitos */}
             <div className="space-y-2">
               <a 
-                href={generateWhatsAppBuyLink(session.name, session.phone)} 
+                href={generateWhatsAppBuyLink(session.name, session.phone, session.generatedAccessKey)} 
                 target="_blank" 
                 rel="noreferrer"
-                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-sm sm:text-base py-4 px-4 rounded-xl shadow-[0_0_25px_rgba(34,197,94,0.5)] transition-all hover:scale-[1.02] tracking-wider uppercase text-center"
+                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-emerald-600 to-green-500 hover:from-emerald-500 hover:to-green-400 text-white font-tactical font-black text-xs sm:text-sm py-4 px-3 rounded-xl shadow-[0_0_25px_rgba(34,197,94,0.5)] transition-all hover:scale-[1.02] tracking-wider uppercase text-center"
               >
                 <MessageCircle className="w-6 h-6 fill-white shrink-0" />
-                <span>COMPRAR NO WHATSAPP (R$ {APP_PRICE_REAIS})</span>
+                <span>ENVIAR CHAVE AO ADMIN (+55 51 99539-4808)</span>
               </a>
               <p className="text-[10.5px] text-zinc-400 text-center font-mono">
-                Ao clicar, você enviará seus dados para liberação imediata da chave pelo desenvolvedor Sandro RR.
+                Após notificação do PIX de R$ {APP_PRICE_REAIS}, o admin Sandro RR enviará esta chave de volta para você desbloquear abaixo.
               </p>
             </div>
 
@@ -1010,14 +1143,14 @@ function Dashboard() {
             <div className="pt-2 border-t border-white/10">
               <form onSubmit={handlePaywallActivate} className="space-y-3">
                 <span className="text-[11px] font-mono text-zinc-300 uppercase tracking-wider block text-center">
-                  Já efetuou o PIX e recebeu sua chave?
+                  Digite a chave de 9 dígitos enviada pelo Admin:
                 </span>
                 <div className="flex gap-2">
                   <Input 
-                    placeholder="DIGITE A CHAVE (EX: PRO-3990)" 
+                    placeholder="DIGITE A CHAVE (EX: 849-201-736)" 
                     value={paywallKey}
                     onChange={(e) => setPaywallKey(e.target.value)}
-                    className="bg-black/60 border-amber-500/40 text-amber-300 font-mono text-xs uppercase"
+                    className="bg-black/60 border-amber-500/40 text-amber-300 font-mono text-xs sm:text-sm uppercase"
                   />
                   <Button 
                     type="submit"

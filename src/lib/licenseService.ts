@@ -1,23 +1,25 @@
-// Sistema de Licenciamento e Teste Gratuito de 2 Dias (TermoMaster Pro)
-// Desenvolvido para conversão comercial direta para venda por R$ 39,90 via WhatsApp
+// Sistema de Licenciamento, Aparelho Único e Chave Aleatória de 9 Dígitos (TermoMaster Pro)
+// Desenvolvido para proteção contra pirataria e conversão comercial direta para venda por R$ 39,90 via WhatsApp
 
 export interface UserAccount {
   name: string;
-  phone: string;            // apenas dígitos (ex: 51995394808)
-  formattedPhone: string;   // formatado (ex: (51) 99539-4808)
-  registeredAt: number;     // timestamp de criação
-  trialExpiresAt: number;   // timestamp de expiração (2 dias após o registro)
-  isPro: boolean;           // acesso vitalício liberado
-  licenseKey?: string;      // chave de liberação utilizada
-  isAdmin?: boolean;        // conta de engenharia/administrador master
+  phone: string;              // apenas dígitos (ex: 51995394808)
+  formattedPhone: string;     // formatado (ex: (51) 99539-4808)
+  registeredAt: number;       // timestamp de criação
+  trialExpiresAt: number;     // timestamp de expiração (2 dias após o registro)
+  isPro: boolean;             // acesso vitalício liberado
+  deviceId: string;           // identificador único do aparelho vinculado (Single Device Lock)
+  generatedAccessKey: string; // chave aleatória de 9 dígitos gerada pelo app (ex: 489-102-753)
+  licenseKey?: string;        // chave de liberação utilizada
+  isAdmin?: boolean;          // conta de engenharia/administrador master
 }
 
 export const TRIAL_DURATION_DAYS = 2;
 export const TRIAL_DURATION_MS = TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000; // 48 horas
 export const APP_PRICE_REAIS = "39,90";
-export const SELLER_WHATSAPP = "5551995394808"; // Sandro RR - Suporte & Vendas
+export const SELLER_WHATSAPP = "5551995394808"; // Sandro RR - Administrador & Engenharia
 
-// Chaves válidas de liberação para compra confirmada
+// Chaves mestras de emergência e liberação
 export const VALID_LICENSE_KEYS = [
   "PRO-3990",
   "TERMOPRO-3990",
@@ -32,12 +34,20 @@ export const VALID_LICENSE_KEYS = [
 
 const STORAGE_KEY_SESSION = "thermomaster_session_user";
 const STORAGE_KEY_ACCOUNTS = "thermomaster_phone_accounts";
+const STORAGE_KEY_DEVICE = "thermomaster_device_id";
 
 /**
  * Remove caracteres não numéricos de um telefone
  */
 export function cleanPhone(value: string): string {
   return value.replace(/\D/g, "");
+}
+
+/**
+ * Normaliza qualquer chave removendo traços, espaços e caracteres especiais
+ */
+export function cleanKey(key: string): string {
+  return key.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
 }
 
 /**
@@ -51,6 +61,34 @@ export function formatPhone(value: string): string {
     return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
   }
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
+}
+
+/**
+ * Obtém ou inicializa o identificador único de aparelho (Hardware/Browser Fingerprint)
+ * Garante que cada aparelho tenha um ID único e persistente.
+ */
+export function getDeviceId(): string {
+  if (typeof window === "undefined") return "DEV-SERVER";
+  try {
+    let devId = localStorage.getItem(STORAGE_KEY_DEVICE);
+    if (!devId) {
+      const randHex = Math.random().toString(36).substring(2, 7).toUpperCase();
+      const timePart = Date.now().toString(36).substring(3, 7).toUpperCase();
+      devId = `DEV-${randHex}-${timePart}`;
+      localStorage.setItem(STORAGE_KEY_DEVICE, devId);
+    }
+    return devId;
+  } catch {
+    return "DEV-BROWSER-1";
+  }
+}
+
+/**
+ * Gera chave aleatória de exatamente 9 dígitos numéricos formatada como XXX-XXX-XXX
+ */
+export function generate9DigitKey(): string {
+  const num = Math.floor(100000000 + Math.random() * 900000000).toString();
+  return `${num.slice(0, 3)}-${num.slice(3, 6)}-${num.slice(6, 9)}`;
 }
 
 /**
@@ -122,10 +160,12 @@ export function setActiveSession(account: UserAccount | null): void {
 }
 
 /**
- * Registra novo técnico para início de teste gratuito de 2 dias
+ * Registra novo técnico para início de teste gratuito de 2 dias com bloqueio de aparelho único
  */
 export function registerFreeTrial(name: string, phoneInput: string): { success: boolean; account?: UserAccount; message?: string } {
   const digits = cleanPhone(phoneInput);
+  const currentDeviceId = getDeviceId();
+
   if (!name.trim() || name.trim().length < 2) {
     return { success: false, message: "Informe seu nome completo ou razão social para o cadastro." };
   }
@@ -135,19 +175,36 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
 
   const accounts = getStoredAccounts();
   const existing = accounts.find(a => a.phone === digits);
-
   const now = Date.now();
 
   if (existing) {
-    // Conta já existente: se já é PRO, restaura PRO. Se ainda em teste, restaura tempo restante.
+    // Verificação de Segurança de Aparelho Único
+    if (existing.deviceId && existing.deviceId !== currentDeviceId && !existing.isAdmin) {
+      return {
+        success: false,
+        account: existing,
+        message: `Acesso Bloqueado: Este número de celular já está vinculado a outro aparelho (${existing.deviceId}). O aplicativo é restrito a 1 único aparelho. Contate Sandro RR (+5551995394808) para transferência.`
+      };
+    }
+
+    // Se o aparelho não estava registrado (legado), vincula agora
+    if (!existing.deviceId) {
+      existing.deviceId = currentDeviceId;
+    }
+    if (!existing.generatedAccessKey) {
+      existing.generatedAccessKey = generate9DigitKey();
+    }
+    saveAccount(existing);
     setActiveSession(existing);
+
     if (existing.isPro) {
-      return { success: true, account: existing, message: `Bem-vindo de volta, ${existing.name}! Sua Licença Vitalícia está ativa.` };
+      return { success: true, account: existing, message: `Bem-vindo de volta, ${existing.name}! Sua Licença Vitalícia está ativa neste aparelho.` };
     }
     if (now < existing.trialExpiresAt) {
       const remaining = getRemainingTrialTime(existing.trialExpiresAt);
       return { success: true, account: existing, message: `Bem-vindo de volta! Você possui ainda ${remaining.text} do seu teste grátis.` };
     }
+
     // Teste expirado
     return { 
       success: false, 
@@ -156,7 +213,8 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
     };
   }
 
-  // Novo cadastro Free de 2 dias
+  // Novo cadastro Free de 2 dias vinculado exclusivamente a este aparelho
+  const key9 = generate9DigitKey();
   const newAccount: UserAccount = {
     name: name.trim(),
     phone: digits,
@@ -164,7 +222,9 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
     registeredAt: now,
     trialExpiresAt: now + TRIAL_DURATION_MS,
     isPro: false,
-    isAdmin: false
+    isAdmin: false,
+    deviceId: currentDeviceId,
+    generatedAccessKey: key9
   };
 
   saveAccount(newAccount);
@@ -173,15 +233,17 @@ export function registerFreeTrial(name: string, phoneInput: string): { success: 
   return {
     success: true,
     account: newAccount,
-    message: `Conta ativada com sucesso! Você tem 2 dias de acesso gratuito completo ao TermoMaster Pro.`
+    message: `Conta ativada com sucesso! Você tem 2 dias de acesso gratuito completo vinculado a este aparelho.`
   };
 }
 
 /**
- * Login direto pelo número de celular cadastrado
+ * Login direto pelo número de celular cadastrado com verificação estrita de aparelho único
  */
 export function loginWithPhone(phoneInput: string): { success: boolean; account?: UserAccount; message?: string } {
   const digits = cleanPhone(phoneInput);
+  const currentDeviceId = getDeviceId();
+
   if (digits.length < 10) {
     return { success: false, message: "Digite seu número de celular com DDD." };
   }
@@ -193,47 +255,82 @@ export function loginWithPhone(phoneInput: string): { success: boolean; account?
     return { success: false, message: "Número de celular não localizado. Faça seu cadastro gratuito de 2 dias." };
   }
 
+  // Validação de Segurança: Aparelho Único
+  if (existing.deviceId && existing.deviceId !== currentDeviceId && !existing.isAdmin) {
+    return {
+      success: false,
+      message: `Aparelho não autorizado! Este número está vinculado a outro dispositivo (${existing.deviceId}). Por segurança contra pirataria, o aplicativo só permite 1 aparelho por usuário. Contate Sandro RR (+5551995394808) para transferir.`
+    };
+  }
+
+  // Vincula se não tinha deviceId previamente
+  if (!existing.deviceId) {
+    existing.deviceId = currentDeviceId;
+  }
+  if (!existing.generatedAccessKey) {
+    existing.generatedAccessKey = generate9DigitKey();
+  }
+  saveAccount(existing);
   setActiveSession(existing);
+
   return { success: true, account: existing, message: `Login realizado com sucesso! Olá, ${existing.name}.` };
 }
 
 /**
- * Ativa a licença vitalícia permanente com código de compra
+ * Ativa a licença vitalícia permanente com a chave de 9 dígitos enviada pelo Admin ou chave mestra
  */
 export function activateLicense(licenseKey: string, phoneToActivate?: string): { success: boolean; account?: UserAccount; message: string } {
-  const cleanKey = licenseKey.trim().toUpperCase();
-  const isValid = VALID_LICENSE_KEYS.some(k => k.toUpperCase() === cleanKey);
+  const cleanInput = cleanKey(licenseKey);
+  const currentDeviceId = getDeviceId();
 
-  if (!isValid) {
-    return { success: false, message: "Chave de ativação inválida ou não reconhecida." };
+  if (!cleanInput) {
+    return { success: false, message: "Digite a chave de liberação recebida no WhatsApp." };
   }
 
   const session = getActiveSession();
   const rawPhone = phoneToActivate || session?.phone;
   const digits = rawPhone ? cleanPhone(rawPhone) : "";
 
-  if (digits) {
-    const accounts = getStoredAccounts();
-    const target = accounts.find(a => a.phone === digits);
-    if (target) {
+  const accounts = getStoredAccounts();
+  let target = digits ? accounts.find(a => a.phone === digits) : session;
+
+  // Se não localizou por telefone direto, tenta achar a conta dona da chave de 9 dígitos gerada
+  if (!target && accounts.length > 0) {
+    target = accounts.find(a => cleanKey(a.generatedAccessKey) === cleanInput);
+  }
+
+  if (target) {
+    const isMasterKey = VALID_LICENSE_KEYS.some(k => cleanKey(k) === cleanInput);
+    const isClient9DigitKey = cleanKey(target.generatedAccessKey) === cleanInput;
+
+    if (isMasterKey || isClient9DigitKey) {
       target.isPro = true;
-      target.licenseKey = cleanKey;
+      target.licenseKey = licenseKey.trim();
+      target.deviceId = target.deviceId || currentDeviceId;
       saveAccount(target);
       setActiveSession(target);
-      return { success: true, account: target, message: `Licença Vitalícia ativada com sucesso para ${target.name}! Acesso definitivo liberado.` };
+      return { 
+        success: true, 
+        account: target, 
+        message: `Licença Vitalícia ativada com sucesso para ${target.name}! Acesso definitivo liberado neste aparelho.` 
+      };
     }
   }
 
-  // Se não houver conta vinculada, ativa na sessão atual
-  if (session) {
+  // Verifica se a chave fornecida é uma chave mestra geral
+  const isMasterKey = VALID_LICENSE_KEYS.some(k => cleanKey(k) === cleanInput);
+  if (isMasterKey && session) {
     session.isPro = true;
-    session.licenseKey = cleanKey;
+    session.licenseKey = licenseKey.trim();
     saveAccount(session);
     setActiveSession(session);
     return { success: true, account: session, message: "Licença Vitalícia ativada com sucesso! Acesso definitivo liberado." };
   }
 
-  return { success: true, message: "Chave válida! Faça login com seu número para vincular a licença." };
+  return { 
+    success: false, 
+    message: "Chave de 9 dígitos incorreta ou não correspondente a este cliente. Verifique a mensagem enviada pelo admin Sandro RR." 
+  };
 }
 
 /**
@@ -272,22 +369,65 @@ export function getRemainingTrialTime(trialExpiresAt: number): { expired: boolea
 }
 
 /**
- * Gera o link oficial do WhatsApp comercial com mensagem formatada do cliente cadastrado
+ * Gera o link oficial do WhatsApp comercial (+5551995394808) com:
+ * - Nome do cliente
+ * - Celular do cliente
+ * - ID do Aparelho único
+ * - Chave aleatória de 9 dígitos gerada pelo app
  */
-export function generateWhatsAppBuyLink(name: string, phone: string): string {
+export function generateWhatsAppBuyLink(name: string, phone: string, customKey?: string): string {
   const cleanNum = cleanPhone(phone);
   const formatted = formatPhone(cleanNum);
   const clientName = name.trim() || "Técnico";
+  const deviceId = getDeviceId();
 
-  const message = `Olá Sandro! Concluí meu período de teste no aplicativo TermoMaster Pro. Meu nome é *${clientName}* e meu celular de cadastro é *${formatted || phone}*. Gostaria de adquirir a licença definitiva no valor promocional de R$ ${APP_PRICE_REAIS} via PIX!`;
+  const accounts = getStoredAccounts();
+  const target = accounts.find(a => a.phone === cleanNum);
+  const key9 = customKey || target?.generatedAccessKey || generate9DigitKey();
+
+  // Se a conta existe mas ainda não tinha a chave salva, grava para garantir conferência
+  if (target && !target.generatedAccessKey) {
+    target.generatedAccessKey = key9;
+    saveAccount(target);
+  }
+
+  const message = `Olá Sandro! Concluí meu período de teste no aplicativo TermoMaster Pro e gostaria de adquirir a licença vitalícia no valor de R$ ${APP_PRICE_REAIS} via PIX!
+
+📋 *DADOS DO CLIENTE CADASTRADO:*
+• Nome: *${clientName}*
+• Celular: *${formatted || phone}*
+• Aparelho (ID): *${deviceId}*
+
+🔑 *CHAVE ALEATÓRIA GERADA PELO MEU APLICATIVO (9 DÍGITOS):*
+👉 *${key9}*
+
+Por favor, confirme o recebimento do meu PIX e me envie a chave de acesso acima para liberação do meu aparelho!`;
 
   return `https://wa.me/${SELLER_WHATSAPP}?text=${encodeURIComponent(message)}`;
+}
+
+/**
+ * Redefine o aparelho vinculado a uma conta (função administrativa para transferências)
+ */
+export function resetAccountDevice(phone: string): { success: boolean; message: string } {
+  const digits = cleanPhone(phone);
+  const accounts = getStoredAccounts();
+  const target = accounts.find(a => a.phone === digits);
+
+  if (!target) {
+    return { success: false, message: "Conta não localizada." };
+  }
+
+  target.deviceId = ""; // libera aparelho
+  saveAccount(target);
+  return { success: true, message: `Aparelho desvinculado com sucesso para ${target.name}. O cliente já pode logar em um novo aparelho.` };
 }
 
 /**
  * Criação da sessão de Administrador Master (Sandro RR)
  */
 export function loginAsAdmin(): UserAccount {
+  const currentDeviceId = getDeviceId();
   const adminAccount: UserAccount = {
     name: "Sandro RR (Engenharia)",
     phone: "5551995394808",
@@ -296,6 +436,8 @@ export function loginAsAdmin(): UserAccount {
     trialExpiresAt: Date.now() + (3650 * 24 * 60 * 60 * 1000), // 10 anos
     isPro: true,
     isAdmin: true,
+    deviceId: currentDeviceId,
+    generatedAccessKey: "999-888-777",
     licenseKey: "MASTER-SRR"
   };
 
